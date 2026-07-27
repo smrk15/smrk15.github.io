@@ -356,10 +356,10 @@
             document.getElementById("btnManageIcon").title = translations[currentLang].manageServersBtn
         }
 
-        let matches = JSON.parse(localStorage.getItem("dartMatchesV20")) || []
-        let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV20")) || []
-        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV20")) || []
-        let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV20")) || {}
+        let matches = JSON.parse(localStorage.getItem("dartMatchesV21")) || []
+        let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV21")) || []
+        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV21")) || []
+        let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV21")) || {}
         let historyStack = []
         let currentView = "home"
         let formMode = "single"
@@ -478,10 +478,12 @@
                 const format = headerParts[1] || "BO7 501 DO"
                 let weekInfo = ""
                 let webUrl = ""
+                let discordUrl = ""
 
                 headerParts.slice(2).forEach(part => {
                     if (part.startsWith("http")) {
-                        webUrl = part
+                        if (part.includes("discord")) discordUrl = part
+                        else webUrl = part
                     } else {
                         weekInfo = part
                     }
@@ -503,23 +505,33 @@
                     const matchParts = cleanLine.split("->").map(p => p.trim())
                     
                     const opponent = matchParts[0]
-                    const datePart = matchParts[1] || ""
-
+                    
                     let date = ""
                     let time = ""
                     let confirmed = false
+                    let mustPlay = false
+                    let week = weekInfo
+                    let notes = ""
 
-                    if (datePart) {
-                        const dtMatch = datePart.match(/(\d{1,2})\.(\d{1,2})\.?(?:\s+(\d{1,2}:\d{2}))?/)
-                        if (dtMatch) {
-                            const day = dtMatch[1].padStart(2, '0')
-                            const month = dtMatch[2].padStart(2, '0')
-                            const currentYear = new Date().getFullYear()
-                            date = `${currentYear}-${month}-${day}`
-                            if (dtMatch[3]) time = dtMatch[3]
-                            confirmed = true
+                    matchParts.slice(1).forEach(part => {
+                        if (part.includes("🔥 DOHRAVKA")) {
+                            mustPlay = true
+                        } else if (part.startsWith("W:")) {
+                            week = part.replace("W:", "").trim()
+                        } else if (part.startsWith("NOTE:")) {
+                            notes = part.replace("NOTE:", "").trim()
+                        } else {
+                            const dtMatch = part.match(/(\d{1,2})\.(\d{1,2})\.?(?:\s+(\d{1,2}:\d{2}))?/)
+                            if (dtMatch) {
+                                const day = dtMatch[1].padStart(2, '0')
+                                const month = dtMatch[2].padStart(2, '0')
+                                const currentYear = new Date().getFullYear()
+                                date = `${currentYear}-${month}-${day}`
+                                if (dtMatch[3]) time = dtMatch[3]
+                                confirmed = true
+                            }
                         }
-                    }
+                    })
 
                     newMatches.push({
                         id: Date.now() + (bIdx * 100) + mIdx,
@@ -528,17 +540,17 @@
                         opponent,
                         format,
                         duration,
-                        type: weekInfo ? "fixed" : "flexi",
-                        week: weekInfo,
+                        type: week ? "fixed" : "flexi",
+                        week,
                         date,
                         time,
                         confirmed,
-                        mustPlay: false,
+                        mustPlay,
                         status: date ? "scheduled" : "unscheduled",
-                        notes: "",
+                        notes,
                         maxWeekly: "",
                         finalDeadline: "",
-                        discordUrl: "",
+                        discordUrl,
                         webUrl
                     })
                 })
@@ -571,6 +583,7 @@
                 if (first.format) header += ` -> ${first.format}`
                 if (first.week) header += ` -> ${first.week}`
                 if (first.webUrl) header += ` -> ${first.webUrl}`
+                if (first.discordUrl) header += ` -> ${first.discordUrl}`
 
                 txtContent += `${header}\n`
 
@@ -584,6 +597,11 @@
                     } else {
                         line += ` -> `
                     }
+
+                    if (m.mustPlay) line += ` -> 🔥 DOHRAVKA`
+                    if (m.week) line += ` -> W: ${m.week}`
+                    if (m.notes) line += ` -> NOTE: ${m.notes}`
+
                     txtContent += `${line}\n`
                 })
 
@@ -618,9 +636,9 @@
             matches = previousState.matches
             emptyServers = previousState.emptyServers
             hiddenServers = previousState.hiddenServers
-            localStorage.setItem("dartMatchesV20", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV20", JSON.stringify(emptyServers))
-            localStorage.setItem("dartHiddenServersV20", JSON.stringify(hiddenServers))
+            localStorage.setItem("dartMatchesV21", JSON.stringify(matches))
+            localStorage.setItem("dartEmptyServersV21", JSON.stringify(emptyServers))
+            localStorage.setItem("dartHiddenServersV21", JSON.stringify(hiddenServers))
             updateUndoButton()
             render()
         }
@@ -637,10 +655,10 @@
         }
 
         function save() {
-            localStorage.setItem("dartMatchesV20", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV20", JSON.stringify(emptyServers))
-            localStorage.setItem("dartHiddenServersV20", JSON.stringify(hiddenServers))
-            localStorage.setItem("dartClosedStatesV20", JSON.stringify(closedStates))
+            localStorage.setItem("dartMatchesV21", JSON.stringify(matches))
+            localStorage.setItem("dartEmptyServersV21", JSON.stringify(emptyServers))
+            localStorage.setItem("dartHiddenServersV21", JSON.stringify(hiddenServers))
+            localStorage.setItem("dartClosedStatesV21", JSON.stringify(closedStates))
             render()
         }
 
@@ -888,7 +906,7 @@
             const match = matches.find(m => m.id === id)
             if (match) {
                 match.notes = text
-                localStorage.setItem("dartMatchesV20", JSON.stringify(matches))
+                localStorage.setItem("dartMatchesV21", JSON.stringify(matches))
             }
         }
 
@@ -1168,11 +1186,9 @@
             }
 
             if (currentView === "timeline") {
-                // Načasované zápasy + zápasy bez termínu, které mají příznak Dohrávky
                 let timelineMatches = matches.filter(m => (m.date || m.mustPlay) && !hiddenServers.includes(m.server))
 
                 timelineMatches.sort((a, b) => {
-                    // Dohrávky bez termínu dáme úplně nahoru
                     if (!a.date && b.date) return -1
                     if (a.date && !b.date) return 1
                     if (!a.date && !b.date) return 0
