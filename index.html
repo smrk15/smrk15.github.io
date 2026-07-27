@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Šipky - Kompletní Správa</title>
-   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #121214 }
@@ -238,7 +238,7 @@
                 modalManageServers: "Spravovat servery",
                 modalManageServersDesc: "Zaškrtni servery, které chceš skrýt z hlavní plochy, nebo které chceš trvale odstranit.",
                 serverLabelEmpty: "Tento server je prázdný. Přidej do něj ligu.",
-                emptyMatchesLabel: "Žádné domluvené zápasy.",
+                emptyMatchesLabel: "Žádné domluvené ani označené zápasy k dohrávce.",
                 noServersLabel: "Žádné servery ani zápasy. Nahraj svá data přes TXT soubor vlevo dole nebo přidej první zápas kliknutím nahoře.",
                 confrimDeleteMatch: "Opravdu smazat zápas?",
                 confirmDeleteSelectedLeagues: "Opravdu chceš smazat vybrané ligy včetně všech zápasů?",
@@ -284,7 +284,7 @@
                 modalManageServers: "Server verwalten",
                 modalManageServersDesc: "Wähle Server aus, die du ausblenden oder dauerhaft löschen möchtest.",
                 serverLabelEmpty: "Dieser Server ist leer. Füge eine Liga hinzu.",
-                emptyMatchesLabel: "Keine vereinbarten Termine.",
+                emptyMatchesLabel: "Keine vereinbarten oder zum Nachholen markierten Spiele.",
                 noServersLabel: "Keine Server oder Spiele vorhanden. Lade deine Daten über die TXT-Datei unten links hoch.",
                 confrimDeleteMatch: "Möchtest du dieses Spiel wirklich löschen?",
                 confirmDeleteSelectedLeagues: "Möchtest du die ausgewählten Ligen inklusive aller Spiele wirklich löschen?",
@@ -1168,10 +1168,18 @@
             }
 
             if (currentView === "timeline") {
-                let scheduledMatches = matches.filter(m => m.date && !hiddenServers.includes(m.server))
-                scheduledMatches.sort((a, b) => `${a.date}T${a.time || "00:00"}`.localeCompare(`${b.date}T${b.time || "00:00"}`))
+                // Načasované zápasy + zápasy bez termínu, které mají příznak Dohrávky
+                let timelineMatches = matches.filter(m => (m.date || m.mustPlay) && !hiddenServers.includes(m.server))
 
-                if (scheduledMatches.length === 0) {
+                timelineMatches.sort((a, b) => {
+                    // Dohrávky bez termínu dáme úplně nahoru
+                    if (!a.date && b.date) return -1
+                    if (a.date && !b.date) return 1
+                    if (!a.date && !b.date) return 0
+                    return `${a.date}T${a.time || "00:00"}`.localeCompare(`${b.date}T${b.time || "00:00"}`)
+                })
+
+                if (timelineMatches.length === 0) {
                     container.innerHTML = `<div class="text-center py-12 text-gray-500 bg-gray-900 rounded-xl border border-gray-800">${translations[currentLang].emptyMatchesLabel}</div>`
                     return
                 }
@@ -1179,11 +1187,11 @@
                 const timelineBg = document.createElement("div")
                 timelineBg.className = "space-y-3"
 
-                scheduledMatches.forEach(m => {
+                timelineMatches.forEach(m => {
                     const card = document.createElement("div")
 
                     let formattedDate = m.date
-                    if (m.date.includes("-")) {
+                    if (m.date && m.date.includes("-")) {
                         const parts = m.date.split("-")
                         formattedDate = `${parseInt(parts[2])}.${parseInt(parts[1])}.`
                     }
@@ -1202,16 +1210,16 @@
                     card.className = "bg-gray-900 p-4 rounded-xl border border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-gray-700 transition"
                     card.innerHTML = `
                         <div class="flex items-center gap-4 flex-1">
-                            <div class="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[70px]">
+                            <div class="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px]">
                                 <p class="text-[10px] text-gray-400 uppercase font-bold">Termín</p>
-                                <p class="text-sm font-black text-white">${formattedDate}</p>
+                                <p class="text-sm font-black text-white">${formattedDate || 'Bez termínu'}</p>
                                 <p class="text-xs text-orange-400 font-semibold">${m.time || '--:--'}</p>
                             </div>
                             <div class="truncate flex-1">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-lg font-bold ${nameColorClass}">${m.opponent}</span>
                                     <span class="text-xs font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">${m.format}</span>
-                                    ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1 animate-pulse">🔥 Nutno dohrát</span>` : ''}
+                                    ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1 animate-pulse">🔥 Dohrávka</span>` : ''}
                                     ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold">${m.week}</span>` : ''}
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1 truncate">🖥️ ${m.server} • 🏆 ${m.comp}</p>
@@ -1219,13 +1227,13 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-3 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800">
-                            <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Označit k dohrání po dovolené">🔥</button>
-                            <button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Přidat do Google Kalendáře">📅 Google</button>
-                            <label class="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-955 p-2 rounded border border-gray-800 cursor-pointer select-none shrink-0">
+                            <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Označit jako dohrávku">🔥</button>
+                            ${m.date ? `<button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Přidat do Google Kalendáře">📅 Google</button>` : ''}
+                            ${m.date ? `<label class="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-955 p-2 rounded border border-gray-800 cursor-pointer select-none shrink-0">
                                 <input type="checkbox" ${m.confirmed ? 'checked' : ''} onchange="toggleConfirmed(${m.id})" class="accent-orange-500">
                                 ${translations[currentLang].lblConfirmedCheck}
-                            </label>
-                            <button onclick="removeDateTime(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipCancelDate}">❌</button>
+                            </label>` : ''}
+                            ${m.date ? `<button onclick="removeDateTime(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipCancelDate}">❌</button>` : ''}
                             <button onclick="deleteMatch(${m.id})" class="bg-red-600/10 hover:bg-red-600/20 text-red-400 p-1.5 px-3 rounded-lg text-xs font-semibold transition">
                                 ${translations[currentLang].btnDelete}
                             </button>
@@ -1361,14 +1369,14 @@
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <span class="text-lg font-bold ${nameColorClass}">${m.opponent}</span>
                                                 <span class="text-xs font-medium text-gray-400 bg-gray-900 px-2 py-0.5 rounded">${m.format}</span>
-                                                ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1 animate-pulse">🔥 Nutno dohrát</span>` : ''}
+                                                ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1 animate-pulse">🔥 Dohrávka</span>` : ''}
                                                 <input type="text" value="${m.week || ''}" onchange="updateWeek(${m.id}, this.value)" placeholder="${translations[currentLang].placeholderWeek}" class="bg-blue-950/40 text-blue-400 text-xs px-2 py-0.5 rounded border border-blue-900/30 font-semibold focus:outline-none focus:border-orange-500 w-24 text-center">
                                             </div>
                                             <input type="text" value="${m.notes || ''}" onchange="updateNote(${m.id}, this.value)" placeholder="${translations[currentLang].placeholderNote}" class="mt-2.5 w-full max-w-sm bg-gray-950 border border-gray-855 text-xs px-2 py-1 rounded text-gray-300 focus:outline-none focus:border-orange-500">
                                         </div>
                                         
                                         <div class="flex items-center gap-2 flex-wrap">
-                                            <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Označit k dohrání po dovolené">🔥</button>
+                                            <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Označit jako dohrávku">🔥</button>
                                             <input type="date" id="match-date-${m.id}" value="${m.date}" onchange="updateDateTime(${m.id}, this.value, '${m.time}')" class="bg-gray-900 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500 w-36 text-center">
                                             <input type="time" value="${m.time}" onchange="updateDateTime(${m.id}, '${m.date}', this.value)" class="bg-gray-900 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500">
                                             ${m.date ? `
