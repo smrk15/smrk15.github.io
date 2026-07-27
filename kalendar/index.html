@@ -109,6 +109,7 @@
 <script>
   // Sem vlož svoje OAuth Client ID z Google Cloud Console
   const CLIENT_ID = '696841805651-h041gmc3pfou9j0no590goqvifrumseo.apps.googleusercontent.com';
+  const CALENDAR_ID = '9b4ncan9fe4hgc6o1fd1tevoe8@group.calendar.google.com';
   const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
   let tokenClient;
@@ -286,7 +287,7 @@
       };
 
       try {
-        const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${accessToken}`,
