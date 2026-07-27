@@ -1,1 +1,311 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plánovač služeb do Google Kalendáře</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --bg-color: #e8ecef;
+      --card-bg: #f8f9fa;
+      --accent-yellow: #fbc02d;
+      --text-dark: #212529;
+      --border-color: #dee2e6;
+    }
 
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-dark); margin: 0; padding: 20px; }
+
+    .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+    h1 { font-size: 1.4rem; margin: 0; }
+
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: var(--accent-yellow); color: #000; }
+    .btn-primary:hover { filter: brightness(0.95); }
+    .btn-auth { background: #4285f4; color: #fff; }
+    .btn-danger { background: #e53935; color: #fff; }
+
+    /* Tool selection bar */
+    .toolbar-section { background: var(--card-bg); padding: 18px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+    .toolbar-title { font-size: 0.85rem; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; }
+    .chips-list { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    .chip { padding: 8px 16px; background: #fff; border: 2px solid var(--border-color); border-radius: 20px; cursor: pointer; font-weight: bold; user-select: none; transition: all 0.15s; }
+    .chip:hover { border-color: #bbb; }
+    .chip.active { background: var(--accent-yellow); border-color: #d7a100; color: #000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .chip.eraser-chip.active { background: #ffebee; border-color: #e53935; color: #c62828; }
+
+    .modifiers { display: flex; align-items: center; gap: 15px; margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-color); }
+    .modifiers label { font-weight: 600; cursor: pointer; }
+
+    /* Calendar controls */
+    .cal-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .cal-title { font-size: 1.2rem; font-weight: bold; }
+
+    /* Calendar Grid */
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border-color); border-radius: 8px; overflow: hidden; }
+    .day-header { background: #e9ecef; padding: 10px; text-align: center; font-weight: bold; font-size: 0.85rem; color: #495057; }
+    .day-cell { background: #fff; min-height: 95px; padding: 6px; cursor: pointer; position: relative; transition: background 0.15s; }
+    .day-cell:hover { background: #f8f9fa; }
+    .day-cell.other-month { background: #f1f3f5; color: #adb5bd; cursor: default; }
+    .day-number { font-weight: bold; font-size: 1.05rem; margin-bottom: 6px; }
+
+    /* Yellow Event Badge */
+    .event-badge { background: var(--accent-yellow); color: #000; font-weight: bold; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; margin-top: 4px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    #status { margin-top: 15px; font-weight: bold; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Plánovač služeb do Google Kalendáře</h1>
+    <button id="authBtn" class="btn btn-auth" onclick="handleAuthClick()">Přihlásit přes Google</button>
+  </header>
+
+  <!-- Toolbar Section -->
+  <div class="toolbar-section">
+    <div class="toolbar-title">1. Vyber nástroj (kód služby) a klikáním nanášej do kalendáře:</div>
+    
+    <div class="chips-list">
+      <div class="chip active" onclick="selectTool('B', this)">B</div>
+      <div class="chip" onclick="selectTool('N', this)">N</div>
+      <div class="chip" onclick="selectTool('HG', this)">HG</div>
+      <div class="chip" onclick="selectTool('HO', this)">HO</div>
+      <div class="chip" onclick="selectTool('S', this)">S</div>
+      <div class="chip" onclick="selectTool('LH', this)">LH</div>
+      <div class="chip eraser-chip" onclick="selectTool('ERASER', this)">🧹 Vymazat den</div>
+    </div>
+
+    <div class="modifiers">
+      <label><input type="checkbox" id="ab20Checkbox"> Přidat do kódů "+ ab 20"</label>
+    </div>
+  </div>
+
+  <!-- Calendar Controls -->
+  <div class="cal-controls">
+    <button class="btn" onclick="changeMonth(-1)">&lt; Předchozí</button>
+    <div class="cal-title" id="monthYearTitle">---</div>
+    <button class="btn" onclick="changeMonth(1)">Následující &gt;</button>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="calendar-grid" id="calendarGrid"></div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn btn-danger" onclick="clearSelections()">Vyčistit celý měsíc</button>
+    <button class="btn btn-primary" id="saveBtn" onclick="saveToGoogleCalendar()" disabled>Uložit měsíc do Google Kalendáře</button>
+  </div>
+
+  <div id="status"></div>
+</div>
+
+<script>
+  // Sem vlož svoje OAuth Client ID z Google Cloud Console
+  const CLIENT_ID = 'TVOJE_CLIENT_ID.apps.googleusercontent.com';
+  const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+
+  let tokenClient;
+  let accessToken = null;
+
+  let currentDate = new Date();
+  let activeTool = 'B';
+  let assignedEvents = {}; // HashMap dat: { "2026-07-25": "HO + B" }
+
+  function initGsi() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: (tokenResponse) => {
+        if (tokenResponse.access_token) {
+          accessToken = tokenResponse.access_token;
+          document.getElementById('authBtn').innerText = 'Přihlášeno';
+          document.getElementById('authBtn').style.background = '#2e7d32';
+          document.getElementById('saveBtn').disabled = false;
+        }
+      },
+    });
+  }
+
+  window.onload = () => {
+    initGsi();
+    renderCalendar();
+  };
+
+  function handleAuthClick() {
+    if (CLIENT_ID.includes('TVOJE_CLIENT_ID')) {
+      alert('Nezapomeň v kódovém souboru doplnit své Google Client ID!');
+      return;
+    }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  function selectTool(toolCode, el) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    activeTool = toolCode;
+  }
+
+  function handleDayClick(dateStr) {
+    if (activeTool === 'ERASER') {
+      delete assignedEvents[dateStr];
+      renderCalendar();
+      return;
+    }
+
+    let currentVal = assignedEvents[dateStr] || '';
+    const hasAb20 = document.getElementById('ab20Checkbox').checked;
+
+    // Odstraníme případný "ab 20" suffix pro čistou manipulaci s kódovými zkratkami
+    let baseVal = currentVal.replace(' ab 20', '').trim();
+    let codes = baseVal ? baseVal.split(' + ') : [];
+
+    if (codes.includes(activeTool)) {
+      // Pokud už kód v daném dni je, kliknutím ho odebereme
+      codes = codes.filter(c => c !== activeTool);
+    } else {
+      // Jinak ho přidáme
+      codes.push(activeTool);
+    }
+
+    if (codes.length === 0) {
+      delete assignedEvents[dateStr];
+    } else {
+      let newVal = codes.join(' + ');
+      if (hasAb20) {
+        newVal += ' ab 20';
+      }
+      assignedEvents[dateStr] = newVal;
+    }
+
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
+    document.getElementById('monthYearTitle').innerText = `${monthNames[month]} ${year}`;
+
+    const daysOfWeek = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE'];
+    daysOfWeek.forEach(day => {
+      const header = document.createElement('div');
+      header.className = 'day-header';
+      header.innerText = day;
+      grid.appendChild(header);
+    });
+
+    const firstDayOfMonth = new Date(year, month, 1);
+    let startingDay = firstDayOfMonth.getDay() - 1; 
+    if (startingDay === -1) startingDay = 6; 
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Dny předchozího měsíce
+    for (let i = 0; i < startingDay; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'day-cell other-month';
+      grid.appendChild(emptyCell);
+    }
+
+    // Dny aktuálního měsíce
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+      const numDiv = document.createElement('div');
+      numDiv.className = 'day-number';
+      numDiv.innerText = day;
+      cell.appendChild(numDiv);
+
+      if (assignedEvents[dateStr]) {
+        const badge = document.createElement('div');
+        badge.className = 'event-badge';
+        badge.innerText = assignedEvents[dateStr];
+        cell.appendChild(badge);
+      }
+
+      cell.onclick = () => handleDayClick(dateStr);
+      grid.appendChild(cell);
+    }
+  }
+
+  function changeMonth(delta) {
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    renderCalendar();
+  }
+
+  function clearSelections() {
+    assignedEvents = {};
+    renderCalendar();
+  }
+
+  async function saveToGoogleCalendar() {
+    if (!accessToken) {
+      alert('Nejprve se přihlaste přes Google.');
+      return;
+    }
+
+    const dates = Object.keys(assignedEvents);
+    if (dates.length === 0) {
+      alert('Vyberte alespoň jeden den v kalendáři.');
+      return;
+    }
+
+    const statusEl = document.getElementById('status');
+    statusEl.style.color = '#333';
+    statusEl.innerText = 'Ukládám celodenní události do Google Kalendáře...';
+
+    let successCount = 0;
+
+    for (const dateStr of dates) {
+      const title = assignedEvents[dateStr];
+
+      const startDate = new Date(dateStr);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+      const endDateStr = endDate.toISOString().split('T')[0];
+
+      const eventData = {
+        summary: title,
+        colorId: "5", // Kód pro žlutou barvu (Banana) v Google Calendar API
+        start: { date: dateStr },
+        end: { date: endDateStr }
+      };
+
+      try {
+        const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(eventData)
+        });
+
+        if (res.ok) successCount++;
+      } catch (err) {
+        console.error('Chyba při ukládání:', err);
+      }
+    }
+
+    statusEl.style.color = '#2e7d32';
+    statusEl.innerText = `Úspěšně vloženo ${successCount} z ${dates.length} událostí do Google Kalendáře!`;
+    assignedEvents = {};
+    renderCalendar();
+  }
+</script>
+</body>
+</html>
