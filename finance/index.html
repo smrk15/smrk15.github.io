@@ -148,9 +148,16 @@
     </div>
 
     <script>
-        const defaultMuster = [];
+        const defaultMuster = [
+            { id: 1, typ: "prijem", nazev: "Lohn", castka: 4000, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 2, typ: "prijem", nazev: "KG", castka: 518, den: 19, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 3, typ: "prijem", nazev: "Miete", castka: 750, den: 4, frekvence: "kazdy_mesic", mesice: [], split: true, part1Amount: 600, part1Day: 4, part2Amount: 150, part2Day: 3 },
+            { id: 4, typ: "vydaj", nazev: "Nákup", castka: 500, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 5, typ: "vydaj", nazev: "Doprava", castka: 200, den: 1, frekvence: "kazdy_mesic", mesice: [] }
+        ];
+
         const defaultIncomeOrder = [];
-        const defaultAccountBalances = { "DE": 0, "Revolut": 0, "SK": 0, "CC": 0 };
+        const defaultAccountBalances = { "DE": 596.35, "Revolut": 10587.99, "SK": 105.75, "CC": 0 };
         const defaultModifiedData = { deleted: {}, added: {}, amounts: {}, names: {} };
 
         const monthStyles = [
@@ -195,25 +202,24 @@
             return count;
         }
 
-        let muster = JSON.parse(localStorage.getItem("finMusterV13")) || defaultMuster;
-        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV13")) || defaultAccountBalances;
-        // Zabezpečení fixních účtů, kdyby chyběly v uložených datech
+        let muster = JSON.parse(localStorage.getItem("finMusterV14")) || defaultMuster;
+        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV14")) || defaultAccountBalances;
         ["DE", "Revolut", "SK", "CC"].forEach(acc => { if (accountBalances[acc] === undefined) accountBalances[acc] = 0; });
 
-        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV13")) || defaultModifiedData;
-        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV13")) || ["2026-07"];
-        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV13")) || defaultIncomeOrder;
-        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV13")) || {};
-        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV13")) || {};
+        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV14")) || defaultModifiedData;
+        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV14")) || ["2026-07"];
+        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV14")) || defaultIncomeOrder;
+        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV14")) || {};
+        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV14")) || {};
         
-        let activeMonth = localStorage.getItem("finActiveMonthV13") || "2026-07";
-        let currentView = localStorage.getItem("finCurrentViewV13") || "home";
+        let activeMonth = localStorage.getItem("finActiveMonthV14") || "2026-07";
+        let currentView = localStorage.getItem("finCurrentViewV14") || "home";
         let checkedSimItems = {};
         let openMusterSettings = {};
         let comparedMusterMonths = [];
         let isMusterOverviewOpen = false;
-        let musterOverviewTab = 'vydaje'; // 'vydaje', 'prijmy', 'bilance'
-        let musterOverviewMode = 'vse'; // 'vse', 'opakujici'
+        let musterOverviewTab = 'vydaje';
+        let musterOverviewMode = 'vse';
         let isEditMode = false;
         let historyStack = [];
 
@@ -264,15 +270,15 @@
 
         function save(writeHistory = true) {
             if (writeHistory) pushToHistory();
-            localStorage.setItem("finMusterV13", JSON.stringify(muster));
-            localStorage.setItem("finBalancesV13", JSON.stringify(accountBalances));
-            localStorage.setItem("finModifiedV13", JSON.stringify(modifiedData));
-            localStorage.setItem("finMonthsV13", JSON.stringify(generatedMonths));
-            localStorage.setItem("finIncomeOrderV13", JSON.stringify(incomeCustomOrder));
-            localStorage.setItem("finExpenseOrderV13", JSON.stringify(expenseCustomOrder));
-            localStorage.setItem("finDeletedMonthsV13", JSON.stringify(deletedMonthsHistory));
-            localStorage.setItem("finActiveMonthV13", activeMonth);
-            localStorage.setItem("finCurrentViewV13", currentView);
+            localStorage.setItem("finMusterV14", JSON.stringify(muster));
+            localStorage.setItem("finBalancesV14", JSON.stringify(accountBalances));
+            localStorage.setItem("finModifiedV14", JSON.stringify(modifiedData));
+            localStorage.setItem("finMonthsV14", JSON.stringify(generatedMonths));
+            localStorage.setItem("finIncomeOrderV14", JSON.stringify(incomeCustomOrder));
+            localStorage.setItem("finExpenseOrderV14", JSON.stringify(expenseCustomOrder));
+            localStorage.setItem("finDeletedMonthsV14", JSON.stringify(deletedMonthsHistory));
+            localStorage.setItem("finActiveMonthV14", activeMonth);
+            localStorage.setItem("finCurrentViewV14", currentView);
             render();
         }
 
@@ -491,12 +497,10 @@
             let expenses = 0;
             let incomes = 0;
 
-            // 1. Přičtení pevných zůstatků účtů (pokud jsme v režimu Včetně stavů)
             if (musterOverviewMode === 'vse') {
                 Object.values(accountBalances).forEach(val => incomes += (val || 0));
             }
 
-            // 2. Přičtení opakujících se šablon
             muster.forEach(template => {
                 if (template.hasExpiry && template.validUntilYear && template.validUntilMonth) {
                     if (targetYear > template.validUntilYear || (targetYear === template.validUntilYear && targetMonthNum > template.validUntilMonth)) return;
@@ -795,7 +799,6 @@
                 });
             }
 
-            // Pevné účty (DE, Revolut, SK, CC)
             Object.keys(accountBalances).forEach(key => {
                 const uniqueId = `staticky-${key}`;
                 const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 1, isStaticAccount: true, accountKey: key };
@@ -1135,7 +1138,6 @@
                 if (balance >= 0) balEl.className = "text-2xl font-black text-emerald-400 mt-1";
                 else balEl.className = "text-2xl font-black text-rose-400 mt-1";
 
-                // VÝPOČET ROČNÍCH HODNOT Z MŮSTRU
                 const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
                 const yearlyData = [];
                 let maxVal = 1;
@@ -1153,7 +1155,6 @@
                 let html = `
                     <div class="space-y-6 max-w-4xl mx-auto">
                         
-                        <!-- ROZBALOVACÍ ROČNÍ PŘEHLED -->
                         <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-lg">
                             <button onclick="toggleMusterOverview()" class="w-full p-4 flex justify-between items-center bg-gray-900 hover:bg-gray-850 transition cursor-pointer">
                                 <div class="flex items-center gap-2">
@@ -1165,7 +1166,6 @@
 
                             ${isMusterOverviewOpen ? `
                                 <div class="p-6 border-t border-gray-800 space-y-6 bg-gray-950/30">
-                                    <!-- PŘEPÍNAČE REŽIMU A ZÁLOŽKY -->
                                     <div class="flex flex-wrap justify-between items-center gap-4 border-b border-gray-800 pb-3">
                                         <div class="flex gap-2">
                                             <button onclick="setMusterOverviewTab('vydaje')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'vydaje' ? 'bg-rose-600/20 text-rose-400 border border-rose-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Výdaje (-)</button>
@@ -1219,7 +1219,6 @@
 
                     html += `</div>`;
 
-                    // POROVNÁVACÍ BOX
                     if (comparedMusterMonths.length > 0) {
                         html += `
                             <div class="bg-gray-900 border border-orange-900/40 rounded-xl p-4 mt-4">
