@@ -195,19 +195,21 @@
             return count;
         }
 
-        let muster = JSON.parse(localStorage.getItem("finMusterV11")) || defaultMuster;
-        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV11")) || defaultAccountBalances;
-        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV11")) || defaultModifiedData;
-        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV11")) || ["2026-07"];
-        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV11")) || defaultIncomeOrder;
-        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV11")) || {};
-        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV11")) || {};
+        let muster = JSON.parse(localStorage.getItem("finMusterV12")) || defaultMuster;
+        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV12")) || defaultAccountBalances;
+        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV12")) || defaultModifiedData;
+        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV12")) || ["2026-07"];
+        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV12")) || defaultIncomeOrder;
+        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV12")) || {};
+        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV12")) || {};
         
-        let activeMonth = localStorage.getItem("finActiveMonthV11") || "2026-07";
-        let currentView = localStorage.getItem("finCurrentViewV11") || "home";
+        let activeMonth = localStorage.getItem("finActiveMonthV12") || "2026-07";
+        let currentView = localStorage.getItem("finCurrentViewV12") || "home";
         let checkedSimItems = {};
         let openMusterSettings = {};
         let comparedMusterMonths = [];
+        let isMusterOverviewOpen = false;
+        let musterOverviewTab = 'vydaje'; // 'vydaje', 'prijmy', 'bilance'
         let isEditMode = false;
         let historyStack = [];
 
@@ -258,15 +260,15 @@
 
         function save(writeHistory = true) {
             if (writeHistory) pushToHistory();
-            localStorage.setItem("finMusterV11", JSON.stringify(muster));
-            localStorage.setItem("finBalancesV11", JSON.stringify(accountBalances));
-            localStorage.setItem("finModifiedV11", JSON.stringify(modifiedData));
-            localStorage.setItem("finMonthsV11", JSON.stringify(generatedMonths));
-            localStorage.setItem("finIncomeOrderV11", JSON.stringify(incomeCustomOrder));
-            localStorage.setItem("finExpenseOrderV11", JSON.stringify(expenseCustomOrder));
-            localStorage.setItem("finDeletedMonthsV11", JSON.stringify(deletedMonthsHistory));
-            localStorage.setItem("finActiveMonthV11", activeMonth);
-            localStorage.setItem("finCurrentViewV11", currentView);
+            localStorage.setItem("finMusterV12", JSON.stringify(muster));
+            localStorage.setItem("finBalancesV12", JSON.stringify(accountBalances));
+            localStorage.setItem("finModifiedV12", JSON.stringify(modifiedData));
+            localStorage.setItem("finMonthsV12", JSON.stringify(generatedMonths));
+            localStorage.setItem("finIncomeOrderV12", JSON.stringify(incomeCustomOrder));
+            localStorage.setItem("finExpenseOrderV12", JSON.stringify(expenseCustomOrder));
+            localStorage.setItem("finDeletedMonthsV12", JSON.stringify(deletedMonthsHistory));
+            localStorage.setItem("finActiveMonthV12", activeMonth);
+            localStorage.setItem("finCurrentViewV12", currentView);
             render();
         }
 
@@ -467,6 +469,8 @@
 
         function toggleSimCheck(uniqueId) { checkedSimItems[uniqueId] = !checkedSimItems[uniqueId]; render(); }
         function toggleMusterSettings(id) { openMusterSettings[id] = !openMusterSettings[id]; render(); }
+        function toggleMusterOverview() { isMusterOverviewOpen = !isMusterOverviewOpen; render(); }
+        function setMusterOverviewTab(tab) { musterOverviewTab = tab; render(); }
 
         function toggleMusterCompareMonth(monthNum) {
             if (comparedMusterMonths.includes(monthNum)) {
@@ -478,9 +482,11 @@
             render();
         }
 
-        function calculatePureMonthExpenses(targetMonthNum, targetYear = 2026) {
-            let total = 0;
-            muster.filter(t => t.typ === "vydaj").forEach(template => {
+        function calculatePureMonthValues(targetMonthNum, targetYear = 2026) {
+            let expenses = 0;
+            let incomes = 0;
+
+            muster.forEach(template => {
                 if (template.hasExpiry && template.validUntilYear && template.validUntilMonth) {
                     if (targetYear > template.validUntilYear || (targetYear === template.validUntilYear && targetMonthNum > template.validUntilMonth)) return;
                 }
@@ -490,20 +496,25 @@
                 else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(targetMonthNum)) belongsToMonth = true;
 
                 if (belongsToMonth) {
+                    let amount = 0;
                     if (template.split) {
-                        total += (template.part1Amount || 0) + (template.part2Amount || 0);
+                        amount = (template.part1Amount || 0) + (template.part2Amount || 0);
                     } else {
                         if (template.monthAmounts && template.monthAmounts[targetMonthNum] !== undefined) {
-                            total += template.monthAmounts[targetMonthNum];
+                            amount = template.monthAmounts[targetMonthNum];
                         } else if (template.tydenni) {
-                            total += template.castka * countDayOfWeekInMonth(targetYear, targetMonthNum, template.denVTydnu || 1);
+                            amount = template.castka * countDayOfWeekInMonth(targetYear, targetMonthNum, template.denVTydnu || 1);
                         } else {
-                            total += template.castka;
+                            amount = template.castka;
                         }
                     }
+
+                    if (template.typ === "vydaj") expenses += amount;
+                    else if (template.typ === "prijem") incomes += amount;
                 }
             });
-            return total;
+
+            return { expenses, incomes, balance: incomes - expenses };
         }
 
         function saveItem() {
@@ -1112,85 +1123,128 @@
                 if (balance >= 0) balEl.className = "text-2xl font-black text-emerald-400 mt-1";
                 else balEl.className = "text-2xl font-black text-rose-400 mt-1";
 
-                // VÝPOČET ROČNÍCH NÁKLADŮ ČISTĚ Z MUSTRU
+                // VÝPOČET ROČNÍCH HODNOT Z MŮSTRU
                 const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
                 const yearlyData = [];
-                let maxMonthExpense = 1;
+                let maxVal = 1;
 
                 for (let m = 1; m <= 12; m++) {
-                    const exp = calculatePureMonthExpenses(m);
-                    yearlyData.push({ monthNum: m, name: monthNames[m-1], expense: exp });
-                    if (exp > maxMonthExpense) maxMonthExpense = exp;
+                    const vals = calculatePureMonthValues(m);
+                    let valToTrack = vals.expenses;
+                    if (musterOverviewTab === 'prijmy') valToTrack = vals.incomes;
+                    if (musterOverviewTab === 'bilance') valToTrack = Math.abs(vals.balance);
+
+                    yearlyData.push({ monthNum: m, name: monthNames[m-1], ...vals });
+                    if (valToTrack > maxVal) maxVal = valToTrack;
                 }
 
                 let html = `
                     <div class="space-y-6 max-w-4xl mx-auto">
                         
-                        <!-- PŘEHLEDNÝ ROČNÍ GRAF / NÁKLADY MĚSÍC PO MĚSÍCI -->
-                        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-lg">
-                            <h2 class="text-base font-bold text-orange-400 mb-1">Roční přehled čistých nákladů (Muster)</h2>
-                            <p class="text-xs text-gray-500 mb-6">Porovnání plných měsíčních závazků bez vlivu ručních úprav v horizontu. Zaškrtni měsíce pro detailní porovnání.</p>
-                            
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+                        <!-- ROZBALOVACÍ ROČNÍ PŘEHLED -->
+                        <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-lg">
+                            <button onclick="toggleMusterOverview()" class="w-full p-4 flex justify-between items-center bg-gray-900 hover:bg-gray-850 transition cursor-pointer">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold text-orange-400">📊 Roční přehled čistých nákladů & bilance (Muster)</span>
+                                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">Bez ručních úprav</span>
+                                </div>
+                                <span class="text-gray-400 font-bold">${isMusterOverviewOpen ? '▲ Skrýt' : '▼ Zobrazit'}</span>
+                            </button>
+
+                            ${isMusterOverviewOpen ? `
+                                <div class="p-6 border-t border-gray-800 space-y-6 bg-gray-950/30">
+                                    <!-- ZÁLOŽKY PŘEHLEDU -->
+                                    <div class="flex gap-2 border-b border-gray-800 pb-3">
+                                        <button onclick="setMusterOverviewTab('vydaje')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'vydaje' ? 'bg-rose-600/20 text-rose-400 border border-rose-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Výdaje (-)</button>
+                                        <button onclick="setMusterOverviewTab('prijmy')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'prijmy' ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Příjmy (+)</button>
+                                        <button onclick="setMusterOverviewTab('bilance')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'bilance' ? 'bg-orange-600/20 text-orange-400 border border-orange-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Bilance (+ / -)</button>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            ` : ''}
+
                 `;
 
-                yearlyData.forEach(item => {
-                    const pct = Math.round((item.expense / maxMonthExpense) * 100);
-                    const isChecked = comparedMusterMonths.includes(item.monthNum);
+                if (isMusterOverviewOpen) {
+                    yearlyData.forEach(item => {
+                        let activeVal = item.expenses;
+                        let colorClass = "text-rose-400";
+                        let barColor = "bg-rose-500";
 
-                    html += `
-                        <div onclick="toggleMusterCompareMonth(${item.monthNum})" class="bg-gray-950 border ${isChecked ? 'border-orange-500 bg-orange-950/20' : 'border-gray-800 hover:border-gray-700'} rounded-xl p-3 cursor-pointer transition flex flex-col justify-between">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-gray-300">${item.name}</span>
-                                <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleMusterCompareMonth(${item.monthNum})" class="accent-orange-500 h-3.5 w-3.5 cursor-pointer">
-                            </div>
-                            <div class="text-sm font-black text-rose-400 mb-3">${formatMoney(item.expense)}</div>
-                            <div class="w-full bg-gray-850 h-1.5 rounded-full overflow-hidden">
-                                <div class="bg-rose-500 h-full rounded-full" style="width: ${pct}%"></div>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                html += `</div>`;
-
-                // POROVNÁVACÍ BOX VYBRANÝCH MĚSÍCŮ
-                if (comparedMusterMonths.length > 0) {
-                    html += `
-                        <div class="bg-gray-950 border border-orange-900/40 rounded-xl p-4 mt-4">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-xs font-bold uppercase tracking-wider text-orange-400">⚖️ Porovnání vybraných měsíců</span>
-                                <button onclick="comparedMusterMonths = []; render();" class="text-xs text-gray-500 hover:text-gray-300">Zrušit výběr</button>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-${Math.min(comparedMusterMonths.length, 3)} gap-4">
-                    `;
-
-                    const sortedCompare = [...comparedMusterMonths].sort((a,b) => a - b);
-                    let baseExp = null;
-
-                    sortedCompare.forEach((mNum, idx) => {
-                        const itemData = yearlyData.find(d => d.monthNum === mNum);
-                        let diffText = "";
-                        if (idx === 0) {
-                            baseExp = itemData.expense;
-                        } else {
-                            const diff = itemData.expense - baseExp;
-                            const diffPct = baseExp > 0 ? Math.round((diff / baseExp) * 100) : 0;
-                            const sign = diff > 0 ? "+" : "";
-                            const col = diff > 0 ? "text-rose-400" : "text-emerald-400";
-                            diffText = `<div class="text-xs font-bold ${col} mt-1">Oproti 1. vybranému: ${sign}${formatMoney(diff)} (${sign}${diffPct}%)</div>`;
+                        if (musterOverviewTab === 'prijmy') {
+                            activeVal = item.incomes;
+                            colorClass = "text-emerald-400";
+                            barColor = "bg-emerald-500";
+                        } else if (musterOverviewTab === 'bilance') {
+                            activeVal = item.balance;
+                            colorClass = activeVal >= 0 ? "text-emerald-400" : "text-rose-400";
+                            barColor = activeVal >= 0 ? "bg-emerald-500" : "bg-rose-500";
                         }
 
+                        const pct = Math.round((Math.abs(activeVal) / maxVal) * 100) || 0;
+                        const isChecked = comparedMusterMonths.includes(item.monthNum);
+
                         html += `
-                            <div class="bg-gray-900 border border-gray-800 p-3 rounded-lg">
-                                <div class="text-xs font-bold text-gray-400">${itemData.name}</div>
-                                <div class="text-lg font-black text-rose-400 mt-0.5">${formatMoney(itemData.expense)}</div>
-                                ${diffText}
+                            <div onclick="toggleMusterCompareMonth(${item.monthNum})" class="bg-gray-950 border ${isChecked ? 'border-orange-500 bg-orange-950/20' : 'border-gray-800 hover:border-gray-700'} rounded-xl p-3 cursor-pointer transition flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-gray-300">${item.name}</span>
+                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleMusterCompareMonth(${item.monthNum})" class="accent-orange-500 h-3.5 w-3.5 cursor-pointer">
+                                </div>
+                                <div class="text-sm font-black ${colorClass} mb-3">${formatMoney(activeVal)}</div>
+                                <div class="w-full bg-gray-850 h-1.5 rounded-full overflow-hidden">
+                                    <div class="${barColor} h-full rounded-full" style="width: ${pct}%"></div>
+                                </div>
                             </div>
                         `;
                     });
 
-                    html += `</div></div>`;
+                    html += `</div>`;
+
+                    // POROVNÁVACÍ BOX
+                    if (comparedMusterMonths.length > 0) {
+                        html += `
+                            <div class="bg-gray-900 border border-orange-900/40 rounded-xl p-4 mt-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-orange-400">⚖️ Detailní porovnání vybraných měsíců</span>
+                                    <button onclick="comparedMusterMonths = []; render();" class="text-xs text-gray-500 hover:text-gray-300">Zrušit výběr</button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-${Math.min(comparedMusterMonths.length, 3)} gap-4">
+                        `;
+
+                        const sortedCompare = [...comparedMusterMonths].sort((a,b) => a - b);
+                        let baseVal = null;
+
+                        sortedCompare.forEach((mNum, idx) => {
+                            const itemData = yearlyData.find(d => d.monthNum === mNum);
+                            let targetVal = musterOverviewTab === 'prijmy' ? itemData.incomes : (musterOverviewTab === 'bilance' ? itemData.balance : itemData.expenses);
+                            let diffText = "";
+
+                            if (idx === 0) {
+                                baseVal = targetVal;
+                            } else {
+                                const diff = targetVal - baseVal;
+                                const diffPct = baseVal !== 0 ? Math.round((diff / Math.abs(baseVal)) * 100) : 0;
+                                const sign = diff > 0 ? "+" : "";
+                                const col = diff > 0 ? (musterOverviewTab === 'prijmy' ? "text-emerald-400" : "text-rose-400") : (musterOverviewTab === 'prijmy' ? "text-rose-400" : "text-emerald-400");
+                                diffText = `<div class="text-xs font-bold ${col} mt-1">Oproti 1. vybranému: ${sign}${formatMoney(diff)} (${sign}${diffPct}%)</div>`;
+                            }
+
+                            const valCol = musterOverviewTab === 'prijmy' ? 'text-emerald-400' : (musterOverviewTab === 'bilance' ? (targetVal >= 0 ? 'text-emerald-400' : 'text-rose-400') : 'text-rose-400');
+
+                            html += `
+                                <div class="bg-gray-950 border border-gray-800 p-3 rounded-lg">
+                                    <div class="text-xs font-bold text-gray-400">${itemData.name}</div>
+                                    <div class="text-lg font-black ${valCol} mt-0.5">${formatMoney(targetVal)}</div>
+                                    ${musterOverviewTab === 'bilance' && targetVal < 0 ? '<div class="text-[10px] text-rose-500 font-bold mt-0.5">⚠️ Příjmy nestačí na výdaje!</div>' : ''}
+                                    ${diffText}
+                                </div>
+                            `;
+                        });
+
+                        html += `</div></div>`;
+                    }
+
+                    html += `</div>`;
                 }
 
                 html += `</div>`;
