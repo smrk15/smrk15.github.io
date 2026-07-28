@@ -194,7 +194,7 @@
         let muster = JSON.parse(localStorage.getItem("finMusterV16")) || defaultMuster;
         let accountBalances = JSON.parse(localStorage.getItem("finBalancesV16")) || defaultAccountBalances;
         ["DE", "Revolut", "SK", "CC"].forEach(acc => { if (accountBalances[acc] === undefined) accountBalances[acc] = 0; });
-        if (accountBalances["CC"] > 0) accountBalances["CC"] = 0;
+        if (accountBalances["CC"] > 0) accountBalances["CC"] = -accountBalances["CC"];
 
         let modifiedData = JSON.parse(localStorage.getItem("finModifiedV16")) || defaultModifiedData;
         let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV16")) || ["2026-07"];
@@ -470,7 +470,9 @@
         function updateAccountBalance(key, val) {
             let num = parseFloat(val) || 0;
             if (key === "CC") {
-                if (num > 0) num = 0;
+                // Pokud uživatel zadá kladné číslo (např. 125), automaticky z něj uděláme záporné,
+                // nebo pokud zadá záporné (např. -125), zůstane záporné. Nula je nula.
+                if (num > 0) num = -num;
             }
             accountBalances[key] = num;
             save();
@@ -878,7 +880,7 @@
                 }
             });
 
-            // Přidání statických stavů účtů (CC se zobrazuje v příjmech jako záporné číslo s červenou barvou)
+            // Přidání statických stavů účtů (CC se přičítá/odčítá podle záporné hodnoty)
             Object.keys(accountBalances).forEach(key => {
                 let val = accountBalances[key] || 0;
                 const uniqueId = `staticky-${key}`;
@@ -1102,6 +1104,8 @@
                         if (item.isStaticAccount) {
                             const isCC = item.accountKey === "CC";
                             const valColor = isCC ? "text-rose-400" : "text-emerald-400";
+                            // Pro CC zobrazíme absolutní hodnotu v inputu, aby uživatel viděl kladné číslo (např. 125) jako jinde, ale v datech je záporné
+                            const displayVal = isCC ? Math.abs(item.castka) : item.castka;
 
                             html += `
                                 <div class="p-3 rounded-lg border ${isCC ? 'border-rose-950/20 bg-rose-950/5' : 'border-emerald-950/20 bg-emerald-950/5'} flex justify-between items-center gap-3 hover:border-gray-800 transition ${isChecked ? 'opacity-40 line-through' : ''}">
@@ -1123,7 +1127,7 @@
                                             </button>
                                         ` : ''}
                                         <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
-                                            <input type="number" step="0.01" ${isCC ? 'max="0"' : ''} value="${formatValTwoDec(item.castka)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 ${valColor}">
+                                            <input type="number" step="0.01" value="${formatValTwoDec(displayVal)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 ${valColor}">
                                             <span class="text-xs text-gray-500 ml-1">€</span>
                                         </div>
                                     </div>
