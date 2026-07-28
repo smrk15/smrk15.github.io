@@ -108,8 +108,7 @@
                             <input type="number" id="fmtNumber" oninput="autoCalcDuration()" placeholder="Číslo (např. 8)" class="bg-gray-900 border border-gray-700 p-2.5 rounded-lg text-sm focus:outline-none focus:border-orange-500">
                             <input type="text" id="fmtGame" placeholder="Hra (501, Cricket...)" value="501" class="bg-gray-900 border border-gray-700 p-2.5 rounded-lg text-sm focus:outline-none focus:border-orange-500">
                             <select id="fmtOut" class="bg-gray-900 border border-gray-700 p-2.5 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                                <option value="">(žádné zakončení)</option>
-                                <option value="DO">DO (Double Out)</option>
+                                <option value="DO" selected>DO (Double Out)</option>
                                 <option value="SO">SO (Single Out)</option>
                                 <option value="MO">MO (Master Out)</option>
                                 <option value="DI DO">DI DO</option>
@@ -198,8 +197,8 @@
 
     <div id="serverManagerModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-lg w-full space-y-4">
-            <h3 class="text-xl font-bold text-orange-500" data-lang="modalManageServers">Spravovat servery</h3>
-            <p class="text-sm text-gray-400" data-lang="modalManageServersDesc">Zaškrtni servery, které chceš skrýt z hlavní plochy, nebo které chceš trvale odstranit.</p>
+            <h3 class="text-xl font-bold text-orange-500" data-lang="modalManageServers">Spravovat servery a pořadí</h3>
+            <p class="text-sm text-gray-400" data-lang="modalManageServersDesc">Použij šipky pro změnu pořadí serverů. Můžeš je také skrýt nebo trvale smazat.</p>
             <div class="space-y-3 max-h-80 overflow-y-auto" id="serverManagerList"></div>
             <div class="flex justify-end gap-2 pt-4 border-t border-gray-800">
                 <button onclick="closeServerManager()" class="bg-gray-800 hover:bg-gray-700 text-sm font-semibold px-4 py-2 rounded-lg" data-lang="btnSaveClose">Uložit a zavřít</button>
@@ -235,8 +234,8 @@
                 btnDeleteSelected: "Smazat vybrané",
                 btnSaveClose: "Uložit a zavřít",
                 modalClearLeagues: "Smazat ligy",
-                modalManageServers: "Spravovat servery",
-                modalManageServersDesc: "Zaškrtni servery, které chceš skrýt z hlavní plochy, nebo které chceš trvale odstranit.",
+                modalManageServers: "Spravovat servery a pořadí",
+                modalManageServersDesc: "Použij šipky pro změnu pořadí serverů. Můžeš je také skrýt nebo trvale smazat.",
                 serverLabelEmpty: "Tento server je prázdný. Přidej do něj ligu.",
                 emptyMatchesLabel: "Žádné domluvené ani označené zápasy k dohrávce.",
                 noServersLabel: "Žádné servery ani zápasy. Nahraj svá data přes TXT soubor vlevo dole nebo přidej první zápas kliknutím nahoře.",
@@ -281,8 +280,8 @@
                 btnDeleteSelected: "Ausgewählte Ligen löschen",
                 btnSaveClose: "Speichern & Schließen",
                 modalClearLeagues: "Ligen löschen",
-                modalManageServers: "Server verwalten",
-                modalManageServersDesc: "Wähle Server aus, die du ausblenden oder dauerhaft löschen möchtest.",
+                modalManageServers: "Server & Reihenfolge verwalten",
+                modalManageServersDesc: "Verwende die Pfeile, um die Reihenfolge der Server zu ändern.",
                 serverLabelEmpty: "Dieser Server ist leer. Füge eine Liga hinzu.",
                 emptyMatchesLabel: "Keine vereinbarten oder zum Nachholen markierten Spiele.",
                 noServersLabel: "Keine Server oder Spiele vorhanden. Lade deine Daten über die TXT-Datei unten links hoch.",
@@ -359,6 +358,7 @@
         let matches = JSON.parse(localStorage.getItem("dartMatchesV21")) || []
         let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV21")) || []
         let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV21")) || []
+        let serverOrder = JSON.parse(localStorage.getItem("dartServerOrderV21")) || []
         let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV21")) || {}
         let historyStack = []
         let currentView = "home"
@@ -475,7 +475,7 @@
                 const headerParts = headerLine.split("->").map(p => p.trim())
                 
                 const compFull = headerParts[0] || "Liga"
-                const format = headerParts[1] || "BO7 501 DO"
+                const format = headerParts[1] || "BO 8 501 DO"
                 let weekInfo = ""
                 let webUrl = ""
                 let discordUrl = ""
@@ -623,7 +623,8 @@
             const state = {
                 matches: JSON.parse(JSON.stringify(matches)),
                 emptyServers: JSON.parse(JSON.stringify(emptyServers)),
-                hiddenServers: JSON.parse(JSON.stringify(hiddenServers))
+                hiddenServers: JSON.parse(JSON.stringify(hiddenServers)),
+                serverOrder: JSON.parse(JSON.stringify(serverOrder))
             }
             historyStack.push(JSON.stringify(state))
             if (historyStack.length > 20) historyStack.shift()
@@ -636,9 +637,11 @@
             matches = previousState.matches
             emptyServers = previousState.emptyServers
             hiddenServers = previousState.hiddenServers
+            serverOrder = previousState.serverOrder || []
             localStorage.setItem("dartMatchesV21", JSON.stringify(matches))
             localStorage.setItem("dartEmptyServersV21", JSON.stringify(emptyServers))
             localStorage.setItem("dartHiddenServersV21", JSON.stringify(hiddenServers))
+            localStorage.setItem("dartServerOrderV21", JSON.stringify(serverOrder))
             updateUndoButton()
             render()
         }
@@ -654,12 +657,13 @@
             }
         }
 
-        function save() {
+        function save(skipRender = false) {
             localStorage.setItem("dartMatchesV21", JSON.stringify(matches))
             localStorage.setItem("dartEmptyServersV21", JSON.stringify(emptyServers))
             localStorage.setItem("dartHiddenServersV21", JSON.stringify(hiddenServers))
+            localStorage.setItem("dartServerOrderV21", JSON.stringify(serverOrder))
             localStorage.setItem("dartClosedStatesV21", JSON.stringify(closedStates))
-            render()
+            if (!skipRender) render()
         }
 
         function toggleForm() {
@@ -743,6 +747,8 @@
                 if (emptyIdx !== -1) emptyServers[emptyIdx] = newName.trim()
                 const hidIdx = hiddenServers.indexOf(oldName)
                 if (hidIdx !== -1) hiddenServers[hidIdx] = newName.trim()
+                const orderIdx = serverOrder.indexOf(oldName)
+                if (orderIdx !== -1) serverOrder[orderIdx] = newName.trim()
                 updateServerSelect()
                 save()
             }
@@ -757,6 +763,38 @@
                 })
                 save()
             }
+        }
+
+        function moveServerOrder(serverName, direction) {
+            pushToHistory()
+            const allServers = getAllServersOrdered()
+            const index = allServers.indexOf(serverName)
+            if (index === -1) return
+
+            const newIndex = index + direction
+            if (newIndex >= 0 && newIndex < allServers.length) {
+                const temp = allServers[index]
+                allServers[index] = allServers[newIndex]
+                allServers[newIndex] = temp
+                serverOrder = allServers
+                save()
+                openServerManager()
+            }
+        }
+
+        function getAllServersOrdered() {
+            const existing = [...new Set([...matches.map(m => m.server), ...emptyServers])]
+            let ordered = []
+
+            serverOrder.forEach(s => {
+                if (existing.includes(s)) ordered.push(s)
+            })
+
+            existing.forEach(s => {
+                if (!ordered.includes(s)) ordered.push(s)
+            })
+
+            return ordered
         }
 
         function openLeagueDeleteModal(serverName) {
@@ -811,18 +849,24 @@
         function openServerManager() {
             const list = document.getElementById("serverManagerList")
             list.innerHTML = ""
-            const allServers = [...new Set([...matches.map(m => m.server), ...emptyServers])]
+            const allServers = getAllServersOrdered()
             
             if (allServers.length === 0) {
                 list.innerHTML = `<p class="text-sm text-gray-500 italic text-center py-4">${currentLang === "cs" ? "Žádné servery k dispozici" : "Keine Server verfügbar"}</p>`
             }
 
-            allServers.forEach(server => {
+            allServers.forEach((server, idx) => {
                 const isHidden = hiddenServers.includes(server)
                 list.innerHTML += `
-                    <div class="bg-gray-850 p-3 rounded-lg border border-gray-800 flex items-center justify-between gap-4">
-                        <span class="font-bold text-gray-200 truncate">${server}</span>
+                    <div class="bg-gray-850 p-3 rounded-lg border border-gray-800 flex items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
+                            <div class="flex flex-col gap-0.5">
+                                <button onclick="moveServerOrder('${server}', -1)" ${idx === 0 ? 'disabled class="opacity-20 text-xs px-1"' : 'class="hover:text-orange-400 text-xs px-1"'}>▲</button>
+                                <button onclick="moveServerOrder('${server}', 1)" ${idx === allServers.length - 1 ? 'disabled class="opacity-20 text-xs px-1"' : 'class="hover:text-orange-400 text-xs px-1"'}>▼</button>
+                            </div>
+                            <span class="font-bold text-gray-200 truncate">${server}</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
                             <button onclick="editServerName('${server}')" class="text-xs text-orange-400 hover:text-orange-300 bg-orange-950/20 px-2 py-1 rounded border border-orange-900/30">
                                 ✏️ ${currentLang === "cs" ? "Upravit" : "Bearbeiten"}
                             </button>
@@ -861,6 +905,7 @@
                 matches = matches.filter(m => m.server !== serverName)
                 emptyServers = emptyServers.filter(s => s !== serverName)
                 hiddenServers = hiddenServers.filter(s => s !== serverName)
+                serverOrder = serverOrder.filter(s => s !== serverName)
                 updateServerSelect()
                 save()
                 openServerManager()
@@ -870,7 +915,7 @@
         function updateServerSelect() {
             const select = document.getElementById("formServer")
             const currentVal = select.value
-            const activeServers = [...new Set([...matches.map(m => m.server), ...emptyServers])]
+            const activeServers = getAllServersOrdered()
             
             select.innerHTML = ""
             
@@ -1078,7 +1123,8 @@
                 match.time = time
                 match.status = date ? "scheduled" : "unscheduled"
                 if (!date) match.confirmed = false
-                save()
+                // Zde skokové nepřerovnávání (skipRender = true), aby políčko neodjelo pod rukama
+                save(true)
             }
         }
 
@@ -1107,16 +1153,20 @@
 
         function getFullGroupedData() {
             const grouped = {}
+            const orderedServers = getAllServersOrdered()
+
+            orderedServers.forEach(s => {
+                if (hiddenServers.includes(s)) return
+                grouped[s] = {}
+            })
+
             matches.forEach(m => {
                 if (hiddenServers.includes(m.server)) return
                 if (!grouped[m.server]) grouped[m.server] = {}
                 if (!grouped[m.server][m.comp]) grouped[m.server][m.comp] = []
                 grouped[m.server][m.comp].push(m)
             })
-            emptyServers.forEach(s => {
-                if (hiddenServers.includes(s)) return
-                if (!grouped[s]) grouped[s] = {}
-            })
+
             return grouped
         }
 
