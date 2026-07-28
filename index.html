@@ -355,12 +355,12 @@
             document.getElementById("btnManageIcon").title = translations[currentLang].manageServersBtn
         }
 
-        let matches = JSON.parse(localStorage.getItem("dartMatchesV22")) || []
-        let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV22")) || []
-        let emptyLeagues = JSON.parse(localStorage.getItem("dartEmptyLeaguesV22")) || [] // [{server, comp}]
-        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV22")) || []
-        let serverOrder = JSON.parse(localStorage.getItem("dartServerOrderV22")) || []
-        let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV22")) || {}
+        let matches = JSON.parse(localStorage.getItem("dartMatchesV23")) || []
+        let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV23")) || []
+        let emptyLeagues = JSON.parse(localStorage.getItem("dartEmptyLeaguesV23")) || []
+        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV23")) || []
+        let serverOrder = JSON.parse(localStorage.getItem("dartServerOrderV23")) || []
+        let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV23")) || {}
         let historyStack = []
         let currentView = "home"
         let formMode = "single"
@@ -475,28 +475,43 @@
                 const headerLine = lines[0]
                 const headerParts = headerLine.split("->").map(p => p.trim())
                 
-                const compFull = headerParts[0] || "Liga"
-                const format = headerParts[1] || "BO 8 501 DO"
+                let server = ""
+                let compFull = ""
+                let format = "BO 8 501 DO"
                 let weekInfo = ""
                 let webUrl = ""
                 let discordUrl = ""
 
-                headerParts.slice(2).forEach(part => {
+                // Zjištění URL odkazů v hlavičce
+                headerParts.forEach(part => {
                     if (part.startsWith("http")) {
                         if (part.includes("discord")) discordUrl = part
                         else webUrl = part
-                    } else {
-                        weekInfo = part
                     }
                 })
 
-                let server = "Ostatní"
-                const compLower = compFull.toLowerCase()
-                if (compLower.includes("edc")) server = "EDC"
-                else if (compLower.includes("dartfan")) server = "Dartfan online"
-                else if (compLower.includes("scolia")) server = "Scolia Checkout Community"
-                else if (compLower.includes("hood")) server = "HOOD"
-                else if (compLower.includes("dbf")) server = "DBF"
+                // Pokud máme v hlavičce alespoň 3 ne-URL části, první část je SERVER!
+                const nonUrlParts = headerParts.filter(p => !p.startsWith("http"))
+
+                if (nonUrlParts.length >= 3) {
+                    server = nonUrlParts[0]
+                    compFull = nonUrlParts[1]
+                    format = nonUrlParts[2] || format
+                    if (nonUrlParts[3]) weekInfo = nonUrlParts[3]
+                } else {
+                    // Starší formát TXT: odhadnutí serveru z názvu nebo odkazů
+                    compFull = nonUrlParts[0] || "Liga"
+                    format = nonUrlParts[1] || format
+                    if (nonUrlParts[2]) weekInfo = nonUrlParts[2]
+
+                    const combinedCheck = `${compFull} ${webUrl} ${discordUrl}`.toLowerCase()
+                    if (combinedCheck.includes("elitedartclub") || combinedCheck.includes("edc")) server = "EDC"
+                    else if (combinedCheck.includes("scolia-checkout-community") || combinedCheck.includes("scolia")) server = "Scolia Checkout Community"
+                    else if (combinedCheck.includes("dartfan")) server = "Dartfan online"
+                    else if (combinedCheck.includes("hood")) server = "HOOD"
+                    else if (combinedCheck.includes("dbf")) server = "DBF"
+                    else server = "Ostatní"
+                }
 
                 const duration = calculateDurationMinutes(format)
 
@@ -580,7 +595,8 @@
                 const compMatches = grouped[key]
                 const first = compMatches[0]
 
-                let header = first.comp
+                // Explicitně zapisujeme SERVER do TXT souboru
+                let header = `${first.server} -> ${first.comp}`
                 if (first.format) header += ` -> ${first.format}`
                 if (first.week) header += ` -> ${first.week}`
                 if (first.webUrl) header += ` -> ${first.webUrl}`
@@ -641,11 +657,11 @@
             emptyLeagues = previousState.emptyLeagues || []
             hiddenServers = previousState.hiddenServers
             serverOrder = previousState.serverOrder || []
-            localStorage.setItem("dartMatchesV22", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV22", JSON.stringify(emptyServers))
-            localStorage.setItem("dartEmptyLeaguesV22", JSON.stringify(emptyLeagues))
-            localStorage.setItem("dartHiddenServersV22", JSON.stringify(hiddenServers))
-            localStorage.setItem("dartServerOrderV22", JSON.stringify(serverOrder))
+            localStorage.setItem("dartMatchesV23", JSON.stringify(matches))
+            localStorage.setItem("dartEmptyServersV23", JSON.stringify(emptyServers))
+            localStorage.setItem("dartEmptyLeaguesV23", JSON.stringify(emptyLeagues))
+            localStorage.setItem("dartHiddenServersV23", JSON.stringify(hiddenServers))
+            localStorage.setItem("dartServerOrderV23", JSON.stringify(serverOrder))
             updateUndoButton()
             render()
         }
@@ -662,12 +678,12 @@
         }
 
         function save(skipRender = false) {
-            localStorage.setItem("dartMatchesV22", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV22", JSON.stringify(emptyServers))
-            localStorage.setItem("dartEmptyLeaguesV22", JSON.stringify(emptyLeagues))
-            localStorage.setItem("dartHiddenServersV22", JSON.stringify(hiddenServers))
-            localStorage.setItem("dartServerOrderV22", JSON.stringify(serverOrder))
-            localStorage.setItem("dartClosedStatesV22", JSON.stringify(closedStates))
+            localStorage.setItem("dartMatchesV23", JSON.stringify(matches))
+            localStorage.setItem("dartEmptyServersV23", JSON.stringify(emptyServers))
+            localStorage.setItem("dartEmptyLeaguesV23", JSON.stringify(emptyLeagues))
+            localStorage.setItem("dartHiddenServersV23", JSON.stringify(hiddenServers))
+            localStorage.setItem("dartServerOrderV23", JSON.stringify(serverOrder))
+            localStorage.setItem("dartClosedStatesV23", JSON.stringify(closedStates))
             if (!skipRender) render()
         }
 
@@ -981,7 +997,7 @@
             const match = matches.find(m => m.id === id)
             if (match) {
                 match.notes = text
-                localStorage.setItem("dartMatchesV22", JSON.stringify(matches))
+                localStorage.setItem("dartMatchesV23", JSON.stringify(matches))
             }
         }
 
@@ -1176,7 +1192,6 @@
                 
                 matches = matches.filter(m => m.id !== id)
                 
-                // Pokud v lize nezůstal žádný zápas, uchováme ligu jako prázdnou
                 if (serverName && compName && !matches.some(m => m.server === serverName && m.comp === compName)) {
                     if (!emptyLeagues.some(l => l.server === serverName && l.comp === compName)) {
                         emptyLeagues.push({ server: serverName, comp: compName })
