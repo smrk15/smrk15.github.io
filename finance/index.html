@@ -28,7 +28,7 @@
                 <button onclick="goHome()" id="btnHomeIcon" class="flex-1 bg-gray-900 hover:bg-gray-850 text-orange-500/60 hover:text-orange-450 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Aktuální přehled">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                 </button>
-                <button onclick="setView('muster')" id="btnMusterIcon" class="flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-450 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Správa šablon (Muster)">
+                <button onclick="setView('muster')" id="btnMusterIcon" class="flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Správa šablon (Muster)">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                 </button>
                 <button onclick="toggleForm()" id="btnAddIcon" class="flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Přidat jednorázovou platbu">
@@ -150,7 +150,7 @@
     <script>
         const defaultMuster = [];
         const defaultIncomeOrder = [];
-        const defaultAccountBalances = {};
+        const defaultAccountBalances = { "DE": 0, "Revolut": 0, "SK": 0, "CC": 0 };
         const defaultModifiedData = { deleted: {}, added: {}, amounts: {}, names: {} };
 
         const monthStyles = [
@@ -195,21 +195,25 @@
             return count;
         }
 
-        let muster = JSON.parse(localStorage.getItem("finMusterV12")) || defaultMuster;
-        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV12")) || defaultAccountBalances;
-        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV12")) || defaultModifiedData;
-        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV12")) || ["2026-07"];
-        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV12")) || defaultIncomeOrder;
-        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV12")) || {};
-        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV12")) || {};
+        let muster = JSON.parse(localStorage.getItem("finMusterV13")) || defaultMuster;
+        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV13")) || defaultAccountBalances;
+        // Zabezpečení fixních účtů, kdyby chyběly v uložených datech
+        ["DE", "Revolut", "SK", "CC"].forEach(acc => { if (accountBalances[acc] === undefined) accountBalances[acc] = 0; });
+
+        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV13")) || defaultModifiedData;
+        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV13")) || ["2026-07"];
+        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV13")) || defaultIncomeOrder;
+        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV13")) || {};
+        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV13")) || {};
         
-        let activeMonth = localStorage.getItem("finActiveMonthV12") || "2026-07";
-        let currentView = localStorage.getItem("finCurrentViewV12") || "home";
+        let activeMonth = localStorage.getItem("finActiveMonthV13") || "2026-07";
+        let currentView = localStorage.getItem("finCurrentViewV13") || "home";
         let checkedSimItems = {};
         let openMusterSettings = {};
         let comparedMusterMonths = [];
         let isMusterOverviewOpen = false;
         let musterOverviewTab = 'vydaje'; // 'vydaje', 'prijmy', 'bilance'
+        let musterOverviewMode = 'vse'; // 'vse', 'opakujici'
         let isEditMode = false;
         let historyStack = [];
 
@@ -260,15 +264,15 @@
 
         function save(writeHistory = true) {
             if (writeHistory) pushToHistory();
-            localStorage.setItem("finMusterV12", JSON.stringify(muster));
-            localStorage.setItem("finBalancesV12", JSON.stringify(accountBalances));
-            localStorage.setItem("finModifiedV12", JSON.stringify(modifiedData));
-            localStorage.setItem("finMonthsV12", JSON.stringify(generatedMonths));
-            localStorage.setItem("finIncomeOrderV12", JSON.stringify(incomeCustomOrder));
-            localStorage.setItem("finExpenseOrderV12", JSON.stringify(expenseCustomOrder));
-            localStorage.setItem("finDeletedMonthsV12", JSON.stringify(deletedMonthsHistory));
-            localStorage.setItem("finActiveMonthV12", activeMonth);
-            localStorage.setItem("finCurrentViewV12", currentView);
+            localStorage.setItem("finMusterV13", JSON.stringify(muster));
+            localStorage.setItem("finBalancesV13", JSON.stringify(accountBalances));
+            localStorage.setItem("finModifiedV13", JSON.stringify(modifiedData));
+            localStorage.setItem("finMonthsV13", JSON.stringify(generatedMonths));
+            localStorage.setItem("finIncomeOrderV13", JSON.stringify(incomeCustomOrder));
+            localStorage.setItem("finExpenseOrderV13", JSON.stringify(expenseCustomOrder));
+            localStorage.setItem("finDeletedMonthsV13", JSON.stringify(deletedMonthsHistory));
+            localStorage.setItem("finActiveMonthV13", activeMonth);
+            localStorage.setItem("finCurrentViewV13", currentView);
             render();
         }
 
@@ -471,6 +475,7 @@
         function toggleMusterSettings(id) { openMusterSettings[id] = !openMusterSettings[id]; render(); }
         function toggleMusterOverview() { isMusterOverviewOpen = !isMusterOverviewOpen; render(); }
         function setMusterOverviewTab(tab) { musterOverviewTab = tab; render(); }
+        function setMusterOverviewMode(mode) { musterOverviewMode = mode; render(); }
 
         function toggleMusterCompareMonth(monthNum) {
             if (comparedMusterMonths.includes(monthNum)) {
@@ -486,6 +491,12 @@
             let expenses = 0;
             let incomes = 0;
 
+            // 1. Přičtení pevných zůstatků účtů (pokud jsme v režimu Včetně stavů)
+            if (musterOverviewMode === 'vse') {
+                Object.values(accountBalances).forEach(val => incomes += (val || 0));
+            }
+
+            // 2. Přičtení opakujících se šablon
             muster.forEach(template => {
                 if (template.hasExpiry && template.validUntilYear && template.validUntilMonth) {
                     if (targetYear > template.validUntilYear || (targetYear === template.validUntilYear && targetMonthNum > template.validUntilMonth)) return;
@@ -784,6 +795,15 @@
                 });
             }
 
+            // Pevné účty (DE, Revolut, SK, CC)
+            Object.keys(accountBalances).forEach(key => {
+                const uniqueId = `staticky-${key}`;
+                const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 1, isStaticAccount: true, accountKey: key };
+                finalIncomesList.push(itemObj);
+                totalIncomes += accountBalances[key];
+                if (checkedSimItems[uniqueId]) simIncomes += accountBalances[key];
+            });
+
             muster.filter(t => t.typ === "prijem" && t.kumulativni).forEach(template => {
                 let cumulativeAmount = 0;
                 let activeMonthsCount = 0;
@@ -816,14 +836,6 @@
                     totalIncomes += cumulativeAmount;
                     if (checkedSimItems[uniqueId]) simIncomes += cumulativeAmount;
                 }
-            });
-
-            Object.keys(accountBalances).forEach(key => {
-                const uniqueId = `staticky-${key}`;
-                const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 1, isStaticAccount: true, accountKey: key };
-                finalIncomesList.push(itemObj);
-                totalIncomes += accountBalances[key];
-                if (checkedSimItems[uniqueId]) simIncomes += accountBalances[key];
             });
 
             activeMonthsInHorizon.forEach((monthKey) => {
@@ -1013,9 +1025,9 @@
                 html += `<div class="border-t border-gray-800 my-4"></div>`;
 
                 // PŘÍJMY & ÚČTY
-                html += `<div><h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Příjmy & Stavy účtů (+)</h3><div class="space-y-2">`;
+                html += `<div><h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Příjmy & Pevné stavy účtů (+)</h3><div class="space-y-2">`;
                 if (horizonData.incomes.length === 0) {
-                    html += `<div class="text-xs italic text-gray-600 py-2">Žádné očekávané příjmy.</div>`;
+                    html += `<div class="text-xs italic text-gray-600 py-2">Žádné příjmy.</div>`;
                 } else {
                     horizonData.incomes.forEach((item, index) => {
                         const isChecked = !!checkedSimItems[item.uniqueId];
@@ -1145,19 +1157,26 @@
                         <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-lg">
                             <button onclick="toggleMusterOverview()" class="w-full p-4 flex justify-between items-center bg-gray-900 hover:bg-gray-850 transition cursor-pointer">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm font-bold text-orange-400">📊 Roční přehled čistých nákladů & bilance (Muster)</span>
-                                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">Bez ručních úprav</span>
+                                    <span class="text-sm font-bold text-orange-400">📊 Roční přehled nákladů & bilance (Muster)</span>
+                                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">${musterOverviewMode === 'vse' ? 'Včetně stavů účtů' : 'Jen opakující se'}</span>
                                 </div>
                                 <span class="text-gray-400 font-bold">${isMusterOverviewOpen ? '▲ Skrýt' : '▼ Zobrazit'}</span>
                             </button>
 
                             ${isMusterOverviewOpen ? `
                                 <div class="p-6 border-t border-gray-800 space-y-6 bg-gray-950/30">
-                                    <!-- ZÁLOŽKY PŘEHLEDU -->
-                                    <div class="flex gap-2 border-b border-gray-800 pb-3">
-                                        <button onclick="setMusterOverviewTab('vydaje')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'vydaje' ? 'bg-rose-600/20 text-rose-400 border border-rose-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Výdaje (-)</button>
-                                        <button onclick="setMusterOverviewTab('prijmy')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'prijmy' ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Příjmy (+)</button>
-                                        <button onclick="setMusterOverviewTab('bilance')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'bilance' ? 'bg-orange-600/20 text-orange-400 border border-orange-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Bilance (+ / -)</button>
+                                    <!-- PŘEPÍNAČE REŽIMU A ZÁLOŽKY -->
+                                    <div class="flex flex-wrap justify-between items-center gap-4 border-b border-gray-800 pb-3">
+                                        <div class="flex gap-2">
+                                            <button onclick="setMusterOverviewTab('vydaje')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'vydaje' ? 'bg-rose-600/20 text-rose-400 border border-rose-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Výdaje (-)</button>
+                                            <button onclick="setMusterOverviewTab('prijmy')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'prijmy' ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Příjmy (+)</button>
+                                            <button onclick="setMusterOverviewTab('bilance')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewTab === 'bilance' ? 'bg-orange-600/20 text-orange-400 border border-orange-900/40' : 'bg-gray-900 text-gray-400 hover:text-white'}">Bilance (+ / -)</button>
+                                        </div>
+
+                                        <div class="flex gap-2">
+                                            <button onclick="setMusterOverviewMode('vse')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewMode === 'vse' ? 'bg-orange-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white'}">Včetně stavů účtů</button>
+                                            <button onclick="setMusterOverviewMode('opakujici')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${musterOverviewMode === 'opakujici' ? 'bg-orange-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white'}">Jen opakující se</button>
+                                        </div>
                                     </div>
 
                                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -1436,7 +1455,7 @@
         function resetToDefault() {
             if (confirm("Opravdu chceš smazat všechny změny a resetovat databázi do výchozího stavu?")) {
                 muster = defaultMuster;
-                accountBalances = defaultAccountBalances;
+                accountBalances = JSON.parse(JSON.stringify(defaultAccountBalances));
                 modifiedData = defaultModifiedData;
                 generatedMonths = ["2026-07"];
                 incomeCustomOrder = defaultIncomeOrder;
