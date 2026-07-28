@@ -151,7 +151,9 @@
         const defaultMuster = [
             { id: 1, typ: "prijem", nazev: "Lohn", castka: 4000, den: 1, frekvence: "kazdy_mesic", mesice: [] },
             { id: 2, typ: "prijem", nazev: "KG", castka: 518, den: 20, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 3, typ: "vydaj", nazev: "Nákup", castka: 500, den: 5, frekvence: "kazdy_mesic", mesice: [] }
+            { id: 3, typ: "vydaj", nazev: "Nákup", castka: 500, den: 5, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 4, typ: "vydaj", nazev: "Spar", castka: 100, den: 1, frekvence: "tydne", den_v_tydnu: 1, mesice: [] },
+            { id: 5, typ: "vydaj", nazev: "Energie Spar", castka: 50, den: 1, frekvence: "tydne", den_v_tydnu: 1, mesice: [] }
         ];
 
         const defaultIncomeOrder = [];
@@ -190,6 +192,21 @@
 
         function getMaxDaysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
         function getAdjustedDay(year, month, targetDay) { return Math.min(targetDay || 5, getMaxDaysInMonth(year, month)); }
+
+        // Spočítá, kolikrát v daném měsíci a roce připadne konkrétní den v týdnu (např. 1 = pondělí, 2 = úterý, atd.)
+        function countWeekdayInMonth(year, month, targetDayOfWeek) {
+            let count = 0;
+            const daysInMonth = getMaxDaysInMonth(year, month);
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, month - 1, d);
+                let dayOfWeek = date.getDay(); // 0 = neděle, 1 = pondělí, ..., 6 = sobota
+                if (dayOfWeek === 0) dayOfWeek = 7; // Převedeme neděli na 7, aby pondělí=1 až neděle=7
+                if (dayOfWeek === targetDayOfWeek) {
+                    count++;
+                }
+            }
+            return count > 0 ? count : 4;
+        }
 
         let muster = JSON.parse(localStorage.getItem("finMusterV16")) || defaultMuster;
         let accountBalances = JSON.parse(localStorage.getItem("finBalancesV16")) || defaultAccountBalances;
@@ -470,8 +487,6 @@
         function updateAccountBalance(key, val) {
             let num = parseFloat(val) || 0;
             if (key === "CC") {
-                // Pokud uživatel zadá kladné číslo (např. 125), automaticky z něj uděláme záporné,
-                // nebo pokud zadá záporné (např. -125), zůstane záporné. Nula je nula.
                 if (num > 0) num = -num;
             }
             accountBalances[key] = num;
@@ -515,20 +530,28 @@
                 }
 
                 let belongsToMonth = false;
-                if (template.frekvence === "kazdy_mesic") belongsToMonth = true;
-                else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(targetMonthNum)) belongsToMonth = true;
+                let multiplier = 1;
+
+                if (template.frekvence === "kazdy_mesic") {
+                    belongsToMonth = true;
+                } else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(targetMonthNum)) {
+                    belongsToMonth = true;
+                } else if (template.frekvence === "tydne") {
+                    belongsToMonth = true;
+                    multiplier = countWeekdayInMonth(targetYear, targetMonthNum, template.den_v_tydnu || 1);
+                }
 
                 if (belongsToMonth) {
                     let amount = 0;
                     if (template.splitParts && template.splitParts.length > 0) {
-                        amount = template.splitParts.reduce((acc, p) => acc + (p.amount || 0), 0);
+                        amount = template.splitParts.reduce((acc, p) => acc + (p.amount || 0), 0) * multiplier;
                     } else if (template.split) {
-                        amount = (template.part1Amount || 0) + (template.part2Amount || 0);
+                        amount = ((template.part1Amount || 0) + (template.part2Amount || 0)) * multiplier;
                     } else {
                         if (template.monthAmounts && template.monthAmounts[targetMonthNum] !== undefined) {
                             amount = template.monthAmounts[targetMonthNum];
                         } else {
-                            amount = template.castka;
+                            amount = template.castka * multiplier;
                         }
                     }
 
@@ -595,6 +618,12 @@
             if (!isNaN(num) && num >= 1 && num <= 31) { const item = muster.find(i => i.id === id); if (item) item.den = num; save(); }
         }
 
+        function updateMusterWeekday(id, val) {
+            const num = parseInt(val);
+            const item = muster.find(i => i.id === id);
+            if (item) { item.den_v_tydnu = num; save(); }
+        }
+
         function setSplitCount(id, count) {
             const item = muster.find(i => i.id === id);
             if (!item) return;
@@ -648,7 +677,12 @@
 
         function updateMusterFrequency(id, val) {
             const item = muster.find(i => i.id === id);
-            if (item) { item.frekvence = val; if (val === "kazdy_mesic") item.mesice = []; save(); }
+            if (item) { 
+                item.frekvence = val; 
+                if (val === "kazdy_mesic") item.mesice = []; 
+                if (val === "tydne" && !item.den_v_tydnu) item.den_v_tydnu = 1;
+                save(); 
+            }
         }
 
         function toggleMusterMonth(itemId, monthNum) {
@@ -692,8 +726,16 @@
                     }
 
                     let belongsToMonth = false;
-                    if (template.frekvence === "kazdy_mesic") belongsToMonth = true;
-                    else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(m)) belongsToMonth = true;
+                    let multiplier = 1;
+
+                    if (template.frekvence === "kazdy_mesic") {
+                        belongsToMonth = true;
+                    } else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(m)) {
+                        belongsToMonth = true;
+                    } else if (template.frekvence === "tydne") {
+                        belongsToMonth = true;
+                        multiplier = countWeekdayInMonth(y, m, template.den_v_tydnu || 1);
+                    }
 
                     if (belongsToMonth) {
                         let partsToProcess = [];
@@ -702,17 +744,21 @@
                             partsToProcess = template.splitParts.map((p, idx) => ({
                                 partNum: idx + 1,
                                 suffix: ` (${idx + 1}/${template.splitParts.length})`,
-                                defaultAmount: p.amount || 0,
+                                defaultAmount: (p.amount || 0) * multiplier,
                                 defaultDay: p.day || 5
                             }));
                         } else if (template.split) {
                             partsToProcess = [
-                                { partNum: 1, suffix: " (1/2)", defaultAmount: template.part1Amount || 0, defaultDay: template.part1Day || 5 },
-                                { partNum: 2, suffix: " (2/2)", defaultAmount: template.part2Amount || 0, defaultDay: template.part2Day || 15 }
+                                { partNum: 1, suffix: " (1/2)", defaultAmount: (template.part1Amount || 0) * multiplier, defaultDay: template.part1Day || 5 },
+                                { partNum: 2, suffix: " (2/2)", defaultAmount: (template.part2Amount || 0) * multiplier, defaultDay: template.part2Day || 15 }
                             ];
                         } else {
+                            let baseAmount = template.castka * multiplier;
+                            if (template.monthAmounts && template.monthAmounts[m] !== undefined) {
+                                baseAmount = template.monthAmounts[m];
+                            }
                             partsToProcess = [
-                                { partNum: 1, suffix: "", defaultAmount: template.castka, defaultDay: template.den || 5 }
+                                { partNum: 1, suffix: "", defaultAmount: baseAmount, defaultDay: template.den || 5 }
                             ];
                         }
 
@@ -721,15 +767,10 @@
                             const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(partKey);
 
                             if (!isDeleted) {
-                                let baseAmt = part.defaultAmount;
-                                if (part.suffix === "" && template.monthAmounts && template.monthAmounts[m] !== undefined) {
-                                    baseAmt = template.monthAmounts[m];
-                                }
-
                                 const customAmountKey = `${monthKey}-${partKey}`;
                                 const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
                                     ? modifiedData.amounts[customAmountKey] 
-                                    : baseAmt;
+                                    : part.defaultAmount;
 
                                 const customNameKey = `${monthKey}-${partKey}`;
                                 const effectiveName = (modifiedData.names && modifiedData.names[customNameKey]) 
@@ -792,8 +833,16 @@
                     }
 
                     let belongsToMonth = false;
-                    if (template.frekvence === "kazdy_mesic") belongsToMonth = true;
-                    else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(m)) belongsToMonth = true;
+                    let multiplier = 1;
+
+                    if (template.frekvence === "kazdy_mesic") {
+                        belongsToMonth = true;
+                    } else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(m)) {
+                        belongsToMonth = true;
+                    } else if (template.frekvence === "tydne") {
+                        belongsToMonth = true;
+                        multiplier = countWeekdayInMonth(y, m, template.den_v_tydnu || 1);
+                    }
 
                     if (belongsToMonth) {
                         let partsToProcess = [];
@@ -802,17 +851,21 @@
                             partsToProcess = template.splitParts.map((p, idx) => ({
                                 partNum: idx + 1,
                                 suffix: ` (${idx + 1}/${template.splitParts.length})`,
-                                defaultAmount: p.amount || 0,
+                                defaultAmount: (p.amount || 0) * multiplier,
                                 defaultDay: p.day || 5
                             }));
                         } else if (template.split) {
                             partsToProcess = [
-                                { partNum: 1, suffix: " (1/2)", defaultAmount: template.part1Amount || 0, defaultDay: template.part1Day || 5 },
-                                { partNum: 2, suffix: " (2/2)", defaultAmount: template.part2Amount || 0, defaultDay: template.part2Day || 15 }
+                                { partNum: 1, suffix: " (1/2)", defaultAmount: (template.part1Amount || 0) * multiplier, defaultDay: template.part1Day || 5 },
+                                { partNum: 2, suffix: " (2/2)", defaultAmount: (template.part2Amount || 0) * multiplier, defaultDay: template.part2Day || 15 }
                             ];
                         } else {
+                            let baseAmount = template.castka * multiplier;
+                            if (template.monthAmounts && template.monthAmounts[m] !== undefined) {
+                                baseAmount = template.monthAmounts[m];
+                            }
                             partsToProcess = [
-                                { partNum: 1, suffix: "", defaultAmount: template.castka, defaultDay: template.den || 5 }
+                                { partNum: 1, suffix: "", defaultAmount: baseAmount, defaultDay: template.den || 5 }
                             ];
                         }
 
@@ -821,15 +874,10 @@
                             const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(partKey);
 
                             if (!isDeleted) {
-                                let baseAmt = part.defaultAmount;
-                                if (part.suffix === "" && template.monthAmounts && template.monthAmounts[m] !== undefined) {
-                                    baseAmt = template.monthAmounts[m];
-                                }
-
                                 const customAmountKey = `${monthKey}-${partKey}`;
                                 const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
                                     ? modifiedData.amounts[customAmountKey] 
-                                    : baseAmt;
+                                    : part.defaultAmount;
 
                                 const customNameKey = `${monthKey}-${partKey}`;
                                 const effectiveName = (modifiedData.names && modifiedData.names[customNameKey]) 
@@ -880,7 +928,7 @@
                 }
             });
 
-            // Přidání statických stavů účtů (CC se přičítá/odčítá podle záporné hodnoty)
+            // Přidání statických stavů účtů
             Object.keys(accountBalances).forEach(key => {
                 let val = accountBalances[key] || 0;
                 const uniqueId = `staticky-${key}`;
@@ -1104,7 +1152,6 @@
                         if (item.isStaticAccount) {
                             const isCC = item.accountKey === "CC";
                             const valColor = isCC ? "text-rose-400" : "text-emerald-400";
-                            // Pro CC zobrazíme absolutní hodnotu v inputu, aby uživatel viděl kladné číslo (např. 125) jako jinde, ale v datech je záporné
                             const displayVal = isCC ? Math.abs(item.castka) : item.castka;
 
                             html += `
@@ -1176,8 +1223,11 @@
                 let totalMusterIncome = 0;
                 let totalMusterExpense = 0;
                 muster.forEach(item => {
-                    if (item.typ === "prijem") totalMusterIncome += item.castka;
-                    else totalMusterExpense += item.castka;
+                    let mult = 1;
+                    if (item.frekvence === "tydne") mult = 4; // pro orientační náhled v musteru bereme 4 týdny
+                    const effectiveAmt = item.castka * mult;
+                    if (item.typ === "prijem") totalMusterIncome += effectiveAmt;
+                    else totalMusterExpense += effectiveAmt;
                 });
                 document.getElementById("statIncome").innerText = formatMoney(totalMusterIncome);
                 document.getElementById("statExpense").innerText = formatMoney(totalMusterExpense);
@@ -1335,6 +1385,7 @@
                     const borderCol = isIncome ? 'border-emerald-950/30' : 'border-rose-950/30';
                     const isSettingsOpen = !!openMusterSettings[item.id];
                     const isIrregular = item.frekvence === "vybrane_mesice";
+                    const isWeekly = item.frekvence === "tydne";
                     const splitCount = item.splitParts ? item.splitParts.length : (item.split ? 2 : 0);
 
                     html += `
@@ -1344,6 +1395,7 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <input type="text" value="${item.nazev}" onchange="updateMusterName(${item.id}, this.value)" class="bg-transparent font-bold text-white text-base focus:outline-none focus:border-orange-500 border-b border-transparent">
                                         <span class="text-[10px] ${isIncome ? 'text-emerald-400 bg-emerald-950/40 border-emerald-900/30' : 'text-rose-400 bg-rose-950/40 border-rose-900/30'} px-2 py-0.5 rounded border">${isIncome ? 'Příjem (+)' : 'Výdaj (-)'}</span>
+                                        ${isWeekly ? '<span class="text-[10px] text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30">Týdně (násobeno počtem dnů v měsíci)</span>' : ''}
                                         ${splitCount > 0 ? `<span class="text-[10px] text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-900/30">Rozděleno na ${splitCount} části</span>` : ''}
                                         
                                         ${isIrregular ? `
@@ -1382,8 +1434,24 @@
                                             <select onchange="updateMusterFrequency(${item.id}, this.value)" class="bg-gray-900 border border-gray-800 text-xs px-2 py-1 rounded text-gray-300 font-semibold focus:outline-none focus:border-orange-500">
                                                 <option value="kazdy_mesic" ${item.frekvence === 'kazdy_mesic' ? 'selected' : ''}>Každý měsíc</option>
                                                 <option value="vybrane_mesice" ${item.frekvence === 'vybrane_mesice' ? 'selected' : ''}>Vybrané měsíce</option>
+                                                <option value="tydne" ${item.frekvence === 'tydne' ? 'selected' : ''}>Týdně (automatický přepočet)</option>
                                             </select>
                                         </div>
+
+                                        ${isWeekly ? `
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-gray-400 font-semibold">Den v týdnu:</span>
+                                                <select onchange="updateMusterWeekday(${item.id}, this.value)" class="bg-gray-900 border border-gray-800 text-xs px-2 py-1 rounded text-gray-300 font-semibold focus:outline-none focus:border-orange-500">
+                                                    <option value="1" ${(item.den_v_tydnu || 1) === 1 ? 'selected' : ''}>Pondělí</option>
+                                                    <option value="2" ${item.den_v_tydnu === 2 ? 'selected' : ''}>Úterý</option>
+                                                    <option value="3" ${item.den_v_tydnu === 3 ? 'selected' : ''}>Středa</option>
+                                                    <option value="4" ${item.den_v_tydnu === 4 ? 'selected' : ''}>Čtvrtek</option>
+                                                    <option value="5" ${item.den_v_tydnu === 5 ? 'selected' : ''}>Pátek</option>
+                                                    <option value="6" ${item.den_v_tydnu === 6 ? 'selected' : ''}>Sobota</option>
+                                                    <option value="7" ${item.den_v_tydnu === 7 ? 'selected' : ''}>Neděle</option>
+                                                </select>
+                                            </div>
+                                        ` : ''}
 
                                         <div class="flex items-center gap-2 border-l border-gray-800 pl-4">
                                             <span class="text-gray-400 font-semibold">Rozdělení plateb:</span>
