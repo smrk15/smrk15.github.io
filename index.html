@@ -4,25 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moje Aplikace</title>
+    <!-- GitHub Favicona na lištu záložek -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22><path fill=%22%23ffffff%22 d=%22M48 0C21.49 0 0 21.49 0 48c0 21.21 13.75 39.2 32.82 45.56 2.4.44 3.28-1.04 3.28-2.31 0-1.14-.04-4.16-.06-8.17-13.35 2.9-16.17-6.44-16.17-6.44-2.18-5.55-5.33-7.03-5.33-7.03-4.36-2.98.33-2.92.33-2.92 4.82.34 7.36 4.95 7.36 4.95 4.28 7.34 11.23 5.22 13.97 3.99.43-3.1 1.68-5.22 3.05-6.42-10.66-1.21-21.87-5.33-21.87-23.73 0-5.24 1.87-9.53 4.94-12.89-.5-1.21-2.14-6.1 0.47-12.72 0 0 4.03-1.29 13.2 4.92 3.83-1.07 7.94-1.6 12.02-1.62 4.08.02 8.19.55 12.03 1.62 9.16-6.22 13.18-4.92 13.18-4.92 2.62 6.62.98 11.51.48 12.72 3.08 3.36 4.93 7.65 4.93 12.89 0 18.45-11.23 22.5-21.93 23.69 1.72 1.48 3.26 4.41 3.26 8.89 0 6.42-.06 11.6-.06 13.18 0 1.28.87 2.78 3.3 2.31C82.26 87.19 96 69.21 96 48 96 21.49 74.51 0 48 0z%22/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #121214; }</style>
+    <style>
+        body { background-color: #121214; }
+    </style>
 </head>
 <body class="text-gray-100 min-h-screen flex items-center justify-center p-6">
     <div class="max-w-md w-full bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
-        <h1 class="text-3xl font-extrabold text-orange-500">🚀 Moje Aplikace</h1>
-        <p class="text-sm text-gray-400">Vyber si aplikaci, kterou chceš otevřít:</p>
         
-        <div class="space-y-3">
-            <a href="./sipky/" class="block bg-gray-800 hover:bg-orange-600/20 hover:border-orange-500/50 border border-gray-700 p-4 rounded-xl text-lg font-bold text-orange-400 transition">
-                🎯 Šipky
+        <!-- Hlavička s GitHub logem -->
+        <div class="space-y-2">
+            <div class="flex justify-center mb-3">
+                <div class="p-3 bg-gray-800 border border-gray-700 rounded-2xl shadow-inner">
+                    <svg class="w-10 h-10 fill-gray-200" viewBox="0 0 96 96">
+                        <path d="M48 0C21.49 0 0 21.49 0 48c0 21.21 13.75 39.2 32.82 45.56 2.4.44 3.28-1.04 3.28-2.31 0-1.14-.04-4.16-.06-8.17-13.35 2.9-16.17-6.44-16.17-6.44-2.18-5.55-5.33-7.03-5.33-7.03-4.36-2.98.33-2.92.33-2.92 4.82.34 7.36 4.95 7.36 4.95 4.28 7.34 11.23 5.22 13.97 3.99.43-3.1 1.68-5.22 3.05-6.42-10.66-1.21-21.87-5.33-21.87-23.73 0-5.24 1.87-9.53 4.94-12.89-.5-1.21-2.14-6.1 0.47-12.72 0 0 4.03-1.29 13.2 4.92 3.83-1.07 7.94-1.6 12.02-1.62 4.08.02 8.19.55 12.03 1.62 9.16-6.22 13.18-4.92 13.18-4.92 2.62 6.62.98 11.51.48 12.72 3.08 3.36 4.93 7.65 4.93 12.89 0 18.45-11.23 22.5-21.93 23.69 1.72 1.48 3.26 4.41 3.26 8.89 0 6.42-.06 11.6-.06 13.18 0 1.28.87 2.78 3.3 2.31C82.26 87.19 96 69.21 96 48 96 21.49 74.51 0 48 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <h1 class="text-3xl font-extrabold text-orange-500">Moje Aplikace</h1>
+            <p class="text-xs text-gray-400">Rozcestník pro aplikace & správa kódu</p>
+        </div>
+        
+        <!-- Odkazy na Aplikace -->
+        <div class="space-y-3 pt-2">
+            <a href="./sipky/" class="flex items-center justify-between bg-gray-800/80 hover:bg-orange-600/20 hover:border-orange-500/50 border border-gray-700/80 p-4 rounded-xl text-lg font-bold text-orange-400 transition group">
+                <span class="flex items-center gap-3">🎯 Šipky</span>
+                <span class="text-xs text-gray-500 group-hover:text-orange-400 transition">Spustit ➔</span>
             </a>
-            <a href="./finance/" class="block bg-gray-800 hover:bg-orange-600/20 hover:border-orange-500/50 border border-gray-700 p-4 rounded-xl text-lg font-bold text-emerald-400 transition">
-                💰 Finance
+            
+            <a href="./finance/" class="flex items-center justify-between bg-gray-800/80 hover:bg-emerald-600/20 hover:border-emerald-500/50 border border-gray-700/80 p-4 rounded-xl text-lg font-bold text-emerald-400 transition group">
+                <span class="flex items-center gap-3">💰 Finance</span>
+                <span class="text-xs text-gray-500 group-hover:text-emerald-400 transition">Spustit ➔</span>
             </a>
-            <a href="./kalendar/" class="block bg-gray-800 hover:bg-orange-600/20 hover:border-orange-500/50 border border-gray-700 p-4 rounded-xl text-lg font-bold text-blue-400 transition">
-                📅 Kalendář
+            
+            <a href="./kalendar/" class="flex items-center justify-between bg-gray-800/80 hover:bg-blue-600/20 hover:border-blue-500/50 border border-gray-700/80 p-4 rounded-xl text-lg font-bold text-blue-400 transition group">
+                <span class="flex items-center gap-3">📅 Kalendář</span>
+                <span class="text-xs text-gray-500 group-hover:text-blue-400 transition">Spustit ➔</span>
             </a>
         </div>
+
+        <hr class="border-gray-800 my-4">
+
+        <!-- Odkaz přímo na GitHub Repozitář -->
+        <a href="https://github.com/smrk15/smrk15.github.io" target="_blank" class="flex items-center justify-center gap-2 bg-gray-950 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 p-3 rounded-xl text-xs font-semibold transition">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 96 96">
+                <path d="M48 0C21.49 0 0 21.49 0 48c0 21.21 13.75 39.2 32.82 45.56 2.4.44 3.28-1.04 3.28-2.31 0-1.14-.04-4.16-.06-8.17-13.35 2.9-16.17-6.44-16.17-6.44-2.18-5.55-5.33-7.03-5.33-7.03-4.36-2.98.33-2.92.33-2.92 4.82.34 7.36 4.95 7.36 4.95 4.28 7.34 11.23 5.22 13.97 3.99.43-3.1 1.68-5.22 3.05-6.42-10.66-1.21-21.87-5.33-21.87-23.73 0-5.24 1.87-9.53 4.94-12.89-.5-1.21-2.14-6.1 0.47-12.72 0 0 4.03-1.29 13.2 4.92 3.83-1.07 7.94-1.6 12.02-1.62 4.08.02 8.19.55 12.03 1.62 9.16-6.22 13.18-4.92 13.18-4.92 2.62 6.62.98 11.51.48 12.72 3.08 3.36 4.93 7.65 4.93 12.89 0 18.45-11.23 22.5-21.93 23.69 1.72 1.48 3.26 4.41 3.26 8.89 0 6.42-.06 11.6-.06 13.18 0 1.28.87 2.78 3.3 2.31C82.26 87.19 96 69.21 96 48 96 21.49 74.51 0 48 0z"/>
+            </svg>
+            <span>Upravit kód na GitHubu</span>
+        </a>
+
     </div>
 </body>
 </html>
