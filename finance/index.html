@@ -149,42 +149,10 @@
     </div>
 
     <script>
-        const defaultMuster = [
-            { id: 1, typ: "vydaj", nazev: "plyn", castka: 168, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 2, typ: "vydaj", nazev: "půjčka", castka: 742, den: 1, frekvence: "kazdy_mesic", mesice: [], split: true, part1Amount: 700, part1Day: 1, part2Amount: 42, part2Day: 15 },
-            { id: 3, typ: "vydaj", nazev: "Hort", castka: 120, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 4, typ: "vydaj", nazev: "Martin", castka: 200, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 5, typ: "vydaj", nazev: "UKV", castka: 18, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 6, typ: "vydaj", nazev: "poplatky", castka: 50, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 7, typ: "vydaj", nazev: "Apple 05/26", castka: 135, den: 1, frekvence: "kazdy_mesic", mesice: [], hasExpiry: true, validUntilMonth: 5, validUntilYear: 2026 },
-            { id: 8, typ: "vydaj", nazev: "životko", castka: 121, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 9, typ: "vydaj", nazev: "Kůň", castka: 80, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 10, typ: "vydaj", nazev: "wustenrott", castka: 50, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 11, typ: "vydaj", nazev: "Deka S", castka: 100, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 12, typ: "vydaj", nazev: "Deka V", castka: 100, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 13, typ: "vydaj", nazev: "táta", castka: 30, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 14, typ: "vydaj", nazev: "děti jídlo", castka: 130, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 15, typ: "vydaj", nazev: "stavebni", castka: 280, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 16, typ: "vydaj", nazev: "WAL 2m", castka: 261, den: 1, frekvence: "vybrane_mesice", mesice: [2, 4, 6, 8, 10, 12] },
-            { id: 17, typ: "vydaj", nazev: "Deka M", castka: 450, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 18, typ: "vydaj", nazev: "internet", castka: 45, den: 15, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 19, typ: "vydaj", nazev: "vodafone", castka: 110, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 20, typ: "vydaj", nazev: "Doprava", castka: 350, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 21, typ: "vydaj", nazev: "Nakupy", castka: 2000, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 22, typ: "vydaj", nazev: "Spar", castka: 246.8, den: 1, frekvence: "kazdy_mesic", mesice: [], tydenni: true, denVTydnu: 1 },
-            { id: 23, typ: "vydaj", nazev: "energie spar", castka: 25, den: 1, frekvence: "kazdy_mesic", mesice: [], tydenni: true, denVTydnu: 1 },
-            { id: 24, typ: "vydaj", nazev: "SFB 2,5,8,11", castka: 130, den: 1, frekvence: "vybrane_mesice", mesice: [2, 5, 8, 11], monthAmounts: { 11: 110 } },
-            { id: 25, typ: "vydaj", nazev: "tv 2,5,8,11", castka: 56, den: 1, frekvence: "vybrane_mesice", mesice: [2, 5, 8, 11] },
-            { id: 26, typ: "vydaj", nazev: "popelnice 4,10", castka: 185, den: 10, frekvence: "vybrane_mesice", mesice: [4, 10] },
-            { id: 27, typ: "vydaj", nazev: "CZ dál 12.7.", castka: 100, den: 12, frekvence: "vybrane_mesice", mesice: [7] },
-            { id: 28, typ: "vydaj", nazev: "SK známka 20.7.", castka: 90, den: 20, frekvence: "vybrane_mesice", mesice: [7] },
-            { id: 29, typ: "vydaj", nazev: "deka 12", castka: 70, den: 1, frekvence: "vybrane_mesice", mesice: [12] },
-            { id: 100, typ: "prijem", nazev: "Lohn", castka: 3000, den: 1, frekvence: "kazdy_mesic", mesice: [], kumulativni: true },
-            { id: 101, typ: "prijem", nazev: "Dirk", castka: 4000, den: 1, frekvence: "kazdy_mesic", mesice: [], kumulativni: true },
-            { id: 102, typ: "prijem", nazev: "KG", castka: 518, den: 1, frekvence: "kazdy_mesic", mesice: [], kumulativni: true }
-        ];
-
-        const defaultIncomeOrder = ["staticky-DE", "kumulativni-Lohn", "kumulativni-Dirk", "kumulativni-KG", "staticky-Revolut", "staticky-CC", "staticky-SK"];
+        const defaultMuster = [];
+        const defaultIncomeOrder = [];
+        const defaultAccountBalances = {};
+        const defaultModifiedData = { deleted: {}, added: {}, amounts: {}, names: {} };
 
         const monthStyles = [
             { badge: "bg-blue-950/60 text-blue-400 border-blue-800/50", card: "border-blue-950/40 bg-blue-950/5" },
@@ -228,19 +196,16 @@
             return count;
         }
 
-        const defaultAccountBalances = { "DE": 8875, "Revolut": 359, "CC": -4000, "SK": 152 };
-        const defaultModifiedData = { deleted: {}, added: {}, amounts: {}, names: {} };
-
-        let muster = JSON.parse(localStorage.getItem("finMusterV10")) || defaultMuster;
-        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV10")) || defaultAccountBalances;
-        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV10")) || defaultModifiedData;
-        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV10")) || ["2026-07"];
-        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV10")) || defaultIncomeOrder;
-        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV10")) || {};
-        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV10")) || {};
+        let muster = JSON.parse(localStorage.getItem("finMusterV11")) || defaultMuster;
+        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV11")) || defaultAccountBalances;
+        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV11")) || defaultModifiedData;
+        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV11")) || ["2026-07"];
+        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV11")) || defaultIncomeOrder;
+        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV11")) || {};
+        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV11")) || {};
         
-        let activeMonth = localStorage.getItem("finActiveMonthV10") || "2026-07";
-        let currentView = localStorage.getItem("finCurrentViewV10") || "home";
+        let activeMonth = localStorage.getItem("finActiveMonthV11") || "2026-07";
+        let currentView = localStorage.getItem("finCurrentViewV11") || "home";
         let checkedSimItems = {};
         let openMusterSettings = {};
         let isEditMode = false;
@@ -293,15 +258,15 @@
 
         function save(writeHistory = true) {
             if (writeHistory) pushToHistory();
-            localStorage.setItem("finMusterV10", JSON.stringify(muster));
-            localStorage.setItem("finBalancesV10", JSON.stringify(accountBalances));
-            localStorage.setItem("finModifiedV10", JSON.stringify(modifiedData));
-            localStorage.setItem("finMonthsV10", JSON.stringify(generatedMonths));
-            localStorage.setItem("finIncomeOrderV10", JSON.stringify(incomeCustomOrder));
-            localStorage.setItem("finExpenseOrderV10", JSON.stringify(expenseCustomOrder));
-            localStorage.setItem("finDeletedMonthsV10", JSON.stringify(deletedMonthsHistory));
-            localStorage.setItem("finActiveMonthV10", activeMonth);
-            localStorage.setItem("finCurrentViewV10", currentView);
+            localStorage.setItem("finMusterV11", JSON.stringify(muster));
+            localStorage.setItem("finBalancesV11", JSON.stringify(accountBalances));
+            localStorage.setItem("finModifiedV11", JSON.stringify(modifiedData));
+            localStorage.setItem("finMonthsV11", JSON.stringify(generatedMonths));
+            localStorage.setItem("finIncomeOrderV11", JSON.stringify(incomeCustomOrder));
+            localStorage.setItem("finExpenseOrderV11", JSON.stringify(expenseCustomOrder));
+            localStorage.setItem("finDeletedMonthsV11", JSON.stringify(deletedMonthsHistory));
+            localStorage.setItem("finActiveMonthV11", activeMonth);
+            localStorage.setItem("finCurrentViewV11", currentView);
             render();
         }
 
@@ -1321,9 +1286,3 @@
     </script>
 </body>
 </html>
-"""
-
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(code)
-
-print("Soubor index.html byl úspěšně vygenerován.")
