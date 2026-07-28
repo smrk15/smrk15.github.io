@@ -482,7 +482,6 @@
                 let webUrl = ""
                 let discordUrl = ""
 
-                // Zjištění URL odkazů v hlavičce
                 headerParts.forEach(part => {
                     if (part.startsWith("http")) {
                         if (part.includes("discord")) discordUrl = part
@@ -490,7 +489,6 @@
                     }
                 })
 
-                // Pokud máme v hlavičce alespoň 3 ne-URL části, první část je SERVER!
                 const nonUrlParts = headerParts.filter(p => !p.startsWith("http"))
 
                 if (nonUrlParts.length >= 3) {
@@ -499,7 +497,6 @@
                     format = nonUrlParts[2] || format
                     if (nonUrlParts[3]) weekInfo = nonUrlParts[3]
                 } else {
-                    // Starší formát TXT: odhadnutí serveru z názvu nebo odkazů
                     compFull = nonUrlParts[0] || "Liga"
                     format = nonUrlParts[1] || format
                     if (nonUrlParts[2]) weekInfo = nonUrlParts[2]
@@ -595,7 +592,6 @@
                 const compMatches = grouped[key]
                 const first = compMatches[0]
 
-                // Explicitně zapisujeme SERVER do TXT souboru
                 let header = `${first.server} -> ${first.comp}`
                 if (first.format) header += ` -> ${first.format}`
                 if (first.week) header += ` -> ${first.week}`
@@ -1040,6 +1036,23 @@
             return currentMonday.getTime() === matchMonday.getTime()
         }
 
+        function isWeekInPastOrCurrent(weekStr) {
+            if (!weekStr) return false
+            const match = weekStr.match(/(\d{1,2})\.(\d{1,2})\./)
+            if (!match) return false
+
+            const day = parseInt(match[1])
+            const month = parseInt(match[2]) - 1
+            const currentYear = new Date().getFullYear()
+
+            // Zjištění začátku daného týdne (pondělí)
+            const weekStart = new Date(currentYear, month, day)
+            weekStart.setHours(0, 0, 0, 0)
+
+            const now = new Date()
+            return now >= weekStart
+        }
+
         function formatDateToLabel(date) {
             return `${date.getDate()}.${date.getMonth() + 1}.`
         }
@@ -1247,13 +1260,13 @@
                     const compMatches = grouped[serverName][compName]
                     const totalCount = compMatches.length
                     const scheduledCount = compMatches.filter(m => m.date).length
-                    const maxWeekly = compMatches[0]?.maxWeekly || ""
 
-                   let warningBadge = ""
-const currentWeekMatch = compMatches.find(m => isCurrentCalendarWeek(m.date) || (m.week && isCurrentCalendarWeek(m.week)))
-if (maxWeekly && currentWeekMatch && !currentWeekMatch.date) {
-    warningBadge = `<span class="ml-1 text-xs text-orange-500 font-bold" title="Nutno naplánovat tento týden">⚠️</span>`
-}
+                    const needsScheduling = compMatches.some(m => !m.date && isWeekInPastOrCurrent(m.week))
+
+                    let warningBadge = ""
+                    if (needsScheduling) {
+                        warningBadge = `<span class="ml-1 text-xs text-orange-500 font-bold" title="Nutno naplánovat zápas na tento týden!">⚠️</span>`
+                    }
 
                     const li = document.createElement("li")
                     li.className = "text-xs text-gray-400 hover:text-white cursor-pointer flex justify-between items-center py-0.5 transition"
