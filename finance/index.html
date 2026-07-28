@@ -1411,7 +1411,10 @@
         }
 
         function exportData() {
-            const dataStr = JSON.stringify({ muster, accountBalances, modifiedData, generatedMonths, incomeCustomOrder, expenseCustomOrder, deletedMonthsHistory }, null, 2);
+            // Seřazení šablon v Musteru podle dne splatnosti před exportem
+            const sortedMuster = [...muster].sort((a, b) => (a.den || 1) - (b.den || 1));
+
+            const dataStr = JSON.stringify({ muster: sortedMuster, accountBalances, modifiedData, generatedMonths, incomeCustomOrder, expenseCustomOrder, deletedMonthsHistory }, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const exportFileDefaultName = 'domaci_finance_zaloha.json';
             
