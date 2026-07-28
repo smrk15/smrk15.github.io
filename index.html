@@ -1249,10 +1249,11 @@
                     const scheduledCount = compMatches.filter(m => m.date).length
                     const maxWeekly = compMatches[0]?.maxWeekly || ""
 
-                    let warningBadge = ""
-                    if (maxWeekly && scheduledCount < parseInt(maxWeekly)) {
-                        warningBadge = `<span class="ml-1 text-xs text-orange-500 font-bold" title="Nutno naplánovat">⚠️</span>`
-                    }
+                   let warningBadge = ""
+const currentWeekMatch = compMatches.find(m => isCurrentCalendarWeek(m.date) || (m.week && isCurrentCalendarWeek(m.week)))
+if (maxWeekly && currentWeekMatch && !currentWeekMatch.date) {
+    warningBadge = `<span class="ml-1 text-xs text-orange-500 font-bold" title="Nutno naplánovat tento týden">⚠️</span>`
+}
 
                     const li = document.createElement("li")
                     li.className = "text-xs text-gray-400 hover:text-white cursor-pointer flex justify-between items-center py-0.5 transition"
