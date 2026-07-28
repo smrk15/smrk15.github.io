@@ -119,7 +119,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Den splatnosti</label>
-                        <input type="number" id="formDay" min="1" max="31" value="1" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-orange-500 text-gray-200 text-sm">
+                        <input type="number" id="formDay" min="1" max="31" value="5" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-orange-500 text-gray-200 text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Typ platby</label>
@@ -150,10 +150,8 @@
     <script>
         const defaultMuster = [
             { id: 1, typ: "prijem", nazev: "Lohn", castka: 4000, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 2, typ: "prijem", nazev: "KG", castka: 518, den: 19, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 3, typ: "prijem", nazev: "Miete", castka: 750, den: 4, frekvence: "kazdy_mesic", mesice: [], split: true, part1Amount: 600, part1Day: 4, part2Amount: 150, part2Day: 3 },
-            { id: 4, typ: "vydaj", nazev: "Nákup", castka: 500, den: 1, frekvence: "kazdy_mesic", mesice: [] },
-            { id: 5, typ: "vydaj", nazev: "Doprava", castka: 200, den: 1, frekvence: "kazdy_mesic", mesice: [] }
+            { id: 2, typ: "prijem", nazev: "KG", castka: 518, den: 20, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 3, typ: "vydaj", nazev: "Nákup", castka: 500, den: 5, frekvence: "kazdy_mesic", mesice: [] }
         ];
 
         const defaultIncomeOrder = [];
@@ -191,29 +189,20 @@
         }
 
         function getMaxDaysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
-        function getAdjustedDay(year, month, targetDay) { return Math.min(targetDay || 1, getMaxDaysInMonth(year, month)); }
+        function getAdjustedDay(year, month, targetDay) { return Math.min(targetDay || 5, getMaxDaysInMonth(year, month)); }
 
-        function countDayOfWeekInMonth(year, month, dayOfWeek = 1) {
-            let count = 0;
-            const daysInMonth = getMaxDaysInMonth(year, month);
-            for (let day = 1; day <= daysInMonth; day++) {
-                if (new Date(year, month - 1, day).getDay() === (dayOfWeek % 7)) count++;
-            }
-            return count;
-        }
-
-        let muster = JSON.parse(localStorage.getItem("finMusterV14")) || defaultMuster;
-        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV14")) || defaultAccountBalances;
+        let muster = JSON.parse(localStorage.getItem("finMusterV15")) || defaultMuster;
+        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV15")) || defaultAccountBalances;
         ["DE", "Revolut", "SK", "CC"].forEach(acc => { if (accountBalances[acc] === undefined) accountBalances[acc] = 0; });
 
-        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV14")) || defaultModifiedData;
-        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV14")) || ["2026-07"];
-        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV14")) || defaultIncomeOrder;
-        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV14")) || {};
-        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV14")) || {};
+        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV15")) || defaultModifiedData;
+        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV15")) || ["2026-07"];
+        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV15")) || defaultIncomeOrder;
+        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV15")) || {};
+        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV15")) || {};
         
-        let activeMonth = localStorage.getItem("finActiveMonthV14") || "2026-07";
-        let currentView = localStorage.getItem("finCurrentViewV14") || "home";
+        let activeMonth = localStorage.getItem("finActiveMonthV15") || "2026-07";
+        let currentView = localStorage.getItem("finCurrentViewV15") || "home";
         let checkedSimItems = {};
         let openMusterSettings = {};
         let comparedMusterMonths = [];
@@ -270,23 +259,19 @@
 
         function save(writeHistory = true) {
             if (writeHistory) pushToHistory();
-            localStorage.setItem("finMusterV14", JSON.stringify(muster));
-            localStorage.setItem("finBalancesV14", JSON.stringify(accountBalances));
-            localStorage.setItem("finModifiedV14", JSON.stringify(modifiedData));
-            localStorage.setItem("finMonthsV14", JSON.stringify(generatedMonths));
-            localStorage.setItem("finIncomeOrderV14", JSON.stringify(incomeCustomOrder));
-            localStorage.setItem("finExpenseOrderV14", JSON.stringify(expenseCustomOrder));
-            localStorage.setItem("finDeletedMonthsV14", JSON.stringify(deletedMonthsHistory));
-            localStorage.setItem("finActiveMonthV14", activeMonth);
-            localStorage.setItem("finCurrentViewV14", currentView);
+            localStorage.setItem("finMusterV15", JSON.stringify(muster));
+            localStorage.setItem("finBalancesV15", JSON.stringify(accountBalances));
+            localStorage.setItem("finModifiedV15", JSON.stringify(modifiedData));
+            localStorage.setItem("finMonthsV15", JSON.stringify(generatedMonths));
+            localStorage.setItem("finIncomeOrderV15", JSON.stringify(incomeCustomOrder));
+            localStorage.setItem("finExpenseOrderV15", JSON.stringify(expenseCustomOrder));
+            localStorage.setItem("finDeletedMonthsV15", JSON.stringify(deletedMonthsHistory));
+            localStorage.setItem("finActiveMonthV15", activeMonth);
+            localStorage.setItem("finCurrentViewV15", currentView);
             render();
         }
 
-        function toggleEditMode() {
-            isEditMode = !isEditMode;
-            render();
-        }
-
+        function toggleEditMode() { isEditMode = !isEditMode; render(); }
         function toggleForm() {
             const form = document.getElementById("itemForm");
             const musterOpt = document.getElementById("musterOnlyOptions");
@@ -370,7 +355,6 @@
                 const nextMonthKey = `${nextY}-${String(nextM).padStart(2, '0')}`;
 
                 if (!generatedMonths.includes(nextMonthKey)) generatedMonths.push(nextMonthKey);
-
                 accountBalances["CC"] = 0;
 
                 if (!modifiedData.added[nextMonthKey]) modifiedData.added[nextMonthKey] = [];
@@ -379,7 +363,7 @@
                     typ: "vydaj",
                     nazev: "Stržení CC",
                     castka: debtAmount,
-                    den: 1
+                    den: 5
                 });
 
                 save(false);
@@ -412,16 +396,6 @@
             }
         }
 
-        function handleItemDeleteClick(item) {
-            if (item.isTydenni && item.weeklyUnitAmount && item.castka > item.weeklyUnitAmount) {
-                const newAmount = Math.max(0, item.castka - item.weeklyUnitAmount);
-                updateHorizonItemAmount(item.itemMonth, item.origNazev, newAmount);
-            } else {
-                if (item.isMusterItem) deleteItem(activeMonth, item.itemMonth, item.origNazev);
-                else deleteAddedItem(activeMonth, item.itemMonth, item.uniqueId);
-            }
-        }
-
         function deleteItem(horizonMonth, itemMonth, itemKey) {
             if (!modifiedData.deleted[itemMonth]) modifiedData.deleted[itemMonth] = [];
             modifiedData.deleted[itemMonth].push(itemKey);
@@ -447,7 +421,7 @@
                 keys.forEach(uniqueId => {
                     const item = allItems.find(i => i.uniqueId === uniqueId);
                     if (item) {
-                        if (item.isMusterItem || item.isKumulativni) deleteItem(activeMonth, item.itemMonth || activeMonth, item.origNazev || item.nazev);
+                        if (item.isMusterItem) deleteItem(activeMonth, item.itemMonth || activeMonth, item.origNazev || item.nazev);
                         else if (!item.isStaticAccount) deleteAddedItem(activeMonth, item.itemMonth, item.uniqueId);
                     }
                 });
@@ -512,13 +486,13 @@
 
                 if (belongsToMonth) {
                     let amount = 0;
-                    if (template.split) {
+                    if (template.splitParts && template.splitParts.length > 0) {
+                        amount = template.splitParts.reduce((acc, p) => acc + (p.amount || 0), 0);
+                    } else if (template.split) {
                         amount = (template.part1Amount || 0) + (template.part2Amount || 0);
                     } else {
                         if (template.monthAmounts && template.monthAmounts[targetMonthNum] !== undefined) {
                             amount = template.monthAmounts[targetMonthNum];
-                        } else if (template.tydenni) {
-                            amount = template.castka * countDayOfWeekInMonth(targetYear, targetMonthNum, template.denVTydnu || 1);
                         } else {
                             amount = template.castka;
                         }
@@ -535,7 +509,7 @@
         function saveItem() {
             const name = document.getElementById("formName").value.trim();
             const amount = parseFloat(document.getElementById("formAmount").value);
-            const day = parseInt(document.getElementById("formDay").value) || 1;
+            const day = parseInt(document.getElementById("formDay").value) || 5;
             const type = document.getElementById("formType").value;
 
             if (!name || isNaN(amount)) { alert("Vyplň správně název i částku!"); return; }
@@ -555,7 +529,7 @@
 
             document.getElementById("formName").value = "";
             document.getElementById("formAmount").value = "";
-            document.getElementById("formDay").value = "1";
+            document.getElementById("formDay").value = "5";
             document.getElementById("formApplyToCurrent").checked = false;
             toggleForm();
             save();
@@ -587,23 +561,37 @@
             if (!isNaN(num) && num >= 1 && num <= 31) { const item = muster.find(i => i.id === id); if (item) item.den = num; save(); }
         }
 
-        function toggleMusterSplit(id, checked) {
+        function setSplitCount(id, count) {
             const item = muster.find(i => i.id === id);
-            if (item) {
-                item.split = checked;
-                if (checked) {
-                    item.part1Amount = item.part1Amount || Math.round(item.castka * 0.9);
-                    item.part1Day = item.part1Day || item.den || 1;
-                    item.part2Amount = item.part2Amount || (item.castka - item.part1Amount);
-                    item.part2Day = item.part2Day || 15;
-                }
-                save();
+            if (!item) return;
+            const c = parseInt(count);
+            if (c === 0) {
+                delete item.splitParts;
+                item.split = false;
+            } else if (c === 2) {
+                item.split = true;
+                item.splitParts = [
+                    { amount: item.part1Amount || Math.round(item.castka / 2), day: item.part1Day || item.den || 5 },
+                    { amount: item.part2Amount || (item.castka - (item.part1Amount || Math.round(item.castka / 2))), day: item.part2Day || 15 }
+                ];
+            } else if (c === 3) {
+                item.split = true;
+                const partVal = Math.round((item.castka / 3) * 100) / 100;
+                item.splitParts = [
+                    { amount: partVal, day: item.den || 5 },
+                    { amount: partVal, day: 15 },
+                    { amount: Math.round((item.castka - 2 * partVal) * 100) / 100, day: 25 }
+                ];
             }
+            save();
         }
 
-        function updateMusterSplitData(id, field, val) {
+        function updateSplitPartData(id, index, field, val) {
             const item = muster.find(i => i.id === id);
-            if (item) { item[field] = parseFloat(val) || parseInt(val) || 0; save(); }
+            if (item && item.splitParts && item.splitParts[index]) {
+                item.splitParts[index][field] = parseFloat(val) || parseInt(val) || 0;
+                save();
+            }
         }
 
         function toggleMusterHasExpiry(id, checked) {
@@ -639,7 +627,7 @@
         }
 
         function deleteMusterItem(id) {
-            if (confirm("Opravdu smazat tuto trvalou šablonu z Mustru?")) {
+            if (confirm("Opravdu smazat tuto trvalou šablonu z Musteru?")) {
                 muster = muster.filter(item => item.id !== id);
                 save();
             }
@@ -673,81 +661,57 @@
                     else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(m)) belongsToMonth = true;
 
                     if (belongsToMonth) {
-                        if (template.split) {
-                            const parts = [
-                                { partNum: 1, suffix: " (1/2)", defaultAmount: template.part1Amount || 0, defaultDay: template.part1Day || 1 },
+                        let partsToProcess = [];
+
+                        if (template.splitParts && template.splitParts.length > 0) {
+                            partsToProcess = template.splitParts.map((p, idx) => ({
+                                partNum: idx + 1,
+                                suffix: ` (${idx + 1}/${template.splitParts.length})`,
+                                defaultAmount: p.amount || 0,
+                                defaultDay: p.day || 5
+                            }));
+                        } else if (template.split) {
+                            partsToProcess = [
+                                { partNum: 1, suffix: " (1/2)", defaultAmount: template.part1Amount || 0, defaultDay: template.part1Day || 5 },
                                 { partNum: 2, suffix: " (2/2)", defaultAmount: template.part2Amount || 0, defaultDay: template.part2Day || 15 }
                             ];
-
-                            parts.forEach(part => {
-                                const partKey = `${template.nazev}${part.suffix}`;
-                                const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(partKey);
-
-                                if (!isDeleted) {
-                                    const customAmountKey = `${monthKey}-${partKey}`;
-                                    const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
-                                        ? modifiedData.amounts[customAmountKey] 
-                                        : part.defaultAmount;
-
-                                    const customNameKey = `${monthKey}-${partKey}`;
-                                    const effectiveName = (modifiedData.names && modifiedData.names[customNameKey]) 
-                                        ? modifiedData.names[customNameKey] 
-                                        : partKey;
-
-                                    const effectiveDay = getAdjustedDay(y, m, part.defaultDay);
-                                    const uniqueId = `${monthKey}-${partKey}`;
-
-                                    const itemObj = {
-                                        uniqueId,
-                                        itemMonth: monthKey,
-                                        origNazev: partKey,
-                                        nazev: effectiveName,
-                                        castka: effectiveAmount,
-                                        den: effectiveDay,
-                                        isMusterItem: true,
-                                        monthStyle: getMonthStyle(monthKey)
-                                    };
-
-                                    finalExpensesList.push(itemObj);
-                                    totalExpenses += effectiveAmount;
-                                    if (checkedSimItems[uniqueId]) simExpenses += effectiveAmount;
-                                }
-                            });
-
                         } else {
-                            const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(template.nazev);
-                            
+                            partsToProcess = [
+                                { partNum: 1, suffix: "", defaultAmount: template.castka, defaultDay: template.den || 5 }
+                            ];
+                        }
+
+                        partsToProcess.forEach(part => {
+                            const partKey = `${template.nazev}${part.suffix}`;
+                            const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(partKey);
+
                             if (!isDeleted) {
-                                let baseAmount = template.castka;
-                                if (template.monthAmounts && template.monthAmounts[m] !== undefined) {
-                                    baseAmount = template.monthAmounts[m];
-                                } else if (template.tydenni) {
-                                    baseAmount = template.castka * countDayOfWeekInMonth(y, m, template.denVTydnu || 1);
+                                let baseAmt = part.defaultAmount;
+                                if (part.suffix === "" && template.monthAmounts && template.monthAmounts[m] !== undefined) {
+                                    baseAmt = template.monthAmounts[m];
                                 }
 
-                                const customAmountKey = `${monthKey}-${template.nazev}`;
+                                const customAmountKey = `${monthKey}-${partKey}`;
                                 const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
                                     ? modifiedData.amounts[customAmountKey] 
-                                    : baseAmount;
+                                    : baseAmt;
 
-                                const customNameKey = `${monthKey}-${template.nazev}`;
+                                const customNameKey = `${monthKey}-${partKey}`;
                                 const effectiveName = (modifiedData.names && modifiedData.names[customNameKey]) 
                                     ? modifiedData.names[customNameKey] 
-                                    : template.nazev;
+                                    : partKey;
 
-                                const effectiveDay = getAdjustedDay(y, m, template.den || 1);
-                                const uniqueId = `${monthKey}-${template.nazev}`;
+                                const effectiveDay = getAdjustedDay(y, m, part.defaultDay);
+                                const uniqueId = `${monthKey}-${partKey}`;
 
                                 const itemObj = {
                                     uniqueId,
                                     itemMonth: monthKey,
-                                    origNazev: template.nazev,
+                                    origNazev: partKey,
                                     nazev: effectiveName,
                                     castka: effectiveAmount,
                                     den: effectiveDay,
                                     isMusterItem: true,
-                                    isTydenni: template.tydenni || false,
-                                    weeklyUnitAmount: template.tydenni ? template.castka : null,
                                     monthStyle: getMonthStyle(monthKey)
                                 };
 
@@ -755,13 +719,13 @@
                                 totalExpenses += effectiveAmount;
                                 if (checkedSimItems[uniqueId]) simExpenses += effectiveAmount;
                             }
-                        }
+                        });
                     }
                 });
 
                 if (modifiedData.added[monthKey]) {
                     modifiedData.added[monthKey].filter(i => i.typ === "vydaj").forEach(addedItem => {
-                        const effectiveDay = getAdjustedDay(y, m, addedItem.den || 1);
+                        const effectiveDay = getAdjustedDay(y, m, addedItem.den || 5);
                         const uniqueId = addedItem.id;
                         
                         const itemObj = {
@@ -801,51 +765,17 @@
 
             Object.keys(accountBalances).forEach(key => {
                 const uniqueId = `staticky-${key}`;
-                const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 1, isStaticAccount: true, accountKey: key };
+                const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 5, isStaticAccount: true, accountKey: key };
                 finalIncomesList.push(itemObj);
                 totalIncomes += accountBalances[key];
                 if (checkedSimItems[uniqueId]) simIncomes += accountBalances[key];
-            });
-
-            muster.filter(t => t.typ === "prijem" && t.kumulativni).forEach(template => {
-                let cumulativeAmount = 0;
-                let activeMonthsCount = 0;
-
-                activeMonthsInHorizon.forEach(monthKey => {
-                    const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(template.nazev);
-                    if (!isDeleted) {
-                        const customAmountKey = `${monthKey}-${template.nazev}`;
-                        const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
-                            ? modifiedData.amounts[customAmountKey] 
-                            : template.castka;
-
-                        cumulativeAmount += effectiveAmount;
-                        activeMonthsCount++;
-                    }
-                });
-
-                if (cumulativeAmount !== 0) {
-                    const uniqueId = `kumulativni-${template.nazev}`;
-                    const itemObj = {
-                        uniqueId,
-                        nazev: template.nazev,
-                        origNazev: template.nazev,
-                        castka: cumulativeAmount,
-                        den: template.den || 1,
-                        isKumulativni: true,
-                        labelSuffix: activeMonthsCount > 1 ? ` (x${activeMonthsCount})` : ''
-                    };
-                    finalIncomesList.push(itemObj);
-                    totalIncomes += cumulativeAmount;
-                    if (checkedSimItems[uniqueId]) simIncomes += cumulativeAmount;
-                }
             });
 
             activeMonthsInHorizon.forEach((monthKey) => {
                 const [y, m] = monthKey.split("-").map(Number);
                 if (modifiedData.added[monthKey]) {
                     modifiedData.added[monthKey].filter(i => i.typ === "prijem").forEach(addedItem => {
-                        const effectiveDay = getAdjustedDay(y, m, addedItem.den || 1);
+                        const effectiveDay = getAdjustedDay(y, m, addedItem.den || 5);
                         const uniqueId = addedItem.id;
                         const itemObj = {
                             uniqueId,
@@ -1015,7 +945,7 @@
                                         <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-rose-400">
                                         <span class="text-xs text-gray-500 ml-1">€</span>
                                     </div>
-                                    <button onclick='handleItemDeleteClick(${JSON.stringify(item)})' class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 p-2 rounded-lg text-xs font-semibold transition" title="${item.isTydenni && item.weeklyUnitAmount && item.castka > item.weeklyUnitAmount ? 'Zaplatit 1 týden' : 'Vyřídit platbu (smazat)'}">
+                                    <button onclick="deleteItem('${activeMonth}', '${item.itemMonth}', '${item.origNazev}')" class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 p-2 rounded-lg text-xs font-semibold transition" title="Vyřídit platbu (smazat)">
                                         🗑️
                                     </button>
                                 </div>
@@ -1049,7 +979,7 @@
                                             </div>
                                             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
                                         ` : ''}
-                                        <span class="text-xs font-bold px-2 py-1 rounded border bg-gray-800 text-gray-400 border-gray-700 shrink-0">1.</span>
+                                        <span class="text-xs font-bold px-2 py-1 rounded border bg-gray-800 text-gray-400 border-gray-700 shrink-0">5.</span>
                                         <span class="text-sm font-semibold text-gray-200 truncate">${item.nazev} <span class="text-[10px] text-gray-500 uppercase font-bold ml-1">(Zůstatek)</span></span>
                                     </div>
                                     <div class="flex items-center gap-2 shrink-0">
@@ -1062,28 +992,6 @@
                                             <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
                                             <span class="text-xs text-gray-500 ml-1">€</span>
                                         </div>
-                                    </div>
-                                </div>
-                            `;
-                        } else if (item.isKumulativni) {
-                            html += `
-                                <div class="p-3 rounded-lg border border-emerald-950/20 bg-emerald-950/5 flex justify-between items-center gap-3 hover:border-gray-800 transition ${isChecked ? 'opacity-40 line-through' : ''}">
-                                    <div class="flex items-center gap-2 min-w-0 flex-1">
-                                        ${isEditMode ? `
-                                            <div class="flex flex-col gap-0.5 mr-1">
-                                                <button onclick="moveIncomeItem('${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
-                                                <button onclick="moveIncomeItem('${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
-                                            </div>
-                                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
-                                        ` : ''}
-                                        <span class="text-xs font-bold px-2 py-1 rounded border bg-gray-800 text-gray-400 border-gray-700 shrink-0">${item.den}.</span>
-                                        <span class="text-sm font-semibold text-gray-200 truncate">${item.nazev}${item.labelSuffix}</span>
-                                    </div>
-                                    <div class="flex items-center gap-3 shrink-0">
-                                        <span class="text-sm font-bold text-emerald-400">${formatMoney(item.castka)}</span>
-                                        <button onclick="deleteItem('${activeMonth}', '${activeMonth}', '${item.origNazev}')" class="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 p-2 rounded-lg text-xs font-semibold transition" title="Přijato (smazat)">
-                                            🗑️
-                                        </button>
                                     </div>
                                 </div>
                             `;
@@ -1285,6 +1193,7 @@
                     const borderCol = isIncome ? 'border-emerald-950/30' : 'border-rose-950/30';
                     const isSettingsOpen = !!openMusterSettings[item.id];
                     const isIrregular = item.frekvence === "vybrane_mesice";
+                    const splitCount = item.splitParts ? item.splitParts.length : (item.split ? 2 : 0);
 
                     html += `
                         <div class="p-4 rounded-xl border ${borderCol} bg-gray-850/50 hover:border-gray-700 transition">
@@ -1292,9 +1201,7 @@
                                 <div class="flex-1 min-w-0 w-full">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <input type="text" value="${item.nazev}" onchange="updateMusterName(${item.id}, this.value)" class="bg-transparent font-bold text-white text-base focus:outline-none focus:border-orange-500 border-b border-transparent">
-                                        ${item.kumulativni ? '<span class="text-[10px] text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-900/30">Fixní</span>' : ''}
-                                        ${item.tydenni ? '<span class="text-[10px] text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-900/30">Týdenní</span>' : ''}
-                                        ${item.split ? '<span class="text-[10px] text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-900/30">Rozdělená (1/2 + 2/2)</span>' : ''}
+                                        ${splitCount > 0 ? `<span class="text-[10px] text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-900/30">Rozděleno na ${splitCount} části</span>` : ''}
                                         
                                         ${isIrregular ? `
                                             <div class="flex items-center gap-1 ml-1">
@@ -1324,7 +1231,7 @@
                                     <div class="flex flex-wrap items-center gap-4 text-xs">
                                         <div class="flex items-center gap-1.5">
                                             <span class="text-gray-400 font-semibold">Den splatnosti:</span>
-                                            <input type="number" min="1" max="31" value="${item.den || 1}" onchange="updateMusterDay(${item.id}, this.value)" class="bg-gray-900 border border-gray-800 text-white font-bold w-12 text-center rounded py-1 focus:outline-none focus:border-orange-500">
+                                            <input type="number" min="1" max="31" value="${item.den || 5}" onchange="updateMusterDay(${item.id}, this.value)" class="bg-gray-900 border border-gray-800 text-white font-bold w-12 text-center rounded py-1 focus:outline-none focus:border-orange-500">
                                         </div>
 
                                         <div class="flex items-center gap-1.5">
@@ -1336,16 +1243,18 @@
                                         </div>
 
                                         <div class="flex items-center gap-2 border-l border-gray-800 pl-4">
-                                            <label class="flex items-center gap-1.5 text-xs text-purple-400 cursor-pointer select-none">
-                                                <input type="checkbox" ${item.split ? 'checked' : ''} onchange="toggleMusterSplit(${item.id}, this.checked)" class="accent-purple-500 h-4 w-4">
-                                                <span>Rozdělit na 2 části</span>
-                                            </label>
+                                            <span class="text-gray-400 font-semibold">Rozdělení plateb:</span>
+                                            <select onchange="setSplitCount(${item.id}, this.value)" class="bg-gray-900 border border-gray-800 text-xs px-2 py-1 rounded text-purple-300 font-semibold focus:outline-none focus:border-purple-500">
+                                                <option value="0" ${splitCount === 0 ? 'selected' : ''}>Nerozděleno (1 platba)</option>
+                                                <option value="2" ${splitCount === 2 ? 'selected' : ''}>Rozdělit na 2 části</option>
+                                                <option value="3" ${splitCount === 3 ? 'selected' : ''}>Rozdělit na 3 části</option>
+                                            </select>
                                         </div>
 
                                         <div class="flex items-center gap-2 border-l border-gray-800 pl-4">
                                             <label class="flex items-center gap-1.5 text-xs text-orange-400 cursor-pointer select-none">
                                                 <input type="checkbox" ${item.hasExpiry ? 'checked' : ''} onchange="toggleMusterHasExpiry(${item.id}, this.checked)" class="accent-orange-500 h-4 w-4">
-                                                <span>Omezit platnost (Platí do)</span>
+                                                <span>Omezit platnost</span>
                                             </label>
 
                                             ${item.hasExpiry ? `
@@ -1358,24 +1267,19 @@
                                         </div>
                                     </div>
 
-                                    ${item.split ? `
+                                    ${splitCount > 0 && item.splitParts ? `
                                         <div class="bg-purple-950/20 border border-purple-900/40 p-2.5 rounded-lg text-xs space-y-2">
-                                            <span class="font-bold text-purple-300 block">Nastavení 2 částí platby:</span>
+                                            <span class="font-bold text-purple-300 block">Nastavení částí platby:</span>
                                             <div class="flex flex-wrap items-center gap-4">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-gray-400">1. část (1/2):</span>
-                                                    <input type="number" step="0.01" value="${formatValTwoDec(item.part1Amount || 0)}" onchange="updateMusterSplitData(${item.id}, 'part1Amount', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-20 text-center rounded py-1">
-                                                    <span>€</span>
-                                                    <span class="text-gray-500 ml-1">den:</span>
-                                                    <input type="number" min="1" max="31" value="${item.part1Day || 1}" onchange="updateMusterSplitData(${item.id}, 'part1Day', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-12 text-center rounded py-1">
-                                                </div>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-gray-400">2. část (2/2):</span>
-                                                    <input type="number" step="0.01" value="${formatValTwoDec(item.part2Amount || 0)}" onchange="updateMusterSplitData(${item.id}, 'part2Amount', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-20 text-center rounded py-1">
-                                                    <span>€</span>
-                                                    <span class="text-gray-500 ml-1">den:</span>
-                                                    <input type="number" min="1" max="31" value="${item.part2Day || 15}" onchange="updateMusterSplitData(${item.id}, 'part2Day', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-12 text-center rounded py-1">
-                                                </div>
+                                                ${item.splitParts.map((part, pIdx) => `
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-gray-400">${pIdx + 1}. část:</span>
+                                                        <input type="number" step="0.01" value="${formatValTwoDec(part.amount || 0)}" onchange="updateSplitPartData(${item.id}, ${pIdx}, 'amount', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-20 text-center rounded py-1">
+                                                        <span>€</span>
+                                                        <span class="text-gray-500 ml-1">den:</span>
+                                                        <input type="number" min="1" max="31" value="${part.day || 5}" onchange="updateSplitPartData(${item.id}, ${pIdx}, 'day', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-12 text-center rounded py-1">
+                                                    </div>
+                                                `).join('')}
                                             </div>
                                         </div>
                                     ` : ''}
@@ -1411,9 +1315,7 @@
         }
 
         function exportData() {
-            // Seřazení šablon v Musteru podle dne splatnosti před exportem
-            const sortedMuster = [...muster].sort((a, b) => (a.den || 1) - (b.den || 1));
-
+            const sortedMuster = [...muster].sort((a, b) => (a.den || 5) - (b.den || 5));
             const dataStr = JSON.stringify({ muster: sortedMuster, accountBalances, modifiedData, generatedMonths, incomeCustomOrder, expenseCustomOrder, deletedMonthsHistory }, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const exportFileDefaultName = 'domaci_finance_zaloha.json';
