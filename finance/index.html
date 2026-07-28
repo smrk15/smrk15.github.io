@@ -1,0 +1,1328 @@
+code = """<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domácí Finance - Plánovač</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #121214; }
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
+        /* Skrytí šipek u číselných vstupů pro čistý vzhled */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- BOČNÍ PANEL (SIDEBAR) -->
+        <aside class="w-64 bg-gray-950 border-r border-gray-800 flex flex-col shrink-0 text-gray-300">
+            <div class="p-4 border-b border-gray-800 flex items-center justify-between gap-2">
+                <button onclick="goHome()" id="btnHomeIcon" class="flex-1 bg-gray-900 hover:bg-gray-850 text-orange-500/60 hover:text-orange-450 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Aktuální přehled">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                </button>
+                <button onclick="setView('muster')" id="btnMusterIcon" class="flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-450 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Správa šablon (Muster)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                </button>
+                <button onclick="toggleForm()" id="btnAddIcon" class="flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Přidat jednorázovou platbu">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+                <button onclick="undo()" id="undoBtn" disabled class="flex-1 bg-gray-900 text-gray-800 rounded-lg border border-gray-955 flex items-center justify-center py-2.5 transition-all duration-200 opacity-30 cursor-not-allowed" title="Zpět">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 sidebar-scroll">
+                <div>
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Plánovací horizonty</div>
+                    <div id="sidebarMonths" class="space-y-1"></div>
+                </div>
+                <div class="pt-2 border-t border-gray-900">
+                    <button onclick="generateNextMonth()" class="w-full bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/30 rounded-lg py-2 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                        ➕ Přidat další měsíc
+                    </button>
+                </div>
+
+                <div id="trashContainer" class="pt-4 border-t border-gray-900 hidden">
+                    <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">🗑️ Obnovit smazaný měsíc</div>
+                    <div id="trashMonthsList" class="space-y-1.5"></div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-800 bg-gray-950 flex items-center justify-between gap-2">
+                <button onclick="exportData()" id="btnExportIcon" class="flex-1 bg-gray-900 hover:bg-gray-850 text-orange-500/60 hover:text-orange-400 border border-gray-800 hover:border-orange-950/50 rounded-lg py-2.5 flex items-center justify-center transition-all" title="Exportovat data">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8l-4-4H8z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M12 14a3 3 0 100-6 3 3 0 000 6z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M6 20h12"></path></svg>
+                </button>
+                <label id="btnImportLabel" class="flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 border border-gray-800 hover:border-orange-950/50 rounded-lg py-2.5 flex items-center justify-center transition-all cursor-pointer" title="Importovat data">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    <input type="file" id="importFile" onchange="importData(event)" class="hidden">
+                </label>
+                <button onclick="resetToDefault()" class="flex-1 bg-gray-900 hover:bg-red-950/20 text-red-500/60 hover:text-red-400 border border-gray-800 hover:border-red-950/50 rounded-lg py-2.5 flex items-center justify-center transition-all" title="Obnovit výchozí data">🔥</button>
+            </div>
+        </aside>
+
+        <!-- HLAVNÍ OBSAH -->
+        <main class="flex-1 overflow-y-auto bg-[#121214] p-6 md:p-8 flex flex-col">
+            <header class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+                <h1 class="text-3xl font-bold text-orange-500 flex items-center gap-3" id="pageTitle">
+                    <svg class="w-8 h-8 text-orange-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Domácí Finance</span>
+                </h1>
+                <div class="text-sm bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-lg text-gray-400 font-mono" id="currentViewIndicator"></div>
+            </header>
+
+            <div id="statsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                    <p class="text-xs text-gray-500 uppercase font-bold">Celkem příjmy (+)</p>
+                    <p class="text-2xl font-black text-emerald-400 mt-1" id="statIncome">0,00 €</p>
+                    <p class="text-xs text-gray-500 mt-1" id="statIncomeSim">Po zaškrtnutí: 0,00 €</p>
+                </div>
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                    <p class="text-xs text-gray-500 uppercase font-bold">Celkem výdaje (-)</p>
+                    <p class="text-2xl font-black text-rose-400 mt-1" id="statExpense">0,00 €</p>
+                    <p class="text-xs text-gray-500 mt-1" id="statExpenseSim">Po zaškrtnutí: 0,00 €</p>
+                </div>
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-800 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase font-bold">Plánovaný zůstatek</p>
+                        <p class="text-2xl font-black mt-1" id="statBalance">0,00 €</p>
+                        <p class="text-xs font-bold text-orange-400 mt-1" id="statBalanceSim">Po zaškrtnutí: 0,00 €</p>
+                    </div>
+                    <div id="bulkDeleteContainer" class="hidden mt-2 pt-2 border-t border-gray-800">
+                        <button onclick="deleteCheckedItems()" class="w-full bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-900/40 rounded py-1 text-xs font-bold transition">
+                            🗑️ Smazat zaškrtnuté platby
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORMULÁŘ PRO PŘIDÁNÍ POLOŽKY -->
+            <div id="itemForm" class="hidden bg-gray-900 p-6 rounded-xl mb-8 border border-gray-850">
+                <h2 class="text-xl font-semibold text-orange-400 mb-4" id="formTitle">Přidat platbu / šablonu</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Název</label>
+                        <input type="text" id="formName" placeholder="Např. Nákup" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-orange-500 text-gray-200 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Částka (€)</label>
+                        <input type="number" step="0.01" id="formAmount" placeholder="Zadej částku" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-orange-500 text-gray-200 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Den splatnosti</label>
+                        <input type="number" id="formDay" min="1" max="31" value="1" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-orange-500 text-gray-200 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Typ platby</label>
+                        <select id="formType" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-orange-500 text-gray-200 text-sm">
+                            <option value="vydaj">Výdaj (-)</option>
+                            <option value="prijem">Příjem (+)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="musterOnlyOptions" class="hidden mt-4 pt-4 border-t border-gray-800 flex flex-wrap items-center gap-4">
+                    <label class="flex items-center gap-2 text-xs text-orange-400 cursor-pointer select-none">
+                        <input type="checkbox" id="formApplyToCurrent" class="accent-orange-500 h-4 w-4">
+                        <span>Aplikovat i na rozpracovaný / aktuální měsíc</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-3 mt-4 justify-end">
+                    <button onclick="toggleForm()" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">Zrušit</button>
+                    <button onclick="saveItem()" class="bg-orange-600 hover:bg-orange-500 px-4 py-2 rounded-lg text-sm font-semibold text-white">Uložit</button>
+                </div>
+            </div>
+
+            <div id="mainContent" class="space-y-6 flex-1"></div>
+        </main>
+    </div>
+
+    <script>
+        const defaultMuster = [
+            { id: 1, typ: "vydaj", nazev: "plyn", castka: 168, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 2, typ: "vydaj", nazev: "půjčka", castka: 742, den: 1, frekvence: "kazdy_mesic", mesice: [], split: true, part1Amount: 700, part1Day: 1, part2Amount: 42, part2Day: 15 },
+            { id: 3, typ: "vydaj", nazev: "Hort", castka: 120, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 4, typ: "vydaj", nazev: "Martin", castka: 200, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 5, typ: "vydaj", nazev: "UKV", castka: 18, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 6, typ: "vydaj", nazev: "poplatky", castka: 50, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 7, typ: "vydaj", nazev: "Apple 05/26", castka: 135, den: 1, frekvence: "kazdy_mesic", mesice: [], hasExpiry: true, validUntilMonth: 5, validUntilYear: 2026 },
+            { id: 8, typ: "vydaj", nazev: "životko", castka: 121, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 9, typ: "vydaj", nazev: "Kůň", castka: 80, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 10, typ: "vydaj", nazev: "wustenrott", castka: 50, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 11, typ: "vydaj", nazev: "Deka S", castka: 100, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 12, typ: "vydaj", nazev: "Deka V", castka: 100, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 13, typ: "vydaj", nazev: "táta", castka: 30, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 14, typ: "vydaj", nazev: "děti jídlo", castka: 130, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 15, typ: "vydaj", nazev: "stavebni", castka: 280, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 16, typ: "vydaj", nazev: "WAL 2m", castka: 261, den: 1, frekvence: "vybrane_mesice", mesice: [2, 4, 6, 8, 10, 12] },
+            { id: 17, typ: "vydaj", nazev: "Deka M", castka: 450, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 18, typ: "vydaj", nazev: "internet", castka: 45, den: 15, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 19, typ: "vydaj", nazev: "vodafone", castka: 110, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 20, typ: "vydaj", nazev: "Doprava", castka: 350, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 21, typ: "vydaj", nazev: "Nakupy", castka: 2000, den: 1, frekvence: "kazdy_mesic", mesice: [] },
+            { id: 22, typ: "vydaj", nazev: "Spar", castka: 246.8, den: 1, frekvence: "kazdy_mesic", mesice: [], tydenni: true, denVTydnu: 1 },
+            { id: 23, typ: "vydaj", nazev: "energie spar", castka: 25, den: 1, frekvence: "kazdy_mesic", mesice: [], tydenni: true, denVTydnu: 1 },
+            { id: 24, typ: "vydaj", nazev: "SFB 2,5,8,11", castka: 130, den: 1, frekvence: "vybrane_mesice", mesice: [2, 5, 8, 11], monthAmounts: { 11: 110 } },
+            { id: 25, typ: "vydaj", nazev: "tv 2,5,8,11", castka: 56, den: 1, frekvence: "vybrane_mesice", mesice: [2, 5, 8, 11] },
+            { id: 26, typ: "vydaj", nazev: "popelnice 4,10", castka: 185, den: 10, frekvence: "vybrane_mesice", mesice: [4, 10] },
+            { id: 27, typ: "vydaj", nazev: "CZ dál 12.7.", castka: 100, den: 12, frekvence: "vybrane_mesice", mesice: [7] },
+            { id: 28, typ: "vydaj", nazev: "SK známka 20.7.", castka: 90, den: 20, frekvence: "vybrane_mesice", mesice: [7] },
+            { id: 29, typ: "vydaj", nazev: "deka 12", castka: 70, den: 1, frekvence: "vybrane_mesice", mesice: [12] },
+            { id: 100, typ: "prijem", nazev: "Lohn", castka: 3000, den: 1, frekvence: "kazdy_mesic", mesice: [], kumulativni: true },
+            { id: 101, typ: "prijem", nazev: "Dirk", castka: 4000, den: 1, frekvence: "kazdy_mesic", mesice: [], kumulativni: true },
+            { id: 102, typ: "prijem", nazev: "KG", castka: 518, den: 1, frekvence: "kazdy_mesic", mesice: [], kumulativni: true }
+        ];
+
+        const defaultIncomeOrder = ["staticky-DE", "kumulativni-Lohn", "kumulativni-Dirk", "kumulativni-KG", "staticky-Revolut", "staticky-CC", "staticky-SK"];
+
+        const monthStyles = [
+            { badge: "bg-blue-950/60 text-blue-400 border-blue-800/50", card: "border-blue-950/40 bg-blue-950/5" },
+            { badge: "bg-purple-950/60 text-purple-400 border-purple-800/50", card: "border-purple-950/40 bg-purple-950/5" },
+            { badge: "bg-amber-950/60 text-amber-400 border-amber-800/50", card: "border-amber-950/40 bg-amber-950/5" },
+            { badge: "bg-teal-950/60 text-teal-400 border-teal-800/50", card: "border-teal-950/40 bg-teal-950/5" },
+            { badge: "bg-pink-950/60 text-pink-400 border-pink-800/50", card: "border-pink-950/40 bg-pink-950/5" },
+            { badge: "bg-indigo-950/60 text-indigo-400 border-indigo-800/50", card: "border-indigo-950/40 bg-indigo-950/5" }
+        ];
+
+        function formatMoney(val) {
+            const num = parseFloat(val) || 0;
+            if (Number.isInteger(num)) {
+                return num.toLocaleString('cs-CZ') + ' €';
+            }
+            return num.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+        }
+
+        function formatValTwoDec(val) {
+            const num = parseFloat(val) || 0;
+            if (Number.isInteger(num)) {
+                return num.toString();
+            }
+            return num.toFixed(2);
+        }
+
+        function getMonthStyle(monthKey) {
+            const [y, m] = monthKey.split("-").map(Number);
+            return monthStyles[(m - 1) % monthStyles.length];
+        }
+
+        function getMaxDaysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
+        function getAdjustedDay(year, month, targetDay) { return Math.min(targetDay || 1, getMaxDaysInMonth(year, month)); }
+
+        function countDayOfWeekInMonth(year, month, dayOfWeek = 1) {
+            let count = 0;
+            const daysInMonth = getMaxDaysInMonth(year, month);
+            for (let day = 1; day <= daysInMonth; day++) {
+                if (new Date(year, month - 1, day).getDay() === (dayOfWeek % 7)) count++;
+            }
+            return count;
+        }
+
+        const defaultAccountBalances = { "DE": 8875, "Revolut": 359, "CC": -4000, "SK": 152 };
+        const defaultModifiedData = { deleted: {}, added: {}, amounts: {}, names: {} };
+
+        let muster = JSON.parse(localStorage.getItem("finMusterV10")) || defaultMuster;
+        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV10")) || defaultAccountBalances;
+        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV10")) || defaultModifiedData;
+        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV10")) || ["2026-07"];
+        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV10")) || defaultIncomeOrder;
+        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV10")) || {};
+        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV10")) || {};
+        
+        let activeMonth = localStorage.getItem("finActiveMonthV10") || "2026-07";
+        let currentView = localStorage.getItem("finCurrentViewV10") || "home";
+        let checkedSimItems = {};
+        let openMusterSettings = {};
+        let isEditMode = false;
+        let historyStack = [];
+
+        function pushToHistory() {
+            const state = {
+                muster: JSON.parse(JSON.stringify(muster)),
+                accountBalances: JSON.parse(JSON.stringify(accountBalances)),
+                modifiedData: JSON.parse(JSON.stringify(modifiedData)),
+                generatedMonths: JSON.parse(JSON.stringify(generatedMonths)),
+                incomeCustomOrder: JSON.parse(JSON.stringify(incomeCustomOrder)),
+                expenseCustomOrder: JSON.parse(JSON.stringify(expenseCustomOrder)),
+                deletedMonthsHistory: JSON.parse(JSON.stringify(deletedMonthsHistory)),
+                activeMonth: activeMonth,
+                currentView: currentView
+            };
+            historyStack.push(JSON.stringify(state));
+            if (historyStack.length > 20) historyStack.shift();
+            updateUndoButton();
+        }
+
+        function undo() {
+            if (historyStack.length === 0) return;
+            const previousState = JSON.parse(historyStack.pop());
+            muster = previousState.muster;
+            accountBalances = previousState.accountBalances;
+            modifiedData = previousState.modifiedData;
+            generatedMonths = previousState.generatedMonths;
+            incomeCustomOrder = previousState.incomeCustomOrder;
+            expenseCustomOrder = previousState.expenseCustomOrder;
+            deletedMonthsHistory = previousState.deletedMonthsHistory;
+            activeMonth = previousState.activeMonth;
+            currentView = previousState.currentView;
+            save(false);
+            updateUndoButton();
+            render();
+        }
+
+        function updateUndoButton() {
+            const btn = document.getElementById("undoBtn");
+            if (historyStack.length > 0) {
+                btn.disabled = false;
+                btn.className = "flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500 rounded-lg border border-orange-900/40 flex items-center justify-center py-2.5 transition-all duration-200 cursor-pointer";
+            } else {
+                btn.disabled = true;
+                btn.className = "flex-1 bg-gray-900 text-gray-800 rounded-lg border border-gray-955 flex items-center justify-center py-2.5 transition-all duration-200 opacity-30 cursor-not-allowed";
+            }
+        }
+
+        function save(writeHistory = true) {
+            if (writeHistory) pushToHistory();
+            localStorage.setItem("finMusterV10", JSON.stringify(muster));
+            localStorage.setItem("finBalancesV10", JSON.stringify(accountBalances));
+            localStorage.setItem("finModifiedV10", JSON.stringify(modifiedData));
+            localStorage.setItem("finMonthsV10", JSON.stringify(generatedMonths));
+            localStorage.setItem("finIncomeOrderV10", JSON.stringify(incomeCustomOrder));
+            localStorage.setItem("finExpenseOrderV10", JSON.stringify(expenseCustomOrder));
+            localStorage.setItem("finDeletedMonthsV10", JSON.stringify(deletedMonthsHistory));
+            localStorage.setItem("finActiveMonthV10", activeMonth);
+            localStorage.setItem("finCurrentViewV10", currentView);
+            render();
+        }
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            render();
+        }
+
+        function toggleForm() {
+            const form = document.getElementById("itemForm");
+            const musterOpt = document.getElementById("musterOnlyOptions");
+            if (currentView === "muster") musterOpt.classList.remove("hidden");
+            else musterOpt.classList.add("hidden");
+            form.classList.toggle("hidden");
+        }
+
+        function setView(view) { currentView = view; save(false); }
+        function goHome() { currentView = "home"; save(false); }
+        function selectMonth(monthKey) { currentView = "home"; activeMonth = monthKey; checkedSimItems = {}; save(false); }
+
+        function generateNextMonth() {
+            const sorted = [...generatedMonths].sort();
+            let nextYear, nextMonth;
+            if (sorted.length === 0) {
+                const now = new Date(); nextYear = now.getFullYear(); nextMonth = now.getMonth() + 1;
+            } else {
+                const last = sorted[sorted.length - 1];
+                const [y, m] = last.split("-").map(Number);
+                if (m === 12) { nextYear = y + 1; nextMonth = 1; } else { nextYear = y; nextMonth = m + 1; }
+            }
+            const newMonthKey = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+            if (!generatedMonths.includes(newMonthKey)) generatedMonths.push(newMonthKey);
+            activeMonth = newMonthKey;
+            currentView = "home";
+            save();
+        }
+
+        function deleteWholeMonth(monthKey) {
+            if (confirm(`Opravdu smazat měsíc ${formatMonthLabel(monthKey)} z plánu?`)) {
+                pushToHistory();
+                deletedMonthsHistory[monthKey] = {
+                    deleted: modifiedData.deleted[monthKey] ? [...modifiedData.deleted[monthKey]] : [],
+                    added: modifiedData.added[monthKey] ? JSON.parse(JSON.stringify(modifiedData.added[monthKey])) : []
+                };
+
+                generatedMonths = generatedMonths.filter(m => m !== monthKey);
+                delete modifiedData.deleted[monthKey];
+                delete modifiedData.added[monthKey];
+                
+                const sorted = [...generatedMonths].sort();
+                activeMonth = sorted.length > 0 ? sorted[sorted.length - 1] : "";
+                save(false);
+            }
+        }
+
+        function restoreMonth(monthKey, keepModifications = true) {
+            pushToHistory();
+            if (!generatedMonths.includes(monthKey)) generatedMonths.push(monthKey);
+
+            if (keepModifications && deletedMonthsHistory[monthKey]) {
+                modifiedData.deleted[monthKey] = [...deletedMonthsHistory[monthKey].deleted];
+                modifiedData.added[monthKey] = JSON.parse(JSON.stringify(deletedMonthsHistory[monthKey].added));
+            } else {
+                delete modifiedData.deleted[monthKey];
+                delete modifiedData.added[monthKey];
+            }
+
+            delete deletedMonthsHistory[monthKey];
+            activeMonth = monthKey;
+            currentView = "home";
+            save(false);
+        }
+
+        function settleCC() {
+            const currentCcDebt = accountBalances["CC"] || 0;
+            const debtAmount = Math.abs(currentCcDebt);
+
+            if (debtAmount === 0) {
+                alert("Na kartě CC je aktuálně nulový dluh.");
+                return;
+            }
+
+            if (confirm(`Chceš vyrovnat dluh ${formatMoney(debtAmount)} na kreditce CC?\n\n- Zůstatek CC se vynuluje (0 €).\n- Vytvoří se výdaj 'Stržení CC' na 1. den následujícího měsíce.`)) {
+                pushToHistory();
+
+                const [y, m] = activeMonth.split("-").map(Number);
+                let nextY = y, nextM = m + 1;
+                if (nextM > 12) { nextM = 1; nextY++; }
+                const nextMonthKey = `${nextY}-${String(nextM).padStart(2, '0')}`;
+
+                if (!generatedMonths.includes(nextMonthKey)) generatedMonths.push(nextMonthKey);
+
+                accountBalances["CC"] = 0;
+
+                if (!modifiedData.added[nextMonthKey]) modifiedData.added[nextMonthKey] = [];
+                modifiedData.added[nextMonthKey].push({
+                    id: Date.now().toString() + "_cc_settle",
+                    typ: "vydaj",
+                    nazev: "Stržení CC",
+                    castka: debtAmount,
+                    den: 1
+                });
+
+                save(false);
+            }
+        }
+
+        function moveIncomeItem(uniqueId, direction) {
+            const idx = incomeCustomOrder.indexOf(uniqueId);
+            if (idx === -1) return;
+            const newIdx = idx + direction;
+            if (newIdx >= 0 && newIdx < incomeCustomOrder.length) {
+                const temp = incomeCustomOrder[idx];
+                incomeCustomOrder[idx] = incomeCustomOrder[newIdx];
+                incomeCustomOrder[newIdx] = temp;
+                save();
+            }
+        }
+
+        function moveExpenseItem(monthKey, uniqueId, direction) {
+            if (!expenseCustomOrder[monthKey]) return;
+            const list = expenseCustomOrder[monthKey];
+            const idx = list.indexOf(uniqueId);
+            if (idx === -1) return;
+            const newIdx = idx + direction;
+            if (newIdx >= 0 && newIdx < list.length) {
+                const temp = list[idx];
+                list[idx] = list[newIdx];
+                list[newIdx] = temp;
+                save();
+            }
+        }
+
+        function handleItemDeleteClick(item) {
+            if (item.isTydenni && item.weeklyUnitAmount && item.castka > item.weeklyUnitAmount) {
+                const newAmount = Math.max(0, item.castka - item.weeklyUnitAmount);
+                updateHorizonItemAmount(item.itemMonth, item.origNazev, newAmount);
+            } else {
+                if (item.isMusterItem) deleteItem(activeMonth, item.itemMonth, item.origNazev);
+                else deleteAddedItem(activeMonth, item.itemMonth, item.uniqueId);
+            }
+        }
+
+        function deleteItem(horizonMonth, itemMonth, itemKey) {
+            if (!modifiedData.deleted[itemMonth]) modifiedData.deleted[itemMonth] = [];
+            modifiedData.deleted[itemMonth].push(itemKey);
+            save();
+        }
+
+        function deleteAddedItem(horizonMonth, itemMonth, itemId) {
+            if (modifiedData.added[itemMonth]) {
+                modifiedData.added[itemMonth] = modifiedData.added[itemMonth].filter(item => item.id !== itemId);
+            }
+            save();
+        }
+
+        function deleteCheckedItems() {
+            const keys = Object.keys(checkedSimItems).filter(k => checkedSimItems[k]);
+            if (keys.length === 0) return;
+
+            if (confirm(`Opravdu chceš trvale smazat ${keys.length} zaškrtnutých plateb?`)) {
+                pushToHistory();
+                const horizonData = buildHorizonData(activeMonth);
+                const allItems = [...horizonData.expenses, ...horizonData.incomes];
+
+                keys.forEach(uniqueId => {
+                    const item = allItems.find(i => i.uniqueId === uniqueId);
+                    if (item) {
+                        if (item.isMusterItem || item.isKumulativni) deleteItem(activeMonth, item.itemMonth || activeMonth, item.origNazev || item.nazev);
+                        else if (!item.isStaticAccount) deleteAddedItem(activeMonth, item.itemMonth, item.uniqueId);
+                    }
+                });
+
+                checkedSimItems = {};
+                save(false);
+            }
+        }
+
+        function updateHorizonItemAmount(itemMonth, itemKey, val) {
+            const num = parseFloat(val);
+            if (!isNaN(num)) {
+                if (!modifiedData.amounts) modifiedData.amounts = {};
+                modifiedData.amounts[`${itemMonth}-${itemKey}`] = num;
+                save();
+            }
+        }
+
+        function updateHorizonItemName(itemMonth, itemKey, val) {
+            if (!modifiedData.names) modifiedData.names = {};
+            modifiedData.names[`${itemMonth}-${itemKey}`] = val.trim();
+            save();
+        }
+
+        function updateAccountBalance(key, val) {
+            const num = parseFloat(val);
+            if (!isNaN(num)) { accountBalances[key] = num; save(); }
+        }
+
+        function toggleSimCheck(uniqueId) { checkedSimItems[uniqueId] = !checkedSimItems[uniqueId]; render(); }
+
+        function toggleMusterSettings(id) {
+            openMusterSettings[id] = !openMusterSettings[id];
+            render();
+        }
+
+        function saveItem() {
+            const name = document.getElementById("formName").value.trim();
+            const amount = parseFloat(document.getElementById("formAmount").value);
+            const day = parseInt(document.getElementById("formDay").value) || 1;
+            const type = document.getElementById("formType").value;
+
+            if (!name || isNaN(amount)) { alert("Vyplň správně název i částku!"); return; }
+
+            if (currentView === "muster") {
+                const applyToCurrent = document.getElementById("formApplyToCurrent").checked;
+                muster.push({ id: Date.now(), typ: type, nazev: name, castka: amount, den: day, frekvence: "kazdy_mesic", mesice: [] });
+
+                if (applyToCurrent && activeMonth) {
+                    if (!modifiedData.added[activeMonth]) modifiedData.added[activeMonth] = [];
+                    modifiedData.added[activeMonth].push({ id: Date.now().toString() + "_curr", typ: type, nazev: name, castka: amount, den: day });
+                }
+            } else {
+                if (!modifiedData.added[activeMonth]) modifiedData.added[activeMonth] = [];
+                modifiedData.added[activeMonth].push({ id: Date.now().toString(), typ: type, nazev: name, castka: amount, den: day });
+            }
+
+            document.getElementById("formName").value = "";
+            document.getElementById("formAmount").value = "";
+            document.getElementById("formDay").value = "1";
+            document.getElementById("formApplyToCurrent").checked = false;
+            toggleForm();
+            save();
+        }
+
+        function updateMusterAmount(id, val) {
+            const num = parseFloat(val);
+            if (!isNaN(num)) { const item = muster.find(i => i.id === id); if (item) item.castka = num; save(); }
+        }
+
+        function updateMusterSpecificMonthAmount(id, monthNum, val) {
+            const num = parseFloat(val);
+            const item = muster.find(i => i.id === id);
+            if (item) {
+                if (!item.monthAmounts) item.monthAmounts = {};
+                if (!isNaN(num)) item.monthAmounts[monthNum] = num;
+                else delete item.monthAmounts[monthNum];
+                save();
+            }
+        }
+
+        function updateMusterName(id, val) {
+            const item = muster.find(i => i.id === id);
+            if (item && val.trim()) { item.nazev = val.trim(); save(); }
+        }
+
+        function updateMusterDay(id, val) {
+            const num = parseInt(val);
+            if (!isNaN(num) && num >= 1 && num <= 31) { const item = muster.find(i => i.id === id); if (item) item.den = num; save(); }
+        }
+
+        function toggleMusterSplit(id, checked) {
+            const item = muster.find(i => i.id === id);
+            if (item) {
+                item.split = checked;
+                if (checked) {
+                    item.part1Amount = item.part1Amount || Math.round(item.castka * 0.9);
+                    item.part1Day = item.part1Day || item.den || 1;
+                    item.part2Amount = item.part2Amount || (item.castka - item.part1Amount);
+                    item.part2Day = item.part2Day || 15;
+                }
+                save();
+            }
+        }
+
+        function updateMusterSplitData(id, field, val) {
+            const item = muster.find(i => i.id === id);
+            if (item) {
+                item[field] = parseFloat(val) || parseInt(val) || 0;
+                save();
+            }
+        }
+
+        function toggleMusterHasExpiry(id, checked) {
+            const item = muster.find(i => i.id === id);
+            if (item) {
+                item.hasExpiry = checked;
+                if (!checked) {
+                    delete item.validUntilMonth;
+                    delete item.validUntilYear;
+                }
+                save();
+            }
+        }
+
+        function updateMusterValidUntil(id, monthVal, yearVal) {
+            const item = muster.find(i => i.id === id);
+            if (item) {
+                item.validUntilMonth = parseInt(monthVal) || null;
+                item.validUntilYear = parseInt(yearVal) || null;
+                save();
+            }
+        }
+
+        function updateMusterFrequency(id, val) {
+            const item = muster.find(i => i.id === id);
+            if (item) { item.frekvence = val; if (val === "kazdy_mesic") item.mesice = []; save(); }
+        }
+
+        function toggleMusterMonth(itemId, monthNum) {
+            const item = muster.find(i => i.id === itemId);
+            if (item) {
+                if (item.mesice.includes(monthNum)) item.mesice = item.mesice.filter(m => m !== monthNum);
+                else item.mesice.push(monthNum);
+                save();
+            }
+        }
+
+        function deleteMusterItem(id) {
+            if (confirm("Opravdu smazat tuto trvalou šablonu z Mustru?")) {
+                muster = muster.filter(item => item.id !== id);
+                save();
+            }
+        }
+
+        function formatMonthLabel(monthKey) {
+            const [y, m] = monthKey.split("-");
+            const months = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
+            return `${months[parseInt(m) - 1]} ${y}`;
+        }
+
+        function buildHorizonData(targetMonthKey) {
+            const activeMonthsInHorizon = generatedMonths.filter(m => m <= targetMonthKey).sort();
+            
+            let totalExpenses = 0, totalIncomes = 0;
+            let simExpenses = 0, simIncomes = 0;
+
+            const finalExpensesList = [];
+            const finalIncomesList = [];
+
+            activeMonthsInHorizon.forEach((monthKey) => {
+                const [y, m] = monthKey.split("-").map(Number);
+
+                muster.filter(t => t.typ === "vydaj").forEach(template => {
+                    if (template.hasExpiry && template.validUntilYear && template.validUntilMonth) {
+                        if (y > template.validUntilYear || (y === template.validUntilYear && m > template.validUntilMonth)) return;
+                    }
+
+                    let belongsToMonth = false;
+                    if (template.frekvence === "kazdy_mesic") belongsToMonth = true;
+                    else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(m)) belongsToMonth = true;
+
+                    if (belongsToMonth) {
+                        if (template.split) {
+                            const parts = [
+                                { partNum: 1, suffix: " (1/2)", defaultAmount: template.part1Amount || 0, defaultDay: template.part1Day || 1 },
+                                { partNum: 2, suffix: " (2/2)", defaultAmount: template.part2Amount || 0, defaultDay: template.part2Day || 15 }
+                            ];
+
+                            parts.forEach(part => {
+                                const partKey = `${template.nazev}${part.suffix}`;
+                                const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(partKey);
+
+                                if (!isDeleted) {
+                                    const customAmountKey = `${monthKey}-${partKey}`;
+                                    const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
+                                        ? modifiedData.amounts[customAmountKey] 
+                                        : part.defaultAmount;
+
+                                    const customNameKey = `${monthKey}-${partKey}`;
+                                    const effectiveName = (modifiedData.names && modifiedData.names[customNameKey]) 
+                                        ? modifiedData.names[customNameKey] 
+                                        : partKey;
+
+                                    const effectiveDay = getAdjustedDay(y, m, part.defaultDay);
+                                    const uniqueId = `${monthKey}-${partKey}`;
+
+                                    const itemObj = {
+                                        uniqueId,
+                                        itemMonth: monthKey,
+                                        origNazev: partKey,
+                                        nazev: effectiveName,
+                                        castka: effectiveAmount,
+                                        den: effectiveDay,
+                                        isMusterItem: true,
+                                        monthStyle: getMonthStyle(monthKey)
+                                    };
+
+                                    finalExpensesList.push(itemObj);
+                                    totalExpenses += effectiveAmount;
+                                    if (checkedSimItems[uniqueId]) simExpenses += effectiveAmount;
+                                }
+                            });
+
+                        } else {
+                            const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(template.nazev);
+                            
+                            if (!isDeleted) {
+                                let baseAmount = template.castka;
+                                if (template.monthAmounts && template.monthAmounts[m] !== undefined) {
+                                    baseAmount = template.monthAmounts[m];
+                                } else if (template.tydenni) {
+                                    baseAmount = template.castka * countDayOfWeekInMonth(y, m, template.denVTydnu || 1);
+                                }
+
+                                const customAmountKey = `${monthKey}-${template.nazev}`;
+                                const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
+                                    ? modifiedData.amounts[customAmountKey] 
+                                    : baseAmount;
+
+                                const customNameKey = `${monthKey}-${template.nazev}`;
+                                const effectiveName = (modifiedData.names && modifiedData.names[customNameKey]) 
+                                    ? modifiedData.names[customNameKey] 
+                                    : template.nazev;
+
+                                const effectiveDay = getAdjustedDay(y, m, template.den || 1);
+                                const uniqueId = `${monthKey}-${template.nazev}`;
+
+                                const itemObj = {
+                                    uniqueId,
+                                    itemMonth: monthKey,
+                                    origNazev: template.nazev,
+                                    nazev: effectiveName,
+                                    castka: effectiveAmount,
+                                    den: effectiveDay,
+                                    isMusterItem: true,
+                                    isTydenni: template.tydenni || false,
+                                    weeklyUnitAmount: template.tydenni ? template.castka : null,
+                                    monthStyle: getMonthStyle(monthKey)
+                                };
+
+                                finalExpensesList.push(itemObj);
+                                totalExpenses += effectiveAmount;
+                                if (checkedSimItems[uniqueId]) simExpenses += effectiveAmount;
+                            }
+                        }
+                    }
+                });
+
+                if (modifiedData.added[monthKey]) {
+                    modifiedData.added[monthKey].filter(i => i.typ === "vydaj").forEach(addedItem => {
+                        const effectiveDay = getAdjustedDay(y, m, addedItem.den || 1);
+                        const uniqueId = addedItem.id;
+                        
+                        const itemObj = {
+                            uniqueId,
+                            itemMonth: monthKey,
+                            origNazev: addedItem.nazev,
+                            nazev: addedItem.nazev,
+                            castka: addedItem.castka,
+                            den: effectiveDay,
+                            isMusterItem: false,
+                            monthStyle: getMonthStyle(monthKey)
+                        };
+
+                        finalExpensesList.push(itemObj);
+                        totalExpenses += addedItem.castka;
+                        if (checkedSimItems[uniqueId]) simExpenses += addedItem.castka;
+                    });
+                }
+            });
+
+            if (!expenseCustomOrder[targetMonthKey]) {
+                finalExpensesList.sort((a, b) => {
+                    if (a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
+                    return a.den - b.den;
+                });
+                expenseCustomOrder[targetMonthKey] = finalExpensesList.map(i => i.uniqueId);
+            } else {
+                const currentOrder = expenseCustomOrder[targetMonthKey];
+                finalExpensesList.sort((a, b) => {
+                    let idxA = currentOrder.indexOf(a.uniqueId);
+                    let idxB = currentOrder.indexOf(b.uniqueId);
+                    if (idxA === -1) { currentOrder.push(a.uniqueId); idxA = currentOrder.length - 1; }
+                    if (idxB === -1) { currentOrder.push(b.uniqueId); idxB = currentOrder.length - 1; }
+                    return idxA - idxB;
+                });
+            }
+
+            muster.filter(t => t.typ === "prijem" && t.kumulativni).forEach(template => {
+                let cumulativeAmount = 0;
+                let activeMonthsCount = 0;
+
+                activeMonthsInHorizon.forEach(monthKey => {
+                    const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(template.nazev);
+                    if (!isDeleted) {
+                        const customAmountKey = `${monthKey}-${template.nazev}`;
+                        const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
+                            ? modifiedData.amounts[customAmountKey] 
+                            : template.castka;
+
+                        cumulativeAmount += effectiveAmount;
+                        activeMonthsCount++;
+                    }
+                });
+
+                if (cumulativeAmount !== 0) {
+                    const uniqueId = `kumulativni-${template.nazev}`;
+                    const itemObj = {
+                        uniqueId,
+                        nazev: template.nazev,
+                        origNazev: template.nazev,
+                        castka: cumulativeAmount,
+                        den: template.den || 1,
+                        isKumulativni: true,
+                        labelSuffix: activeMonthsCount > 1 ? ` (x${activeMonthsCount})` : ''
+                    };
+                    finalIncomesList.push(itemObj);
+                    totalIncomes += cumulativeAmount;
+                    if (checkedSimItems[uniqueId]) simIncomes += cumulativeAmount;
+                }
+            });
+
+            Object.keys(accountBalances).forEach(key => {
+                const uniqueId = `staticky-${key}`;
+                const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 1, isStaticAccount: true, accountKey: key };
+                finalIncomesList.push(itemObj);
+                totalIncomes += accountBalances[key];
+                if (checkedSimItems[uniqueId]) simIncomes += accountBalances[key];
+            });
+
+            activeMonthsInHorizon.forEach((monthKey) => {
+                const [y, m] = monthKey.split("-").map(Number);
+                if (modifiedData.added[monthKey]) {
+                    modifiedData.added[monthKey].filter(i => i.typ === "prijem").forEach(addedItem => {
+                        const effectiveDay = getAdjustedDay(y, m, addedItem.den || 1);
+                        const uniqueId = addedItem.id;
+                        const itemObj = {
+                            uniqueId,
+                            itemMonth: monthKey,
+                            origNazev: addedItem.nazev,
+                            nazev: addedItem.nazev,
+                            castka: addedItem.castka,
+                            den: effectiveDay,
+                            isMusterItem: false,
+                            monthStyle: getMonthStyle(monthKey)
+                        };
+                        finalIncomesList.push(itemObj);
+                        totalIncomes += addedItem.castka;
+                        if (checkedSimItems[uniqueId]) simIncomes += addedItem.castka;
+                    });
+                }
+            });
+
+            finalIncomesList.sort((a, b) => {
+                let idxA = incomeCustomOrder.indexOf(a.uniqueId);
+                let idxB = incomeCustomOrder.indexOf(b.uniqueId);
+                if (idxA === -1) { incomeCustomOrder.push(a.uniqueId); idxA = incomeCustomOrder.length - 1; }
+                if (idxB === -1) { incomeCustomOrder.push(b.uniqueId); idxB = incomeCustomOrder.length - 1; }
+                return idxA - idxB;
+            });
+
+            return {
+                expenses: finalExpensesList,
+                incomes: finalIncomesList,
+                totalExpenses,
+                totalIncomes,
+                balance: totalIncomes - totalExpenses,
+                simExpenses,
+                simIncomes,
+                simBalance: (totalIncomes - simIncomes) - (totalExpenses - simExpenses)
+            };
+        }
+
+        function renderSidebar() {
+            const container = document.getElementById("sidebarMonths");
+            container.innerHTML = "";
+
+            const sorted = [...generatedMonths].sort();
+            sorted.forEach(monthKey => {
+                const activeClass = (monthKey === activeMonth && currentView === "home") 
+                    ? "text-orange-500 border-orange-500/50 bg-orange-950/10" 
+                    : "text-gray-400 border-gray-900 bg-gray-900/30 hover:text-white";
+
+                container.innerHTML += `
+                    <div class="flex items-center justify-between group">
+                        <button onclick="selectMonth('${monthKey}')" class="flex-1 text-left text-xs font-semibold p-2.5 rounded-lg border transition truncate ${activeClass}">
+                            📅 ${formatMonthLabel(monthKey)}
+                        </button>
+                        <button onclick="deleteWholeMonth('${monthKey}')" class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-400 px-2 py-1 text-xs transition" title="Odstranit z plánu">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+            });
+
+            const trashContainer = document.getElementById("trashContainer");
+            const trashList = document.getElementById("trashMonthsList");
+            const trashKeys = Object.keys(deletedMonthsHistory).sort();
+
+            if (trashKeys.length > 0) {
+                trashContainer.classList.remove("hidden");
+                trashList.innerHTML = "";
+                trashKeys.forEach(monthKey => {
+                    trashList.innerHTML += `
+                        <div class="p-2 rounded border border-gray-900 bg-gray-900/40 text-xs">
+                            <div class="font-bold text-gray-400 mb-1 truncate">${formatMonthLabel(monthKey)}</div>
+                            <div class="flex gap-1">
+                                <button onclick="restoreMonth('${monthKey}', true)" class="flex-1 bg-orange-950/40 hover:bg-orange-900/60 text-orange-400 border border-orange-900/40 rounded py-1 text-[10px] font-bold transition" title="Vrátil včetně ručních úprav z daného měsíce">
+                                    🔄 S úpravami
+                                </button>
+                                <button onclick="restoreMonth('${monthKey}', false)" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded py-1 text-[10px] font-bold transition" title="Obnovit čistý z Musteru">
+                                    ✨ Z Musteru
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                trashContainer.classList.add("hidden");
+            }
+        }
+
+        function render() {
+            renderSidebar();
+
+            const container = document.getElementById("mainContent");
+            container.innerHTML = "";
+
+            const btnHome = document.getElementById("btnHomeIcon");
+            const btnMuster = document.getElementById("btnMusterIcon");
+            const viewIndicator = document.getElementById("currentViewIndicator");
+
+            if (currentView === "home") {
+                btnHome.className = "flex-1 bg-orange-950/20 hover:bg-orange-900/30 text-orange-500 rounded-lg border border-orange-500/50 flex items-center justify-center py-2.5 transition-all duration-200 cursor-pointer";
+                btnMuster.className = "flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200 cursor-pointer";
+                
+                if (!activeMonth) {
+                    viewIndicator.innerText = "Žádný měsíc";
+                    container.innerHTML = `<div class="text-center py-12 text-gray-500 bg-gray-900 rounded-xl border border-gray-800">Přidej první plánovací měsíc v bočním panelu! ➕</div>`;
+                    return;
+                }
+
+                viewIndicator.innerText = `Přehled do: ${formatMonthLabel(activeMonth)}`;
+
+                const horizonData = buildHorizonData(activeMonth);
+
+                document.getElementById("statIncome").innerText = formatMoney(horizonData.totalIncomes);
+                document.getElementById("statIncomeSim").innerText = `Po zaškrtnutí: ${formatMoney(horizonData.totalIncomes - horizonData.simIncomes)}`;
+
+                document.getElementById("statExpense").innerText = formatMoney(horizonData.totalExpenses);
+                document.getElementById("statExpenseSim").innerText = `Po zaškrtnutí: ${formatMoney(horizonData.totalExpenses - horizonData.simExpenses)}`;
+                
+                const balEl = document.getElementById("statBalance");
+                balEl.innerText = formatMoney(horizonData.balance);
+                if (horizonData.balance >= 0) balEl.className = "text-2xl font-black text-emerald-400 mt-1";
+                else balEl.className = "text-2xl font-black text-rose-400 mt-1";
+
+                document.getElementById("statBalanceSim").innerText = `Po zaškrtnutí: ${formatMoney(horizonData.simBalance)}`;
+
+                const checkedCount = Object.values(checkedSimItems).filter(Boolean).length;
+                const bulkBtnCont = document.getElementById("bulkDeleteContainer");
+                if (checkedCount > 0) bulkBtnCont.classList.remove("hidden");
+                else bulkBtnCont.classList.add("hidden");
+
+                let html = `
+                    <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-6 max-w-3xl mx-auto shadow-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-lg font-bold text-gray-200">Plánovaný horizont</h2>
+                            <button onclick="toggleEditMode()" class="${isEditMode ? 'bg-orange-600 text-white border-orange-500' : 'bg-gray-950 text-gray-400 border-gray-800 hover:text-white'} border px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                ${isEditMode ? '✓ Hotovo' : '✏️ Upravit přehled'}
+                            </button>
+                        </div>
+                `;
+
+                // A. VÝDAJE
+                html += `<div><h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Výdaje (-)</h3><div class="space-y-2">`;
+                if (horizonData.expenses.length === 0) {
+                    html += `<div class="text-xs italic text-gray-600 py-2">Všechny výdaje v tomto horizontu jsou vyřízené! 🎉</div>`;
+                } else {
+                    horizonData.expenses.forEach((item, index) => {
+                        const style = item.monthStyle || { badge: "bg-gray-800 text-gray-400 border-gray-700", card: "border-rose-950/20 bg-rose-950/5" };
+                        const isChecked = !!checkedSimItems[item.uniqueId];
+                        const isFirst = index === 0;
+                        const isLast = index === horizonData.expenses.length - 1;
+
+                        html += `
+                            <div class="p-3 rounded-lg border ${style.card} flex justify-between items-center gap-3 hover:border-gray-700 transition ${isChecked ? 'opacity-40 line-through' : ''}">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    ${isEditMode ? `
+                                        <div class="flex flex-col gap-0.5 mr-1">
+                                            <button onclick="moveExpenseItem('${activeMonth}', '${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
+                                            <button onclick="moveExpenseItem('${activeMonth}', '${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
+                                        </div>
+                                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer" title="Simulace zaplacení">
+                                    ` : ''}
+                                    <span class="text-xs font-bold px-2 py-1 rounded border shrink-0 ${style.badge}">${item.den}.</span>
+                                    <input type="text" value="${item.nazev}" onchange="updateHorizonItemName('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-semibold text-gray-200 focus:outline-none focus:border-orange-500 truncate flex-1">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${style.badge}">${formatMonthLabel(item.itemMonth).split(' ')[0]}</span>
+                                </div>
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
+                                        <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-rose-400">
+                                        <span class="text-xs text-gray-500 ml-1">€</span>
+                                    </div>
+                                    <button onclick='handleItemDeleteClick(${JSON.stringify(item)})' class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 p-2 rounded-lg text-xs font-semibold transition" title="${item.isTydenni && item.weeklyUnitAmount && item.castka > item.weeklyUnitAmount ? 'Zaplatit 1 týden' : 'Vyřídit platbu (smazat)'}">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                html += `</div></div>`;
+
+                html += `<div class="border-t border-gray-800 my-4"></div>`;
+
+                // B. PŘÍJMY A STAVY ÚČTŮ
+                html += `<div><h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Příjmy & Stavy účtů (+)</h3><div class="space-y-2">`;
+                if (horizonData.incomes.length === 0) {
+                    html += `<div class="text-xs italic text-gray-600 py-2">Žádné očekávané příjmy.</div>`;
+                } else {
+                    horizonData.incomes.forEach((item, index) => {
+                        const isChecked = !!checkedSimItems[item.uniqueId];
+                        const isFirst = index === 0;
+                        const isLast = index === horizonData.incomes.length - 1;
+
+                        if (item.isStaticAccount) {
+                            const isCC = item.accountKey === "CC";
+                            html += `
+                                <div class="p-3 rounded-lg border border-emerald-950/20 bg-emerald-950/5 flex justify-between items-center gap-3 hover:border-gray-800 transition ${isChecked ? 'opacity-40 line-through' : ''}">
+                                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                                        ${isEditMode ? `
+                                            <div class="flex flex-col gap-0.5 mr-1">
+                                                <button onclick="moveIncomeItem('${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
+                                                <button onclick="moveIncomeItem('${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
+                                            </div>
+                                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
+                                        ` : ''}
+                                        <span class="text-xs font-bold px-2 py-1 rounded border bg-gray-800 text-gray-400 border-gray-700 shrink-0">1.</span>
+                                        <span class="text-sm font-semibold text-gray-200 truncate">${item.nazev} <span class="text-[10px] text-gray-500 uppercase font-bold ml-1">(Zůstatek)</span></span>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        ${isCC ? `
+                                            <button onclick="settleCC()" class="bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 border border-orange-500/40 px-2 py-1 rounded text-xs font-bold transition" title="Vynulovat dluh a vytvořit výdaj na 1. den příštího měsíce">
+                                                💳 Vyrovnat CC
+                                            </button>
+                                        ` : ''}
+                                        <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
+                                            <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
+                                            <span class="text-xs text-gray-500 ml-1">€</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (item.isKumulativni) {
+                            html += `
+                                <div class="p-3 rounded-lg border border-emerald-950/20 bg-emerald-950/5 flex justify-between items-center gap-3 hover:border-gray-800 transition ${isChecked ? 'opacity-40 line-through' : ''}">
+                                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                                        ${isEditMode ? `
+                                            <div class="flex flex-col gap-0.5 mr-1">
+                                                <button onclick="moveIncomeItem('${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
+                                                <button onclick="moveIncomeItem('${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
+                                            </div>
+                                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
+                                        ` : ''}
+                                        <span class="text-xs font-bold px-2 py-1 rounded border bg-gray-800 text-gray-400 border-gray-700 shrink-0">${item.den}.</span>
+                                        <span class="text-sm font-semibold text-gray-200 truncate">${item.nazev}${item.labelSuffix}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 shrink-0">
+                                        <span class="text-sm font-bold text-emerald-400">${formatMoney(item.castka)}</span>
+                                        <button onclick="deleteItem('${activeMonth}', '${activeMonth}', '${item.origNazev}')" class="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 p-2 rounded-lg text-xs font-semibold transition" title="Přijato (smazat)">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            const style = item.monthStyle || { badge: "bg-gray-800 text-gray-400 border-gray-700", card: "border-emerald-950/20 bg-emerald-950/5" };
+                            html += `
+                                <div class="p-3 rounded-lg border ${style.card} flex justify-between items-center gap-3 hover:border-gray-800 transition ${isChecked ? 'opacity-40 line-through' : ''}">
+                                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                                        ${isEditMode ? `
+                                            <div class="flex flex-col gap-0.5 mr-1">
+                                                <button onclick="moveIncomeItem('${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
+                                                <button onclick="moveIncomeItem('${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
+                                            </div>
+                                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
+                                        ` : ''}
+                                        <span class="text-xs font-bold px-2 py-1 rounded border shrink-0 ${style.badge}">${item.den}.</span>
+                                        <span class="text-sm font-semibold text-gray-200 truncate">${item.nazev}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 shrink-0">
+                                        <span class="text-sm font-bold text-emerald-400">${formatMoney(item.castka)}</span>
+                                        <button onclick="deleteAddedItem('${activeMonth}', '${item.itemMonth}', '${item.uniqueId}')" class="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 p-2 rounded-lg text-xs font-semibold transition" title="Smazat">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+                html += `</div></div>`;
+
+                html += `</div>`;
+                container.innerHTML = html;
+
+            } else if (currentView === "muster") {
+                btnHome.className = "flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200 cursor-pointer";
+                btnMuster.className = "flex-1 bg-orange-950/20 hover:bg-orange-900/30 text-orange-500 rounded-lg border border-orange-500/50 flex items-center justify-center py-2.5 transition-all duration-200 cursor-pointer";
+                viewIndicator.innerText = "Šablony (Muster)";
+
+                let totalMusterIncome = 0;
+                let totalMusterExpense = 0;
+                muster.forEach(item => {
+                    if (item.typ === "prijem") totalMusterIncome += item.castka;
+                    else totalMusterExpense += item.castka;
+                });
+                document.getElementById("statIncome").innerText = formatMoney(totalMusterIncome);
+                document.getElementById("statExpense").innerText = formatMoney(totalMusterExpense);
+                
+                const balEl = document.getElementById("statBalance");
+                const balance = totalMusterIncome - totalMusterExpense;
+                balEl.innerText = formatMoney(balance);
+                if (balance >= 0) balEl.className = "text-2xl font-black text-emerald-400 mt-1";
+                else balEl.className = "text-2xl font-black text-rose-400 mt-1";
+
+                let html = `
+                    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-lg p-6 max-w-4xl mx-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xl font-bold text-orange-500">Katalog trvalých šablon (Muster)</h2>
+                            <button onclick="toggleForm()" class="bg-orange-600 hover:bg-orange-500 px-4 py-2 rounded-lg text-xs font-bold text-white">
+                                ➕ Nová šablona
+                            </button>
+                        </div>
+                        <div class="space-y-3">
+                `;
+
+                muster.forEach(item => {
+                    const isIncome = item.typ === "prijem";
+                    const textCol = isIncome ? 'text-emerald-400' : 'text-rose-400';
+                    const borderCol = isIncome ? 'border-emerald-950/30' : 'border-rose-950/30';
+                    const isSettingsOpen = !!openMusterSettings[item.id];
+                    const isIrregular = item.frekvence === "vybrane_mesice";
+
+                    html += `
+                        <div class="p-4 rounded-xl border ${borderCol} bg-gray-850/50 hover:border-gray-700 transition">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div class="flex-1 min-w-0 w-full">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <input type="text" value="${item.nazev}" onchange="updateMusterName(${item.id}, this.value)" class="bg-transparent font-bold text-white text-base focus:outline-none focus:border-orange-500 border-b border-transparent">
+                                        ${item.kumulativni ? '<span class="text-[10px] text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-900/30">Fixní</span>' : ''}
+                                        ${item.tydenni ? '<span class="text-[10px] text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-900/30">Týdenní</span>' : ''}
+                                        ${item.split ? '<span class="text-[10px] text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-900/30">Rozdělená (1/2 + 2/2)</span>' : ''}
+                                        
+                                        ${isIrregular ? `
+                                            <div class="flex items-center gap-1 ml-1">
+                                                ${item.mesice.sort((a,b)=>a-b).map(m => `<span class="w-5 h-5 bg-orange-600/20 text-orange-400 border border-orange-500/40 rounded text-[10px] font-bold flex items-center justify-center">${m}</span>`).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+                                    <div class="flex items-center bg-gray-950 border border-gray-800 rounded px-2.5 py-1">
+                                        <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateMusterAmount(${item.id}, this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 ${textCol}">
+                                        <span class="text-xs text-gray-500 ml-1">€</span>
+                                    </div>
+                                    
+                                    <button onclick="toggleMusterSettings(${item.id})" class="p-2 rounded-lg border border-gray-800 hover:border-gray-700 bg-gray-950 text-gray-400 hover:text-white transition" title="Možnosti a výjimky">
+                                        ⚙️
+                                    </button>
+                                    <button onclick="deleteMusterItem(${item.id})" class="bg-red-600/10 hover:bg-red-600/20 text-red-400 p-2 rounded-lg text-xs font-semibold transition">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+
+                            ${isSettingsOpen ? `
+                                <div class="mt-4 pt-4 border-t border-gray-800/80 space-y-4 bg-gray-950/40 p-3 rounded-lg border border-gray-800">
+                                    <div class="flex flex-wrap items-center gap-4 text-xs">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-gray-400 font-semibold">Den splatnosti:</span>
+                                            <input type="number" min="1" max="31" value="${item.den || 1}" onchange="updateMusterDay(${item.id}, this.value)" class="bg-gray-900 border border-gray-800 text-white font-bold w-12 text-center rounded py-1 focus:outline-none focus:border-orange-500">
+                                        </div>
+
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-gray-400 font-semibold">Frekvence:</span>
+                                            <select onchange="updateMusterFrequency(${item.id}, this.value)" class="bg-gray-900 border border-gray-800 text-xs px-2 py-1 rounded text-gray-300 font-semibold focus:outline-none focus:border-orange-500">
+                                                <option value="kazdy_mesic" ${item.frekvence === 'kazdy_mesic' ? 'selected' : ''}>Každý měsíc</option>
+                                                <option value="vybrane_mesice" ${item.frekvence === 'vybrane_mesice' ? 'selected' : ''}>Vybrané měsíce</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 border-l border-gray-800 pl-4">
+                                            <label class="flex items-center gap-1.5 text-xs text-purple-400 cursor-pointer select-none">
+                                                <input type="checkbox" ${item.split ? 'checked' : ''} onchange="toggleMusterSplit(${item.id}, this.checked)" class="accent-purple-500 h-4 w-4">
+                                                <span>Rozdělit na 2 části</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 border-l border-gray-800 pl-4">
+                                            <label class="flex items-center gap-1.5 text-xs text-orange-400 cursor-pointer select-none">
+                                                <input type="checkbox" ${item.hasExpiry ? 'checked' : ''} onchange="toggleMusterHasExpiry(${item.id}, this.checked)" class="accent-orange-500 h-4 w-4">
+                                                <span>Omezit platnost (Platí do)</span>
+                                            </label>
+
+                                            ${item.hasExpiry ? `
+                                                <div class="flex items-center gap-1 bg-gray-900 border border-gray-800 px-2 py-0.5 rounded ml-2">
+                                                    <input type="number" min="1" max="12" placeholder="MM" value="${item.validUntilMonth || ''}" onchange="updateMusterValidUntil(${item.id}, this.value, ${item.validUntilYear || 'null'})" class="bg-transparent font-bold text-white w-8 text-center focus:outline-none">
+                                                    <span class="text-gray-500">/</span>
+                                                    <input type="number" min="2024" max="2035" placeholder="RRRR" value="${item.validUntilYear || ''}" onchange="updateMusterValidUntil(${item.id}, ${item.validUntilMonth || 'null'}, this.value)" class="bg-transparent font-bold text-white w-12 text-center focus:outline-none">
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+
+                                    ${item.split ? `
+                                        <div class="bg-purple-950/20 border border-purple-900/40 p-2.5 rounded-lg text-xs space-y-2">
+                                            <span class="font-bold text-purple-300 block">Nastavení 2 částí platby:</span>
+                                            <div class="flex flex-wrap items-center gap-4">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-gray-400">1. část (1/2):</span>
+                                                    <input type="number" step="0.01" value="${formatValTwoDec(item.part1Amount || 0)}" onchange="updateMusterSplitData(${item.id}, 'part1Amount', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-20 text-center rounded py-1">
+                                                    <span>€</span>
+                                                    <span class="text-gray-500 ml-1">den:</span>
+                                                    <input type="number" min="1" max="31" value="${item.part1Day || 1}" onchange="updateMusterSplitData(${item.id}, 'part1Day', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-12 text-center rounded py-1">
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-gray-400">2. část (2/2):</span>
+                                                    <input type="number" step="0.01" value="${formatValTwoDec(item.part2Amount || 0)}" onchange="updateMusterSplitData(${item.id}, 'part2Amount', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-20 text-center rounded py-1">
+                                                    <span>€</span>
+                                                    <span class="text-gray-500 ml-1">den:</span>
+                                                    <input type="number" min="1" max="31" value="${item.part2Day || 15}" onchange="updateMusterSplitData(${item.id}, 'part2Day', this.value)" class="bg-gray-900 border border-gray-800 font-bold text-white w-12 text-center rounded py-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+
+                                    ${item.frekvence === "vybrane_mesice" ? `
+                                        <div>
+                                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Výběr měsíců a individuální částky:</span>
+                                            <div class="flex flex-wrap gap-2">
+                                                ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => {
+                                                    const isActive = item.mesice.includes(m);
+                                                    const btnClass = isActive ? "bg-orange-600 text-white border-orange-500" : "bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300";
+                                                    const monthAmt = (item.monthAmounts && item.monthAmounts[m] !== undefined) ? formatValTwoDec(item.monthAmounts[m]) : '';
+
+                                                    return `
+                                                        <div class="flex items-center gap-1 bg-gray-900 p-1 rounded border border-gray-800">
+                                                            <button onclick="toggleMusterMonth(${item.id}, ${m})" class="w-6 h-6 border rounded text-[10px] font-bold flex items-center justify-center transition ${btnClass}">${m}</button>
+                                                            ${isActive ? `<input type="number" step="0.01" placeholder="${formatValTwoDec(item.castka)}" value="${monthAmt}" onchange="updateMusterSpecificMonthAmount(${item.id}, ${m}, this.value)" class="bg-transparent text-[11px] font-bold w-12 text-center text-gray-300 focus:outline-none focus:border-orange-500" title="Částka pro měsíc ${m}">€` : ''}
+                                                        </div>
+                                                    `;
+                                                }).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+                container.innerHTML = html;
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify({ muster, accountBalances, modifiedData, generatedMonths, incomeCustomOrder, expenseCustomOrder, deletedMonthsHistory }, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'domaci_finance_zaloha.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.muster && imported.accountBalances && imported.modifiedData && imported.generatedMonths) {
+                        muster = imported.muster;
+                        accountBalances = imported.accountBalances;
+                        modifiedData = imported.modifiedData;
+                        generatedMonths = imported.generatedMonths;
+                        if (imported.incomeCustomOrder) incomeCustomOrder = imported.incomeCustomOrder;
+                        if (imported.expenseCustomOrder) expenseCustomOrder = imported.expenseCustomOrder;
+                        if (imported.deletedMonthsHistory) deletedMonthsHistory = imported.deletedMonthsHistory;
+                        const sorted = [...generatedMonths].sort();
+                        activeMonth = sorted.length > 0 ? sorted[sorted.length - 1] : "";
+                        save();
+                        alert("Data úspěšně nahrána!");
+                    } else {
+                        alert("Neplatný formát souboru zálohy.");
+                    }
+                } catch (err) {
+                    alert("Chyba při čtení souboru.");
+                }
+            }
+            reader.readAsText(file);
+        }
+
+        function resetToDefault() {
+            if (confirm("Opravdu chceš smazat všechny změny a resetovat databázi do výchozího stavu z Excelu?")) {
+                muster = defaultMuster;
+                accountBalances = defaultAccountBalances;
+                modifiedData = defaultModifiedData;
+                generatedMonths = ["2026-07"];
+                incomeCustomOrder = defaultIncomeOrder;
+                expenseCustomOrder = {};
+                deletedMonthsHistory = {};
+                activeMonth = "2026-07";
+                currentView = "home";
+                save();
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(code)
+
+print("Soubor index.html byl úspěšně vygenerován.")
