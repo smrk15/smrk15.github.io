@@ -1043,12 +1043,17 @@
 
             const day = parseInt(match[1])
             const month = parseInt(match[2]) - 1
-            const currentYear = new Date().getFullYear()
+            const now = new Date()
+            let year = now.getFullYear()
 
-            const weekStart = new Date(currentYear, month, day)
+            // Pokud je měsíc kola menší než aktuální měsíc, jedná se o příští rok
+            if (month < now.getMonth() - 2) {
+                year += 1
+            }
+
+            const weekStart = new Date(year, month, day)
             weekStart.setHours(0, 0, 0, 0)
 
-            const now = new Date()
             return now >= weekStart
         }
 
