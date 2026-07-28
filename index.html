@@ -434,11 +434,13 @@
                 const timeEl = document.getElementById(`edit-time-${id}`)
                 const weekEl = document.getElementById(`edit-week-${id}`)
                 const notesEl = document.getElementById(`edit-notes-${id}`)
+                const confirmedCb = document.getElementById(`edit-confirmed-${id}`)
 
                 if (dateEl) match.date = dateEl.value
                 if (timeEl) match.time = timeEl.value
                 if (weekEl) match.week = weekEl.value.trim()
                 if (notesEl) match.notes = notesEl.value.trim()
+                if (confirmedCb) match.confirmed = confirmedCb.checked
 
                 match.status = match.date ? "scheduled" : "unscheduled"
                 if (!match.date) match.confirmed = false
@@ -1193,13 +1195,6 @@
             document.getElementById("formWebUrl").value = ""
         }
 
-        function toggleConfirmedInEdit(id) {
-            const cb = document.getElementById(`edit-confirmed-${id}`)
-            if (cb) {
-                cb.checked = !cb.checked
-            }
-        }
-
         function toggleConfirmed(id) {
             pushToHistory()
             const match = matches.find(m => m.id === id)
@@ -1375,13 +1370,10 @@
                                 ${m.notes ? `<p class="text-xs text-gray-400 mt-1 italic">📝 ${m.notes}</p>` : ''}
                             </div>
                         </div>
-                        <div class="flex items-center gap-3 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800">
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800">
                             <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Označit jako dohrávku">🔥</button>
-                            ${m.date ? `<button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Přidat do Google Kalendáře">📅 Google</button>` : ''}
-                            ${m.date ? `<label class="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-955 p-2 rounded border border-gray-800 cursor-pointer select-none shrink-0">
-                                <input type="checkbox" ${m.confirmed ? 'checked' : ''} onchange="toggleConfirmed(${m.id})" class="accent-orange-500">
-                                ${translations[currentLang].lblConfirmedCheck}
-                            </label>` : ''}
+                            ${m.date ? `<button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Přidat do Google Kalendáře">📅</button>` : ''}
+                            ${m.date ? `<button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">✅</button>` : ''}
                         </div>
                     `
                     timelineBg.appendChild(card)
@@ -1528,7 +1520,7 @@
                                 }
 
                                 if (isEditing) {
-                                    /* === EDITAČNÍ REŽIM === */
+                                    /* === EDITAČNÍ REŽIM IKONOVÝ === */
                                     matchEl.className = "p-4 rounded-xl border bg-gray-800/90 border-orange-500/60 flex flex-col md:flex-row md:items-center justify-between gap-4 transition shadow-lg"
                                     matchEl.innerHTML = `
                                         <div class="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
@@ -1545,22 +1537,23 @@
                                                 <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Označit jako dohrávku">🔥</button>
                                                 <input type="date" id="edit-date-${m.id}" value="${m.date}" class="bg-gray-900 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500 w-36 text-center">
                                                 <input type="time" id="edit-time-${m.id}" value="${m.time}" class="bg-gray-900 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500">
-                                                <button onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipCancelDate}">❌ Vymazat termín</button>
-                                                <label class="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-900 p-2 rounded border border-gray-700 cursor-pointer select-none">
-                                                    <input type="checkbox" id="edit-confirmed-${m.id}" ${m.confirmed ? 'checked' : ''} class="accent-orange-500">
-                                                    ${translations[currentLang].lblConfirmedCheck}
+                                                
+                                                <button onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="${translations[currentLang].tooltipCancelDate}">❌</button>
+                                                
+                                                <label title="${translations[currentLang].lblConfirmedCheck}" class="bg-gray-900 p-2 rounded border border-gray-700 cursor-pointer select-none flex items-center justify-center">
+                                                    <input type="checkbox" id="edit-confirmed-${m.id}" ${m.confirmed ? 'checked' : ''} class="accent-orange-500 h-4 w-4">
                                                 </label>
                                             </div>
                                         </div>
 
                                         <div class="flex items-center gap-2 justify-end border-t md:border-none pt-2 md:pt-0 border-gray-700/40">
-                                            <button onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 px-3 rounded-lg text-xs font-bold transition flex items-center gap-1" title="Uložit změny">
-                                                ✔️ Uložit
+                                            <button onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 px-3 rounded-lg text-sm font-bold transition" title="Uložit změny">
+                                                ✔️
                                             </button>
-                                            <button onclick="toggleEditMatch(${m.id})" class="bg-gray-700 hover:bg-gray-600 text-gray-300 p-2 px-3 rounded-lg text-xs font-semibold transition">
-                                                Zrušit
+                                            <button onclick="toggleEditMatch(${m.id})" class="bg-gray-700 hover:bg-gray-600 text-gray-300 p-2 px-3 rounded-lg text-sm transition" title="Zrušit úpravy">
+                                                ↩️
                                             </button>
-                                            <button onclick="deleteMatch(${m.id})" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 p-2 px-2.5 rounded-lg text-xs font-semibold transition border border-red-900/40" title="Smazat zápas">
+                                            <button onclick="deleteMatch(${m.id})" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 p-2 px-2.5 rounded-lg text-sm font-semibold transition border border-red-900/40" title="Smazat zápas">
                                                 🗑️
                                             </button>
                                         </div>
@@ -1588,14 +1581,14 @@
                                                         <span class="text-xs text-orange-400 font-semibold ml-1.5">${m.time || '--:--'}</span>
                                                         ${m.confirmed ? `<span class="ml-1 text-emerald-400 text-xs" title="Potvrzeno">✓</span>` : ''}
                                                     </div>
-                                                    <button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Přidat do Google Kalendáře">📅 Google</button>
+                                                    <button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Přidat do Google Kalendáře">📅</button>
                                                 ` : '<span class="text-xs text-gray-500 italic">Bez termínu</span>'}
                                             </div>
                                         </div>
 
                                         <div class="flex items-center gap-2 justify-end border-t md:border-none pt-2 md:pt-0 border-gray-700/40 shrink-0">
-                                            <button onclick="toggleEditMatch(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 p-2 px-3 rounded-lg text-xs font-semibold transition flex items-center gap-1">
-                                                ✏️ Upravit
+                                            <button onclick="toggleEditMatch(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 p-2 px-3 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Upravit zápas">
+                                                ✏️
                                             </button>
                                         </div>
                                     `
