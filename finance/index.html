@@ -402,15 +402,14 @@
             }
         }
 
-        function deleteItem(horizonMonth, itemMonth, itemKey) {
-            if (!modifiedData.deleted[itemMonth]) modifiedData.deleted[itemMonth] = [];
-            modifiedData.deleted[itemMonth].push(itemKey);
-            save();
-        }
-
-        function deleteAddedItem(horizonMonth, itemMonth, itemId) {
-            if (modifiedData.added[itemMonth]) {
-                modifiedData.added[itemMonth] = modifiedData.added[itemMonth].filter(item => item.id !== itemId);
+        function deleteItem(horizonMonth, itemMonth, itemKey, isAdded = false, addedItemId = null) {
+            if (isAdded && addedItemId) {
+                if (modifiedData.added[itemMonth]) {
+                    modifiedData.added[itemMonth] = modifiedData.added[itemMonth].filter(i => i.id !== addedItemId);
+                }
+            } else {
+                if (!modifiedData.deleted[itemMonth]) modifiedData.deleted[itemMonth] = [];
+                modifiedData.deleted[itemMonth].push(itemKey);
             }
             save();
         }
@@ -427,8 +426,8 @@
                 keys.forEach(uniqueId => {
                     const item = allItems.find(i => i.uniqueId === uniqueId);
                     if (item) {
-                        if (item.isMusterItem) deleteItem(activeMonth, item.itemMonth || activeMonth, item.origNazev || item.nazev);
-                        else if (!item.isStaticAccount) deleteAddedItem(activeMonth, item.itemMonth, item.uniqueId);
+                        if (item.isMusterItem) deleteItem(activeMonth, item.itemMonth || activeMonth, item.origNazev, false, null);
+                        else if (!item.isStaticAccount) deleteItem(activeMonth, item.itemMonth, null, true, item.uniqueId);
                     }
                 });
 
@@ -446,10 +445,25 @@
             }
         }
 
+        function updateAddedItemAmount(itemMonth, addedId, val) {
+            const num = parseFloat(val);
+            if (!isNaN(num) && modifiedData.added[itemMonth]) {
+                const item = modifiedData.added[itemMonth].find(i => i.id === addedId);
+                if (item) { item.castka = num; save(); }
+            }
+        }
+
         function updateHorizonItemName(itemMonth, itemKey, val) {
             if (!modifiedData.names) modifiedData.names = {};
             modifiedData.names[`${itemMonth}-${itemKey}`] = val.trim();
             save();
+        }
+
+        function updateAddedItemName(itemMonth, addedId, val) {
+            if (modifiedData.added[itemMonth]) {
+                const item = modifiedData.added[itemMonth].find(i => i.id === addedId);
+                if (item) { item.nazev = val.trim(); save(); }
+            }
         }
 
         function updateAccountBalance(key, val) {
@@ -746,6 +760,7 @@
                             castka: addedItem.castka,
                             den: effectiveDay,
                             isMusterItem: false,
+                            isAddedItem: true,
                             monthStyle: getMonthStyle(monthKey)
                         };
 
@@ -844,6 +859,7 @@
                             castka: addedItem.castka,
                             den: effectiveDay,
                             isMusterItem: false,
+                            isAddedItem: true,
                             monthStyle: getMonthStyle(monthKey)
                         };
                         finalIncomesList.push(itemObj);
@@ -1044,15 +1060,15 @@
                                         <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer" title="Simulace zaplacení">
                                     ` : ''}
                                     <span class="text-xs font-bold px-2 py-1 rounded border shrink-0 ${style.badge}">${item.den}.</span>
-                                    <input type="text" value="${item.nazev}" onchange="updateHorizonItemName('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-semibold text-gray-200 focus:outline-none focus:border-orange-500 truncate flex-1">
+                                    <input type="text" value="${item.nazev}" onchange="${item.isAddedItem ? `updateAddedItemName('${item.itemMonth}', '${item.uniqueId}', this.value)` : `updateHorizonItemName('${item.itemMonth}', '${item.origNazev}', this.value)`}" class="bg-transparent text-sm font-semibold text-gray-200 focus:outline-none focus:border-orange-500 truncate flex-1">
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${style.badge}">${formatMonthLabel(item.itemMonth).split(' ')[0]}</span>
                                 </div>
                                 <div class="flex items-center gap-3 shrink-0">
                                     <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
-                                        <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-rose-400">
+                                        <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="${item.isAddedItem ? `updateAddedItemAmount('${item.itemMonth}', '${item.uniqueId}', this.value)` : `updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)`}" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-rose-400">
                                         <span class="text-xs text-gray-500 ml-1">€</span>
                                     </div>
-                                    <button onclick="deleteItem('${activeMonth}', '${item.itemMonth}', '${item.origNazev}')" class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 p-2 rounded-lg text-xs font-semibold transition" title="Vyřídit platbu (smazat)">
+                                    <button onclick="deleteItem('${activeMonth}', '${item.itemMonth}', '${item.origNazev}', ${item.isAddedItem ? 'true' : 'false'}, '${item.uniqueId}')" class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 p-2 rounded-lg text-xs font-semibold transition" title="Vyřídit platbu (smazat)">
                                         🗑️
                                     </button>
                                 </div>
@@ -1115,15 +1131,15 @@
                                             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
                                         ` : ''}
                                         <span class="text-xs font-bold px-2 py-1 rounded border shrink-0 ${style.badge}">${item.den}.</span>
-                                        <input type="text" value="${item.nazev}" onchange="updateHorizonItemName('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-semibold text-gray-200 focus:outline-none focus:border-orange-500 truncate flex-1">
+                                        <input type="text" value="${item.nazev}" onchange="${item.isAddedItem ? `updateAddedItemName('${item.itemMonth}', '${item.uniqueId}', this.value)` : `updateHorizonItemName('${item.itemMonth}', '${item.origNazev}', this.value)`}" class="bg-transparent text-sm font-semibold text-gray-200 focus:outline-none focus:border-orange-500 truncate flex-1">
                                         <span class="text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${style.badge}">${formatMonthLabel(item.itemMonth).split(' ')[0]}</span>
                                     </div>
                                     <div class="flex items-center gap-3 shrink-0">
                                         <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
-                                            <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
+                                            <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="${item.isAddedItem ? `updateAddedItemAmount('${item.itemMonth}', '${item.uniqueId}', this.value)` : `updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)`}" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
                                             <span class="text-xs text-gray-500 ml-1">€</span>
                                         </div>
-                                        <button onclick="deleteItem('${activeMonth}', '${item.itemMonth}', '${item.origNazev}')" class="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 p-2 rounded-lg text-xs font-semibold transition" title="Smazat">
+                                        <button onclick="deleteItem('${activeMonth}', '${item.itemMonth}', '${item.origNazev}', ${item.isAddedItem ? 'true' : 'false'}, '${item.uniqueId}')" class="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 p-2 rounded-lg text-xs font-semibold transition" title="Smazat">
                                             🗑️
                                         </button>
                                     </div>
