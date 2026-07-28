@@ -355,11 +355,12 @@
             document.getElementById("btnManageIcon").title = translations[currentLang].manageServersBtn
         }
 
-        let matches = JSON.parse(localStorage.getItem("dartMatchesV21")) || []
-        let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV21")) || []
-        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV21")) || []
-        let serverOrder = JSON.parse(localStorage.getItem("dartServerOrderV21")) || []
-        let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV21")) || {}
+        let matches = JSON.parse(localStorage.getItem("dartMatchesV22")) || []
+        let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV22")) || []
+        let emptyLeagues = JSON.parse(localStorage.getItem("dartEmptyLeaguesV22")) || [] // [{server, comp}]
+        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV22")) || []
+        let serverOrder = JSON.parse(localStorage.getItem("dartServerOrderV22")) || []
+        let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV22")) || {}
         let historyStack = []
         let currentView = "home"
         let formMode = "single"
@@ -623,6 +624,7 @@
             const state = {
                 matches: JSON.parse(JSON.stringify(matches)),
                 emptyServers: JSON.parse(JSON.stringify(emptyServers)),
+                emptyLeagues: JSON.parse(JSON.stringify(emptyLeagues)),
                 hiddenServers: JSON.parse(JSON.stringify(hiddenServers)),
                 serverOrder: JSON.parse(JSON.stringify(serverOrder))
             }
@@ -636,12 +638,14 @@
             const previousState = JSON.parse(historyStack.pop())
             matches = previousState.matches
             emptyServers = previousState.emptyServers
+            emptyLeagues = previousState.emptyLeagues || []
             hiddenServers = previousState.hiddenServers
             serverOrder = previousState.serverOrder || []
-            localStorage.setItem("dartMatchesV21", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV21", JSON.stringify(emptyServers))
-            localStorage.setItem("dartHiddenServersV21", JSON.stringify(hiddenServers))
-            localStorage.setItem("dartServerOrderV21", JSON.stringify(serverOrder))
+            localStorage.setItem("dartMatchesV22", JSON.stringify(matches))
+            localStorage.setItem("dartEmptyServersV22", JSON.stringify(emptyServers))
+            localStorage.setItem("dartEmptyLeaguesV22", JSON.stringify(emptyLeagues))
+            localStorage.setItem("dartHiddenServersV22", JSON.stringify(hiddenServers))
+            localStorage.setItem("dartServerOrderV22", JSON.stringify(serverOrder))
             updateUndoButton()
             render()
         }
@@ -658,17 +662,30 @@
         }
 
         function save(skipRender = false) {
-            localStorage.setItem("dartMatchesV21", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV21", JSON.stringify(emptyServers))
-            localStorage.setItem("dartHiddenServersV21", JSON.stringify(hiddenServers))
-            localStorage.setItem("dartServerOrderV21", JSON.stringify(serverOrder))
-            localStorage.setItem("dartClosedStatesV21", JSON.stringify(closedStates))
+            localStorage.setItem("dartMatchesV22", JSON.stringify(matches))
+            localStorage.setItem("dartEmptyServersV22", JSON.stringify(emptyServers))
+            localStorage.setItem("dartEmptyLeaguesV22", JSON.stringify(emptyLeagues))
+            localStorage.setItem("dartHiddenServersV22", JSON.stringify(hiddenServers))
+            localStorage.setItem("dartServerOrderV22", JSON.stringify(serverOrder))
+            localStorage.setItem("dartClosedStatesV22", JSON.stringify(closedStates))
             if (!skipRender) render()
         }
 
-        function toggleForm() {
-            document.getElementById("matchForm").classList.toggle("hidden")
-            autoCalcDuration()
+        function toggleForm(presetServer = null, presetComp = null) {
+            const form = document.getElementById("matchForm")
+            form.classList.toggle("hidden")
+
+            if (!form.classList.contains("hidden")) {
+                if (presetServer) {
+                    const select = document.getElementById("formServer")
+                    select.value = presetServer
+                    checkNewServer(presetServer)
+                }
+                if (presetComp) {
+                    document.getElementById("formComp").value = presetComp
+                }
+                autoCalcDuration()
+            }
         }
 
         function setFormMode(mode) {
@@ -743,6 +760,9 @@
                 matches.forEach(m => {
                     if (m.server === oldName) m.server = newName.trim()
                 })
+                emptyLeagues.forEach(l => {
+                    if (l.server === oldName) l.server = newName.trim()
+                })
                 const emptyIdx = emptyServers.indexOf(oldName)
                 if (emptyIdx !== -1) emptyServers[emptyIdx] = newName.trim()
                 const hidIdx = hiddenServers.indexOf(oldName)
@@ -760,6 +780,9 @@
                 pushToHistory()
                 matches.forEach(m => {
                     if (m.server === serverName && m.comp === oldCompName) m.comp = newName.trim()
+                })
+                emptyLeagues.forEach(l => {
+                    if (l.server === serverName && l.comp === oldCompName) l.comp = newName.trim()
                 })
                 save()
             }
@@ -783,7 +806,7 @@
         }
 
         function getAllServersOrdered() {
-            const existing = [...new Set([...matches.map(m => m.server), ...emptyServers])]
+            const existing = [...new Set([...matches.map(m => m.server), ...emptyServers, ...emptyLeagues.map(l => l.server)])]
             let ordered = []
 
             serverOrder.forEach(s => {
@@ -802,7 +825,11 @@
             document.getElementById("leagueDeleteServerDesc").innerText = `Server: ${serverName}`
             const list = document.getElementById("leagueDeleteList")
             list.innerHTML = ""
-            const comps = [...new Set(matches.filter(m => m.server === serverName).map(m => m.comp))]
+            
+            const comps = [...new Set([
+                ...matches.filter(m => m.server === serverName).map(m => m.comp),
+                ...emptyLeagues.filter(l => l.server === serverName).map(l => l.comp)
+            ])]
             
             if (comps.length === 0) {
                 list.innerHTML = `<p class="text-sm text-gray-500 italic">${currentLang === "cs" ? "Žádné ligy k dispozici" : "Keine Ligen verfügbar"}</p>`
@@ -837,7 +864,9 @@
             if (confirm(translations[currentLang].confirmDeleteSelectedLeagues)) {
                 pushToHistory()
                 matches = matches.filter(m => !(m.server === activeDeleteServerName && selectedComps.includes(m.comp)))
-                const hasMatches = matches.some(m => m.server === activeDeleteServerName)
+                emptyLeagues = emptyLeagues.filter(l => !(l.server === activeDeleteServerName && selectedComps.includes(l.comp)))
+                
+                const hasMatches = matches.some(m => m.server === activeDeleteServerName) || emptyLeagues.some(l => l.server === activeDeleteServerName)
                 if (!hasMatches && !emptyServers.includes(activeDeleteServerName)) {
                     emptyServers.push(activeDeleteServerName)
                 }
@@ -904,6 +933,7 @@
                 pushToHistory()
                 matches = matches.filter(m => m.server !== serverName)
                 emptyServers = emptyServers.filter(s => s !== serverName)
+                emptyLeagues = emptyLeagues.filter(l => l.server !== serverName)
                 hiddenServers = hiddenServers.filter(s => s !== serverName)
                 serverOrder = serverOrder.filter(s => s !== serverName)
                 updateServerSelect()
@@ -951,7 +981,7 @@
             const match = matches.find(m => m.id === id)
             if (match) {
                 match.notes = text
-                localStorage.setItem("dartMatchesV21", JSON.stringify(matches))
+                localStorage.setItem("dartMatchesV22", JSON.stringify(matches))
             }
         }
 
@@ -1031,6 +1061,7 @@
 
             pushToHistory()
             emptyServers = emptyServers.filter(s => s !== server)
+            emptyLeagues = emptyLeagues.filter(l => !(l.server === server && l.comp === comp))
 
             if (formMode === "single") {
                 const opponent = document.getElementById("formOpponent").value.trim()
@@ -1123,7 +1154,6 @@
                 match.time = time
                 match.status = date ? "scheduled" : "unscheduled"
                 if (!date) match.confirmed = false
-                // Zde skokové nepřerovnávání (skipRender = true), aby políčko neodjelo pod rukama
                 save(true)
             }
         }
@@ -1142,10 +1172,15 @@
                 pushToHistory()
                 const match = matches.find(m => m.id === id)
                 const serverName = match ? match.server : null
+                const compName = match ? match.comp : null
                 
                 matches = matches.filter(m => m.id !== id)
-                if (serverName && !matches.some(m => m.server === serverName) && !emptyServers.includes(serverName)) {
-                    emptyServers.push(serverName)
+                
+                // Pokud v lize nezůstal žádný zápas, uchováme ligu jako prázdnou
+                if (serverName && compName && !matches.some(m => m.server === serverName && m.comp === compName)) {
+                    if (!emptyLeagues.some(l => l.server === serverName && l.comp === compName)) {
+                        emptyLeagues.push({ server: serverName, comp: compName })
+                    }
                 }
                 save()
             }
@@ -1165,6 +1200,12 @@
                 if (!grouped[m.server]) grouped[m.server] = {}
                 if (!grouped[m.server][m.comp]) grouped[m.server][m.comp] = []
                 grouped[m.server][m.comp].push(m)
+            })
+
+            emptyLeagues.forEach(l => {
+                if (hiddenServers.includes(l.server)) return
+                if (!grouped[l.server]) grouped[l.server] = {}
+                if (!grouped[l.server][l.comp]) grouped[l.server][l.comp] = []
             })
 
             return grouped
@@ -1413,6 +1454,17 @@
                         if (isLeagueOpen) {
                             const matchesList = document.createElement("div")
                             matchesList.className = "p-3 space-y-3 border-t border-gray-800 bg-gray-900/20"
+
+                            if (compMatches.length === 0) {
+                                matchesList.innerHTML = `
+                                    <div class="p-4 text-center border border-dashed border-gray-800 rounded-lg">
+                                        <p class="text-xs text-gray-500 mb-2">${currentLang === "cs" ? "Tato liga zatím nemá žádné zápasy." : "Diese Liga hat noch keine Spiele."}</p>
+                                        <button onclick="toggleForm('${serverName}', '${compName}')" class="text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 px-3 py-1.5 rounded-lg border border-orange-500/30 font-semibold transition">
+                                            + ${currentLang === "cs" ? "Přidat zápas do této ligy" : "Spiel zu dieser Liga hinzufügen"}
+                                        </button>
+                                    </div>
+                                `
+                            }
 
                             compMatches.forEach(m => {
                                 const matchEl = document.createElement("div")
