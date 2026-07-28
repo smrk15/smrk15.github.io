@@ -346,11 +346,11 @@
             const debtAmount = Math.abs(currentCcDebt);
 
             if (debtAmount === 0) {
-                alert("Na kartě CC je aktuálně nulový dluh.");
+                alert("Na kreditce CC je aktuálně nulový dluh.");
                 return;
             }
 
-            if (confirm(`Chceš vyrovnat dluh ${formatMoney(debtAmount)} na kreditce CC?\n\n- Zůstatek CC se vynuluje (0 €).\n- Vytvoří se výdaj 'Stržení CC' na 5. den následujícího měsíce.`)) {
+            if (confirm(`Chceš vyrovnat dluh ${formatMoney(debtAmount)} na kreditce CC?\n\n- Zůstatek CC se vynuluje (0 €).\n- Vytvoří se výdaj 'Stržení CC' na 2. den následujícího měsíce.`)) {
                 pushToHistory();
 
                 const [y, m] = activeMonth.split("-").map(Number);
@@ -367,7 +367,7 @@
                     typ: "vydaj",
                     nazev: "Stržení CC",
                     castka: debtAmount,
-                    den: 5
+                    den: 2
                 });
 
                 save(false);
@@ -478,7 +478,15 @@
             let incomes = 0;
 
             if (musterOverviewMode === 'vse') {
-                Object.values(accountBalances).forEach(val => incomes += (val || 0));
+                Object.keys(accountBalances).forEach(key => {
+                    const val = accountBalances[key] || 0;
+                    if (key === "CC") {
+                        if (val > 0) expenses += val;
+                        else incomes += Math.abs(val);
+                    } else {
+                        incomes += val;
+                    }
+                });
             }
 
             muster.forEach(template => {
@@ -753,7 +761,7 @@
                 }
             });
 
-            // Zpracování příjmů přes horizont (stejně jako výdaje!)
+            // Zpracování příjmů přes horizont
             activeMonthsInHorizon.forEach((monthKey) => {
                 const [y, m] = monthKey.split("-").map(Number);
 
@@ -850,19 +858,61 @@
                 }
             });
 
-            // Přidání statických stavů účtů (pouze k aktuálnímu/poslednímu měsíci nebo dle potřeby)
+            // Přidání statických stavů účtů (CC se chová jako dluh/výdaj pokud je kladný, nebo se přičítá pokud záporný)
             Object.keys(accountBalances).forEach(key => {
+                const val = accountBalances[key] || 0;
                 const uniqueId = `staticky-${key}`;
-                const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 5, isStaticAccount: true, accountKey: key };
-                finalIncomesList.push(itemObj);
-                totalIncomes += accountBalances[key];
-                if (checkedSimItems[uniqueId]) simIncomes += accountBalances[key];
+
+                if (key === "CC") {
+                    if (val > 0) {
+                        // CC je dluh -> přidáme do výdajů
+                        const itemObj = {
+                            uniqueId,
+                            nazev: "CC (Dluh)",
+                            castka: val,
+                            den: 5,
+                            isStaticAccount: true,
+                            accountKey: key,
+                            isDebt: true
+                        };
+                        finalExpensesList.push(itemObj);
+                        totalExpenses += val;
+                        if (checkedSimItems[uniqueId]) simExpenses += val;
+                    } else if (val < 0) {
+                        // CC je v plusu -> jako příjem
+                        const itemObj = {
+                            uniqueId,
+                            nazev: "CC",
+                            castka: Math.abs(val),
+                            den: 5,
+                            isStaticAccount: true,
+                            accountKey: key
+                        };
+                        finalIncomesList.push(itemObj);
+                        totalIncomes += Math.abs(val);
+                        if (checkedSimItems[uniqueId]) simIncomes += Math.abs(val);
+                    }
+                } else {
+                    const itemObj = {
+                        uniqueId,
+                        nazev: key,
+                        castka: val,
+                        den: 5,
+                        isStaticAccount: true,
+                        accountKey: key
+                    };
+                    finalIncomesList.push(itemObj);
+                    totalIncomes += val;
+                    if (checkedSimItems[uniqueId]) simIncomes += val;
+                }
             });
 
             // Řazení výdajů
             if (!expenseCustomOrder[targetMonthKey]) {
                 finalExpensesList.sort((a, b) => {
-                    if (a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
+                    if (a.isDebt && !b.isDebt) return -1;
+                    if (!a.isDebt && b.isDebt) return 1;
+                    if (a.itemMonth && b.itemMonth && a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
                     return a.den - b.den;
                 });
                 expenseCustomOrder[targetMonthKey] = finalExpensesList.map(i => i.uniqueId);
@@ -1021,31 +1071,61 @@
                         const isFirst = index === 0;
                         const isLast = index === horizonData.expenses.length - 1;
 
-                        html += `
-                            <div class="p-3 rounded-lg border ${style.card} flex justify-between items-center gap-3 hover:border-gray-700 transition ${isChecked ? 'opacity-40 line-through' : ''}">
-                                <div class="flex items-center gap-2 min-w-0 flex-1">
-                                    ${isEditMode ? `
-                                        <div class="flex flex-col gap-0.5 mr-1">
-                                            <button onclick="moveExpenseItem('${activeMonth}', '${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
-                                            <button onclick="moveExpenseItem('${activeMonth}', '${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
-                                        </div>
-                                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer" title="Simulace zaplacení">
-                                    ` : ''}
-                                    <span class="text-xs font-bold px-2 py-1 rounded border shrink-0 ${style.badge}">${item.den}.</span>
-                                    <input type="text" value="${item.nazev}" onchange="updateHorizonItemName('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-semibold text-gray-200 focus:outline-none focus:border-orange-500 truncate flex-1">
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${style.badge}">${formatMonthLabel(item.itemMonth).split(' ')[0]}</span>
-                                </div>
-                                <div class="flex items-center gap-3 shrink-0">
-                                    <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
-                                        <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-rose-400">
-                                        <span class="text-xs text-gray-500 ml-1">€</span>
+                        if (item.isStaticAccount && item.isDebt) {
+                            const isCC = item.accountKey === "CC";
+                            html += `
+                                <div class="p-3 rounded-lg border border-rose-950/20 bg-rose-950/5 flex justify-between items-center gap-3 hover:border-gray-800 transition ${isChecked ? 'opacity-40 line-through' : ''}">
+                                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                                        ${isEditMode ? `
+                                            <div class="flex flex-col gap-0.5 mr-1">
+                                                <button onclick="moveExpenseItem('${activeMonth}', '${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
+                                                <button onclick="moveExpenseItem('${activeMonth}', '${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
+                                            </div>
+                                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
+                                        ` : ''}
+                                        <span class="text-xs font-bold px-2 py-1 rounded border bg-gray-800 text-gray-400 border-gray-700 shrink-0">5.</span>
+                                        <span class="text-sm font-semibold text-gray-200 truncate">${item.nazev} <span class="text-[10px] text-rose-400 uppercase font-bold ml-1">(Dluh)</span></span>
                                     </div>
-                                    <button onclick="deleteItem('${activeMonth}', '${item.itemMonth}', '${item.origNazev}')" class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 p-2 rounded-lg text-xs font-semibold transition" title="Vyřídit platbu (smazat)">
-                                        🗑️
-                                    </button>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        ${isCC ? `
+                                            <button onclick="settleCC()" class="bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 border border-orange-500/40 px-2 py-1 rounded text-xs font-bold transition" title="Vyrovnat dluh na CC">
+                                                💳 Vyrovnat CC
+                                            </button>
+                                        ` : ''}
+                                        <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
+                                            <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-rose-400">
+                                            <span class="text-xs text-gray-500 ml-1">€</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        `;
+                            `;
+                        } else {
+                            html += `
+                                <div class="p-3 rounded-lg border ${style.card} flex justify-between items-center gap-3 hover:border-gray-700 transition ${isChecked ? 'opacity-40 line-through' : ''}">
+                                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                                        ${isEditMode ? `
+                                            <div class="flex flex-col gap-0.5 mr-1">
+                                                <button onclick="moveExpenseItem('${activeMonth}', '${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
+                                                <button onclick="moveExpenseItem('${activeMonth}', '${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
+                                            </div>
+                                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer" title="Simulace zaplacení">
+                                        ` : ''}
+                                        <span class="text-xs font-bold px-2 py-1 rounded border shrink-0 ${style.badge}">${item.den}.</span>
+                                        <input type="text" value="${item.nazev}" onchange="updateHorizonItemName('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-semibold text-gray-200 focus:outline-none focus:border-orange-500 truncate flex-1">
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${style.badge}">${formatMonthLabel(item.itemMonth).split(' ')[0]}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 shrink-0">
+                                        <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
+                                            <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-rose-400">
+                                            <span class="text-xs text-gray-500 ml-1">€</span>
+                                        </div>
+                                        <button onclick="deleteItem('${activeMonth}', '${item.itemMonth}', '${item.origNazev}')" class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 p-2 rounded-lg text-xs font-semibold transition" title="Vyřídit platbu (smazat)">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }
                     });
                 }
                 html += `</div></div>`;
@@ -1053,7 +1133,7 @@
                 html += `<div class="border-t border-gray-800 my-4"></div>`;
 
                 // PŘÍJMY & ÚČTY
-                html += `<div><h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Příjmy & Pevné stavy účtů (+)</h3><div class="space-y-2">`;
+                html += `<div><h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Příjmy & Pevné stavy účtů (+ / zůstatky)</h3><div class="space-y-2">`;
                 if (horizonData.incomes.length === 0) {
                     html += `<div class="text-xs italic text-gray-600 py-2">Žádné příjmy.</div>`;
                 } else {
@@ -1063,7 +1143,6 @@
                         const isLast = index === horizonData.incomes.length - 1;
 
                         if (item.isStaticAccount) {
-                            const isCC = item.accountKey === "CC";
                             html += `
                                 <div class="p-3 rounded-lg border border-emerald-950/20 bg-emerald-950/5 flex justify-between items-center gap-3 hover:border-gray-800 transition ${isChecked ? 'opacity-40 line-through' : ''}">
                                     <div class="flex items-center gap-2 min-w-0 flex-1">
@@ -1078,13 +1157,8 @@
                                         <span class="text-sm font-semibold text-gray-200 truncate">${item.nazev} <span class="text-[10px] text-gray-500 uppercase font-bold ml-1">(Zůstatek)</span></span>
                                     </div>
                                     <div class="flex items-center gap-2 shrink-0">
-                                        ${isCC ? `
-                                            <button onclick="settleCC()" class="bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 border border-orange-500/40 px-2 py-1 rounded text-xs font-bold transition" title="Vynulovat dluh">
-                                                💳 Vyrovnat CC
-                                            </button>
-                                        ` : ''}
                                         <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
-                                            <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
+                                            <input type="number" step="0.01" value="${formatValTwoDec(-item.castka)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
                                             <span class="text-xs text-gray-500 ml-1">€</span>
                                         </div>
                                     </div>
