@@ -1250,12 +1250,17 @@
             nav.innerHTML = ""
 
             Object.keys(grouped).forEach(serverName => {
+                const serverMatches = Object.values(grouped[serverName]).flat()
+                const hasServerMustPlay = serverMatches.some(m => m.mustPlay)
+                let serverFireBadge = hasServerMustPlay ? `<span class="ml-1 text-xs" title="Obsahuje dohrávku!">🔥</span>` : ""
+
                 const serverDiv = document.createElement("div")
                 serverDiv.className = "space-y-1"
 
                 serverDiv.innerHTML = `
-                    <div onclick="scrollToElement('${serverName.replace(/\s+/g, '-')}')" class="text-sm font-bold text-orange-400 hover:text-orange-300 cursor-pointer p-1 rounded truncate transition">
-                        🖥️ ${serverName}
+                    <div onclick="scrollToElement('${serverName.replace(/\s+/g, '-')}')" class="text-sm font-bold text-orange-400 hover:text-orange-300 cursor-pointer p-1 rounded truncate transition flex items-center">
+                        <span class="truncate">🖥️ ${serverName}</span>
+                        ${serverFireBadge}
                     </div>
                 `
                 
@@ -1268,16 +1273,20 @@
                     const scheduledCount = compMatches.filter(m => m.date).length
 
                     const needsScheduling = compMatches.some(m => !m.date && isWeekInPastOrCurrent(m.week))
+                    const hasLeagueMustPlay = compMatches.some(m => m.mustPlay)
 
-                    let warningBadge = ""
+                    let statusBadges = ""
+                    if (hasLeagueMustPlay) {
+                        statusBadges += `<span class="ml-1 text-xs" title="Obsahuje dohrávku!">🔥</span>`
+                    }
                     if (needsScheduling) {
-                        warningBadge = `<span class="ml-1 text-xs text-orange-500 font-bold" title="Nutno naplánovat zápas na tento týden!">⚠️</span>`
+                        statusBadges += `<span class="ml-1 text-xs text-orange-500 font-bold" title="Nutno naplánovat zápas na tento týden!">⚠️</span>`
                     }
 
                     const li = document.createElement("li")
                     li.className = "text-xs text-gray-400 hover:text-white cursor-pointer flex justify-between items-center py-0.5 transition"
                     li.innerHTML = `
-                        <span class="truncate flex-1">🏆 ${compName} ${warningBadge}</span>
+                        <span class="truncate flex-1">🏆 ${compName} ${statusBadges}</span>
                         <span class="text-[10px] bg-gray-900 border border-gray-800 px-1.5 py-0.5 rounded text-gray-400 font-mono font-bold ml-2">${scheduledCount}/${totalCount}</span>
                     `
                     li.onclick = (e) => {
