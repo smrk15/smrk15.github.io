@@ -434,13 +434,11 @@
                 const timeEl = document.getElementById(`edit-time-${id}`)
                 const weekEl = document.getElementById(`edit-week-${id}`)
                 const notesEl = document.getElementById(`edit-notes-${id}`)
-                const confirmedCb = document.getElementById(`edit-confirmed-${id}`)
 
                 if (dateEl) match.date = dateEl.value
                 if (timeEl) match.time = timeEl.value
                 if (weekEl) match.week = weekEl.value.trim()
                 if (notesEl) match.notes = notesEl.value.trim()
-                if (confirmedCb) match.confirmed = confirmedCb.checked
 
                 match.status = match.date ? "scheduled" : "unscheduled"
                 if (!match.date) match.confirmed = false
@@ -1373,7 +1371,7 @@
                         <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800">
                             <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Označit jako dohrávku">🔥</button>
                             ${m.date ? `<button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Přidat do Google Kalendáře">📅</button>` : ''}
-                            ${m.date ? `<button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">✅</button>` : ''}
+                            ${m.date ? `<button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>` : ''}
                         </div>
                     `
                     timelineBg.appendChild(card)
@@ -1444,8 +1442,12 @@
                         if (discordUrl || webUrl) {
                             linksHtml = `
                                 <div class="flex items-center gap-1.5 ml-3">
-                                    ${discordUrl ? `<a href="${discordUrl}" target="_blank" class="bg-indigo-600/10 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-900/40 rounded px-2.5 py-1 text-xs font-bold transition flex items-center gap-1 select-none">👾 Discord</a>` : ""}
-                                    ${webUrl ? `<a href="${webUrl}" target="_blank" class="bg-orange-600/10 hover:bg-orange-600/30 text-orange-400 border border-orange-900/40 rounded px-2.5 py-1 text-xs font-bold transition flex items-center gap-1 select-none">🌐 Web</a>` : ""}
+                                    ${discordUrl ? `<a href="${discordUrl}" target="_blank" title="Discord" class="bg-indigo-600/10 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-900/40 rounded p-1.5 transition flex items-center justify-center select-none">
+                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 127.14 96.36">
+                                            <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,121.71,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.92,53.87,53,48.8,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.2,45.92,96.07,53,91,65.69,84.69,65.69Z"/>
+                                        </svg>
+                                    </a>` : ""}
+                                    ${webUrl ? `<a href="${webUrl}" target="_blank" title="Web / Tabulka / Pravidla" class="bg-orange-600/10 hover:bg-orange-600/30 text-orange-400 border border-orange-900/40 rounded p-1 text-xs transition flex items-center justify-center select-none">🌐</a>` : ""}
                                 </div>
                             `
                         }
@@ -1540,9 +1542,7 @@
                                                 
                                                 <button onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="${translations[currentLang].tooltipCancelDate}">❌</button>
                                                 
-                                                <label title="${translations[currentLang].lblConfirmedCheck}" class="bg-gray-900 p-2 rounded border border-gray-700 cursor-pointer select-none flex items-center justify-center">
-                                                    <input type="checkbox" id="edit-confirmed-${m.id}" ${m.confirmed ? 'checked' : ''} class="accent-orange-500 h-4 w-4">
-                                                </label>
+                                                <button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>
                                             </div>
                                         </div>
 
@@ -1579,7 +1579,7 @@
                                                     <div class="bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-800 text-center">
                                                         <span class="text-xs font-bold text-white">${formattedMatchDate}</span>
                                                         <span class="text-xs text-orange-400 font-semibold ml-1.5">${m.time || '--:--'}</span>
-                                                        ${m.confirmed ? `<span class="ml-1 text-emerald-400 text-xs" title="Potvrzeno">✓</span>` : ''}
+                                                        ${m.confirmed ? `<span class="ml-1 text-emerald-400 text-xs" title="Potvrzeno">👍</span>` : ''}
                                                     </div>
                                                     <button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Přidat do Google Kalendáře">📅</button>
                                                 ` : '<span class="text-xs text-gray-500 italic">Bez termínu</span>'}
