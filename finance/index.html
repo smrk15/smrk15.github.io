@@ -194,6 +194,8 @@
         let muster = JSON.parse(localStorage.getItem("finMusterV16")) || defaultMuster;
         let accountBalances = JSON.parse(localStorage.getItem("finBalancesV16")) || defaultAccountBalances;
         ["DE", "Revolut", "SK", "CC"].forEach(acc => { if (accountBalances[acc] === undefined) accountBalances[acc] = 0; });
+        // CC nesmí být v plusu
+        if (accountBalances["CC"] > 0) accountBalances["CC"] = 0;
 
         let modifiedData = JSON.parse(localStorage.getItem("finModifiedV16")) || defaultModifiedData;
         let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV16")) || ["2026-07"];
@@ -467,8 +469,12 @@
         }
 
         function updateAccountBalance(key, val) {
-            const num = parseFloat(val);
-            if (!isNaN(num)) { accountBalances[key] = num; save(); }
+            let num = parseFloat(val) || 0;
+            if (key === "CC") {
+                if (num > 0) num = 0; // CC nesmí být kladná
+            }
+            accountBalances[key] = num;
+            save();
         }
 
         function toggleSimCheck(uniqueId) { checkedSimItems[uniqueId] = !checkedSimItems[uniqueId]; render(); }
@@ -494,7 +500,11 @@
             if (musterOverviewMode === 'vse') {
                 Object.keys(accountBalances).forEach(key => {
                     const val = accountBalances[key] || 0;
-                    incomes += val;
+                    if (key === "CC") {
+                        expenses += Math.abs(val);
+                    } else {
+                        incomes += val;
+                    }
                 });
             }
 
@@ -869,7 +879,7 @@
                 }
             });
 
-            // Přidání statických stavů účtů (včetně CC) do spodní sekce
+            // Přidání statických stavů účtů (včetně CC, která je v příjmech, ale počítá se správně)
             Object.keys(accountBalances).forEach(key => {
                 const val = accountBalances[key] || 0;
                 const uniqueId = `staticky-${key}`;
@@ -1112,7 +1122,7 @@
                                             </button>
                                         ` : ''}
                                         <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
-                                            <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
+                                            <input type="number" step="0.01" ${isCC ? 'max="0"' : ''} value="${formatValTwoDec(item.castka)}" onchange="updateAccountBalance('${item.accountKey}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
                                             <span class="text-xs text-gray-500 ml-1">€</span>
                                         </div>
                                     </div>
