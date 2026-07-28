@@ -250,7 +250,7 @@
                 tooltipEditServer: "Upravit název serveru",
                 tooltipDeleteLeagues: "Smazat vybrané ligy",
                 tooltipEditLeague: "Upravit název ligy",
-                tooltipCancelDate: "Zrušit termín",
+                tooltipCancelDate: "Vymazat termín",
                 placeholderWeek: "Kolo / Týden",
                 placeholderDateInput: "dd.mm.rrrr"
             },
@@ -296,7 +296,7 @@
                 tooltipEditServer: "Servernamen bearbeiten",
                 tooltipDeleteLeagues: "Ausgewählte Ligen löschen",
                 tooltipEditLeague: "Liganamen bearbeiten",
-                tooltipCancelDate: "Termin absagen",
+                tooltipCancelDate: "Termin löschen",
                 placeholderWeek: "Runde / Woche",
                 placeholderDateInput: "tt.mm.jjjj"
             }
@@ -361,7 +361,7 @@
         let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV23")) || []
         let serverOrder = JSON.parse(localStorage.getItem("dartServerOrderV23")) || []
         let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV23")) || {}
-        let editingMatchIds = new Set() // Záznam zápasů, které se právě upravují
+        let editingMatchIds = new Set()
         let historyStack = []
         let currentView = "home"
         let formMode = "single"
@@ -414,6 +414,16 @@
                 editingMatchIds.add(id)
             }
             render()
+        }
+
+        function clearMatchDateInEdit(id) {
+            const dateEl = document.getElementById(`edit-date-${id}`)
+            const timeEl = document.getElementById(`edit-time-${id}`)
+            if (dateEl) {
+                dateEl.value = ""
+                handleDatePlaceholder(dateEl)
+            }
+            if (timeEl) timeEl.value = ""
         }
 
         function saveMatchEdit(id) {
@@ -1023,18 +1033,6 @@
             return `${type} ${formatNum}${game}${formatOut}`.replace(/\s+/g, ' ').trim()
         }
 
-        function removeDateTime(id) {
-            pushToHistory()
-            const match = matches.find(m => m.id === id)
-            if (match) {
-                match.date = ""
-                match.time = ""
-                match.confirmed = false
-                match.status = "unscheduled"
-                save()
-            }
-        }
-
         function isCurrentCalendarWeek(dateString) {
             if (!dateString) return false
             const date = new Date(dateString)
@@ -1193,6 +1191,13 @@
             document.getElementById("formMaxWeekly").value = ""
             document.getElementById("formDiscordUrl").value = ""
             document.getElementById("formWebUrl").value = ""
+        }
+
+        function toggleConfirmedInEdit(id) {
+            const cb = document.getElementById(`edit-confirmed-${id}`)
+            if (cb) {
+                cb.checked = !cb.checked
+            }
         }
 
         function toggleConfirmed(id) {
@@ -1377,7 +1382,6 @@
                                 <input type="checkbox" ${m.confirmed ? 'checked' : ''} onchange="toggleConfirmed(${m.id})" class="accent-orange-500">
                                 ${translations[currentLang].lblConfirmedCheck}
                             </label>` : ''}
-                            ${m.date ? `<button onclick="removeDateTime(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipCancelDate}">❌</button>` : ''}
                         </div>
                     `
                     timelineBg.appendChild(card)
@@ -1541,8 +1545,9 @@
                                                 <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Označit jako dohrávku">🔥</button>
                                                 <input type="date" id="edit-date-${m.id}" value="${m.date}" class="bg-gray-900 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500 w-36 text-center">
                                                 <input type="time" id="edit-time-${m.id}" value="${m.time}" class="bg-gray-900 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                                                <button onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipCancelDate}">❌ Vymazat termín</button>
                                                 <label class="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-900 p-2 rounded border border-gray-700 cursor-pointer select-none">
-                                                    <input type="checkbox" ${m.confirmed ? 'checked' : ''} onchange="toggleConfirmed(${m.id})" class="accent-orange-500">
+                                                    <input type="checkbox" id="edit-confirmed-${m.id}" ${m.confirmed ? 'checked' : ''} class="accent-orange-500">
                                                     ${translations[currentLang].lblConfirmedCheck}
                                                 </label>
                                             </div>
