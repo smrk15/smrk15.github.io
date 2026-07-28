@@ -191,18 +191,19 @@
         function getMaxDaysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
         function getAdjustedDay(year, month, targetDay) { return Math.min(targetDay || 5, getMaxDaysInMonth(year, month)); }
 
-        let muster = JSON.parse(localStorage.getItem("finMusterV15")) || defaultMuster;
-        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV15")) || defaultAccountBalances;
+        let muster = JSON.parse(localStorage.getItem("finMusterV16")) || defaultMuster;
+        let accountBalances = JSON.parse(localStorage.getItem("finBalancesV16")) || defaultAccountBalances;
         ["DE", "Revolut", "SK", "CC"].forEach(acc => { if (accountBalances[acc] === undefined) accountBalances[acc] = 0; });
 
-        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV15")) || defaultModifiedData;
-        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV15")) || ["2026-07"];
-        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV15")) || defaultIncomeOrder;
-        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV15")) || {};
-        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV15")) || {};
+        let modifiedData = JSON.parse(localStorage.getItem("finModifiedV16")) || defaultModifiedData;
+        let generatedMonths = JSON.parse(localStorage.getItem("finMonthsV16")) || ["2026-07"];
+        let incomeCustomOrder = JSON.parse(localStorage.getItem("finIncomeOrderV16")) || defaultIncomeOrder;
+        let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV16")) || {};
+        let incomeCustomOrderPerMonth = JSON.parse(localStorage.getItem("finIncomeOrderMonthV16")) || {};
+        let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV16")) || {};
         
-        let activeMonth = localStorage.getItem("finActiveMonthV15") || "2026-07";
-        let currentView = localStorage.getItem("finCurrentViewV15") || "home";
+        let activeMonth = localStorage.getItem("finActiveMonthV16") || "2026-07";
+        let currentView = localStorage.getItem("finCurrentViewV16") || "home";
         let checkedSimItems = {};
         let openMusterSettings = {};
         let comparedMusterMonths = [];
@@ -220,6 +221,7 @@
                 generatedMonths: JSON.parse(JSON.stringify(generatedMonths)),
                 incomeCustomOrder: JSON.parse(JSON.stringify(incomeCustomOrder)),
                 expenseCustomOrder: JSON.parse(JSON.stringify(expenseCustomOrder)),
+                incomeCustomOrderPerMonth: JSON.parse(JSON.stringify(incomeCustomOrderPerMonth)),
                 deletedMonthsHistory: JSON.parse(JSON.stringify(deletedMonthsHistory)),
                 activeMonth: activeMonth,
                 currentView: currentView
@@ -238,6 +240,7 @@
             generatedMonths = previousState.generatedMonths;
             incomeCustomOrder = previousState.incomeCustomOrder;
             expenseCustomOrder = previousState.expenseCustomOrder;
+            incomeCustomOrderPerMonth = previousState.incomeCustomOrderPerMonth || {};
             deletedMonthsHistory = previousState.deletedMonthsHistory;
             activeMonth = previousState.activeMonth;
             currentView = previousState.currentView;
@@ -259,15 +262,16 @@
 
         function save(writeHistory = true) {
             if (writeHistory) pushToHistory();
-            localStorage.setItem("finMusterV15", JSON.stringify(muster));
-            localStorage.setItem("finBalancesV15", JSON.stringify(accountBalances));
-            localStorage.setItem("finModifiedV15", JSON.stringify(modifiedData));
-            localStorage.setItem("finMonthsV15", JSON.stringify(generatedMonths));
-            localStorage.setItem("finIncomeOrderV15", JSON.stringify(incomeCustomOrder));
-            localStorage.setItem("finExpenseOrderV15", JSON.stringify(expenseCustomOrder));
-            localStorage.setItem("finDeletedMonthsV15", JSON.stringify(deletedMonthsHistory));
-            localStorage.setItem("finActiveMonthV15", activeMonth);
-            localStorage.setItem("finCurrentViewV15", currentView);
+            localStorage.setItem("finMusterV16", JSON.stringify(muster));
+            localStorage.setItem("finBalancesV16", JSON.stringify(accountBalances));
+            localStorage.setItem("finModifiedV16", JSON.stringify(modifiedData));
+            localStorage.setItem("finMonthsV16", JSON.stringify(generatedMonths));
+            localStorage.setItem("finIncomeOrderV16", JSON.stringify(incomeCustomOrder));
+            localStorage.setItem("finExpenseOrderV16", JSON.stringify(expenseCustomOrder));
+            localStorage.setItem("finIncomeOrderMonthV16", JSON.stringify(incomeCustomOrderPerMonth));
+            localStorage.setItem("finDeletedMonthsV16", JSON.stringify(deletedMonthsHistory));
+            localStorage.setItem("finActiveMonthV16", activeMonth);
+            localStorage.setItem("finCurrentViewV16", currentView);
             render();
         }
 
@@ -346,7 +350,7 @@
                 return;
             }
 
-            if (confirm(`Chceš vyrovnat dluh ${formatMoney(debtAmount)} na kreditce CC?\n\n- Zůstatek CC se vynuluje (0 €).\n- Vytvoří se výdaj 'Stržení CC' na 1. den následujícího měsíce.`)) {
+            if (confirm(`Chceš vyrovnat dluh ${formatMoney(debtAmount)} na kreditce CC?\n\n- Zůstatek CC se vynuluje (0 €).\n- Vytvoří se výdaj 'Stržení CC' na 5. den následujícího měsíce.`)) {
                 pushToHistory();
 
                 const [y, m] = activeMonth.split("-").map(Number);
@@ -370,14 +374,16 @@
             }
         }
 
-        function moveIncomeItem(uniqueId, direction) {
-            const idx = incomeCustomOrder.indexOf(uniqueId);
+        function moveIncomeItem(monthKey, uniqueId, direction) {
+            if (!incomeCustomOrderPerMonth[monthKey]) incomeCustomOrderPerMonth[monthKey] = [];
+            const list = incomeCustomOrderPerMonth[monthKey];
+            const idx = list.indexOf(uniqueId);
             if (idx === -1) return;
             const newIdx = idx + direction;
-            if (newIdx >= 0 && newIdx < incomeCustomOrder.length) {
-                const temp = incomeCustomOrder[idx];
-                incomeCustomOrder[idx] = incomeCustomOrder[newIdx];
-                incomeCustomOrder[newIdx] = temp;
+            if (newIdx >= 0 && newIdx < list.length) {
+                const temp = list[idx];
+                list[idx] = list[newIdx];
+                list[newIdx] = temp;
                 save();
             }
         }
@@ -648,6 +654,7 @@
             const finalExpensesList = [];
             const finalIncomesList = [];
 
+            // Zpracování výdajů přes horizont
             activeMonthsInHorizon.forEach((monthKey) => {
                 const [y, m] = monthKey.split("-").map(Number);
 
@@ -746,33 +753,82 @@
                 }
             });
 
-            if (!expenseCustomOrder[targetMonthKey]) {
-                finalExpensesList.sort((a, b) => {
-                    if (a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
-                    return a.den - b.den;
-                });
-                expenseCustomOrder[targetMonthKey] = finalExpensesList.map(i => i.uniqueId);
-            } else {
-                const currentOrder = expenseCustomOrder[targetMonthKey];
-                finalExpensesList.sort((a, b) => {
-                    let idxA = currentOrder.indexOf(a.uniqueId);
-                    let idxB = currentOrder.indexOf(b.uniqueId);
-                    if (idxA === -1) { currentOrder.push(a.uniqueId); idxA = currentOrder.length - 1; }
-                    if (idxB === -1) { currentOrder.push(b.uniqueId); idxB = currentOrder.length - 1; }
-                    return idxA - idxB;
-                });
-            }
-
-            Object.keys(accountBalances).forEach(key => {
-                const uniqueId = `staticky-${key}`;
-                const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 5, isStaticAccount: true, accountKey: key };
-                finalIncomesList.push(itemObj);
-                totalIncomes += accountBalances[key];
-                if (checkedSimItems[uniqueId]) simIncomes += accountBalances[key];
-            });
-
+            // Zpracování příjmů přes horizont (stejně jako výdaje!)
             activeMonthsInHorizon.forEach((monthKey) => {
                 const [y, m] = monthKey.split("-").map(Number);
+
+                muster.filter(t => t.typ === "prijem").forEach(template => {
+                    if (template.hasExpiry && template.validUntilYear && template.validUntilMonth) {
+                        if (y > template.validUntilYear || (y === template.validUntilYear && m > template.validUntilMonth)) return;
+                    }
+
+                    let belongsToMonth = false;
+                    if (template.frekvence === "kazdy_mesic") belongsToMonth = true;
+                    else if (template.frekvence === "vybrane_mesice" && template.mesice.includes(m)) belongsToMonth = true;
+
+                    if (belongsToMonth) {
+                        let partsToProcess = [];
+
+                        if (template.splitParts && template.splitParts.length > 0) {
+                            partsToProcess = template.splitParts.map((p, idx) => ({
+                                partNum: idx + 1,
+                                suffix: ` (${idx + 1}/${template.splitParts.length})`,
+                                defaultAmount: p.amount || 0,
+                                defaultDay: p.day || 5
+                            }));
+                        } else if (template.split) {
+                            partsToProcess = [
+                                { partNum: 1, suffix: " (1/2)", defaultAmount: template.part1Amount || 0, defaultDay: template.part1Day || 5 },
+                                { partNum: 2, suffix: " (2/2)", defaultAmount: template.part2Amount || 0, defaultDay: template.part2Day || 15 }
+                            ];
+                        } else {
+                            partsToProcess = [
+                                { partNum: 1, suffix: "", defaultAmount: template.castka, defaultDay: template.den || 5 }
+                            ];
+                        }
+
+                        partsToProcess.forEach(part => {
+                            const partKey = `${template.nazev}${part.suffix}`;
+                            const isDeleted = modifiedData.deleted[monthKey] && modifiedData.deleted[monthKey].includes(partKey);
+
+                            if (!isDeleted) {
+                                let baseAmt = part.defaultAmount;
+                                if (part.suffix === "" && template.monthAmounts && template.monthAmounts[m] !== undefined) {
+                                    baseAmt = template.monthAmounts[m];
+                                }
+
+                                const customAmountKey = `${monthKey}-${partKey}`;
+                                const effectiveAmount = (modifiedData.amounts && modifiedData.amounts[customAmountKey] !== undefined) 
+                                    ? modifiedData.amounts[customAmountKey] 
+                                    : baseAmt;
+
+                                const customNameKey = `${monthKey}-${partKey}`;
+                                const effectiveName = (modifiedData.names && modifiedData.names[customNameKey]) 
+                                    ? modifiedData.names[customNameKey] 
+                                    : partKey;
+
+                                const effectiveDay = getAdjustedDay(y, m, part.defaultDay);
+                                const uniqueId = `${monthKey}-${partKey}`;
+
+                                const itemObj = {
+                                    uniqueId,
+                                    itemMonth: monthKey,
+                                    origNazev: partKey,
+                                    nazev: effectiveName,
+                                    castka: effectiveAmount,
+                                    den: effectiveDay,
+                                    isMusterItem: true,
+                                    monthStyle: getMonthStyle(monthKey)
+                                };
+
+                                finalIncomesList.push(itemObj);
+                                totalIncomes += effectiveAmount;
+                                if (checkedSimItems[uniqueId]) simIncomes += effectiveAmount;
+                            }
+                        });
+                    }
+                });
+
                 if (modifiedData.added[monthKey]) {
                     modifiedData.added[monthKey].filter(i => i.typ === "prijem").forEach(addedItem => {
                         const effectiveDay = getAdjustedDay(y, m, addedItem.den || 5);
@@ -794,13 +850,52 @@
                 }
             });
 
-            finalIncomesList.sort((a, b) => {
-                let idxA = incomeCustomOrder.indexOf(a.uniqueId);
-                let idxB = incomeCustomOrder.indexOf(b.uniqueId);
-                if (idxA === -1) { incomeCustomOrder.push(a.uniqueId); idxA = incomeCustomOrder.length - 1; }
-                if (idxB === -1) { incomeCustomOrder.push(b.uniqueId); idxB = incomeCustomOrder.length - 1; }
-                return idxA - idxB;
+            // Přidání statických stavů účtů (pouze k aktuálnímu/poslednímu měsíci nebo dle potřeby)
+            Object.keys(accountBalances).forEach(key => {
+                const uniqueId = `staticky-${key}`;
+                const itemObj = { uniqueId, nazev: key, castka: accountBalances[key], den: 5, isStaticAccount: true, accountKey: key };
+                finalIncomesList.push(itemObj);
+                totalIncomes += accountBalances[key];
+                if (checkedSimItems[uniqueId]) simIncomes += accountBalances[key];
             });
+
+            // Řazení výdajů
+            if (!expenseCustomOrder[targetMonthKey]) {
+                finalExpensesList.sort((a, b) => {
+                    if (a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
+                    return a.den - b.den;
+                });
+                expenseCustomOrder[targetMonthKey] = finalExpensesList.map(i => i.uniqueId);
+            } else {
+                const currentOrder = expenseCustomOrder[targetMonthKey];
+                finalExpensesList.sort((a, b) => {
+                    let idxA = currentOrder.indexOf(a.uniqueId);
+                    let idxB = currentOrder.indexOf(b.uniqueId);
+                    if (idxA === -1) { currentOrder.push(a.uniqueId); idxA = currentOrder.length - 1; }
+                    if (idxB === -1) { currentOrder.push(b.uniqueId); idxB = currentOrder.length - 1; }
+                    return idxA - idxB;
+                });
+            }
+
+            // Řazení příjmů
+            if (!incomeCustomOrderPerMonth[targetMonthKey]) {
+                finalIncomesList.sort((a, b) => {
+                    if (a.isStaticAccount && !b.isStaticAccount) return -1;
+                    if (!a.isStaticAccount && b.isStaticAccount) return 1;
+                    if (a.itemMonth && b.itemMonth && a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
+                    return a.den - b.den;
+                });
+                incomeCustomOrderPerMonth[targetMonthKey] = finalIncomesList.map(i => i.uniqueId);
+            } else {
+                const currentOrder = incomeCustomOrderPerMonth[targetMonthKey];
+                finalIncomesList.sort((a, b) => {
+                    let idxA = currentOrder.indexOf(a.uniqueId);
+                    let idxB = currentOrder.indexOf(b.uniqueId);
+                    if (idxA === -1) { currentOrder.push(a.uniqueId); idxA = currentOrder.length - 1; }
+                    if (idxB === -1) { currentOrder.push(b.uniqueId); idxB = currentOrder.length - 1; }
+                    return idxA - idxB;
+                });
+            }
 
             return {
                 expenses: finalExpensesList,
@@ -974,8 +1069,8 @@
                                     <div class="flex items-center gap-2 min-w-0 flex-1">
                                         ${isEditMode ? `
                                             <div class="flex flex-col gap-0.5 mr-1">
-                                                <button onclick="moveIncomeItem('${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
-                                                <button onclick="moveIncomeItem('${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
+                                                <button onclick="moveIncomeItem('${activeMonth}', '${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
+                                                <button onclick="moveIncomeItem('${activeMonth}', '${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
                                             </div>
                                             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
                                         ` : ''}
@@ -1002,17 +1097,21 @@
                                     <div class="flex items-center gap-2 min-w-0 flex-1">
                                         ${isEditMode ? `
                                             <div class="flex flex-col gap-0.5 mr-1">
-                                                <button onclick="moveIncomeItem('${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
-                                                <button onclick="moveIncomeItem('${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
+                                                <button onclick="moveIncomeItem('${activeMonth}', '${item.uniqueId}', -1)" ${isFirst ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout nahoru">▲</button>
+                                                <button onclick="moveIncomeItem('${activeMonth}', '${item.uniqueId}', 1)" ${isLast ? 'disabled class="opacity-20"' : 'class="hover:text-orange-400 text-gray-500"'} title="Posunout dolů">▼</button>
                                             </div>
                                             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSimCheck('${item.uniqueId}')" class="accent-orange-500 h-4 w-4 shrink-0 cursor-pointer">
                                         ` : ''}
                                         <span class="text-xs font-bold px-2 py-1 rounded border shrink-0 ${style.badge}">${item.den}.</span>
-                                        <span class="text-sm font-semibold text-gray-200 truncate">${item.nazev}</span>
+                                        <input type="text" value="${item.nazev}" onchange="updateHorizonItemName('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-semibold text-gray-200 focus:outline-none focus:border-orange-500 truncate flex-1">
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${style.badge}">${formatMonthLabel(item.itemMonth).split(' ')[0]}</span>
                                     </div>
                                     <div class="flex items-center gap-3 shrink-0">
-                                        <span class="text-sm font-bold text-emerald-400">${formatMoney(item.castka)}</span>
-                                        <button onclick="deleteAddedItem('${activeMonth}', '${item.itemMonth}', '${item.uniqueId}')" class="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 p-2 rounded-lg text-xs font-semibold transition" title="Smazat">
+                                        <div class="flex items-center bg-gray-950 border border-gray-850 rounded px-2.5 py-1">
+                                            <input type="number" step="0.01" value="${formatValTwoDec(item.castka)}" onchange="updateHorizonItemAmount('${item.itemMonth}', '${item.origNazev}', this.value)" class="bg-transparent text-sm font-bold text-center focus:outline-none w-20 text-emerald-400">
+                                            <span class="text-xs text-gray-500 ml-1">€</span>
+                                        </div>
+                                        <button onclick="deleteItem('${activeMonth}', '${item.itemMonth}', '${item.origNazev}')" class="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 p-2 rounded-lg text-xs font-semibold transition" title="Smazat">
                                             🗑️
                                         </button>
                                     </div>
@@ -1201,6 +1300,7 @@
                                 <div class="flex-1 min-w-0 w-full">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <input type="text" value="${item.nazev}" onchange="updateMusterName(${item.id}, this.value)" class="bg-transparent font-bold text-white text-base focus:outline-none focus:border-orange-500 border-b border-transparent">
+                                        <span class="text-[10px] ${isIncome ? 'text-emerald-400 bg-emerald-950/40 border-emerald-900/30' : 'text-rose-400 bg-rose-950/40 border-rose-900/30'} px-2 py-0.5 rounded border">${isIncome ? 'Příjem (+)' : 'Výdaj (-)'}</span>
                                         ${splitCount > 0 ? `<span class="text-[10px] text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-900/30">Rozděleno na ${splitCount} části</span>` : ''}
                                         
                                         ${isIrregular ? `
@@ -1315,8 +1415,11 @@
         }
 
         function exportData() {
-            const sortedMuster = [...muster].sort((a, b) => (a.den || 5) - (b.den || 5));
-            const dataStr = JSON.stringify({ muster: sortedMuster, accountBalances, modifiedData, generatedMonths, incomeCustomOrder, expenseCustomOrder, deletedMonthsHistory }, null, 2);
+            const expenses = muster.filter(i => i.typ === "vydaj").sort((a, b) => (a.den || 5) - (b.den || 5));
+            const incomes = muster.filter(i => i.typ === "prijem").sort((a, b) => (a.den || 5) - (b.den || 5));
+            const sortedMuster = [...expenses, ...incomes];
+
+            const dataStr = JSON.stringify({ muster: sortedMuster, accountBalances, modifiedData, generatedMonths, incomeCustomOrder, expenseCustomOrder, incomeCustomOrderPerMonth, deletedMonthsHistory }, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const exportFileDefaultName = 'domaci_finance_zaloha.json';
             
@@ -1341,6 +1444,7 @@
                         generatedMonths = imported.generatedMonths;
                         if (imported.incomeCustomOrder) incomeCustomOrder = imported.incomeCustomOrder;
                         if (imported.expenseCustomOrder) expenseCustomOrder = imported.expenseCustomOrder;
+                        if (imported.incomeCustomOrderPerMonth) incomeCustomOrderPerMonth = imported.incomeCustomOrderPerMonth;
                         if (imported.deletedMonthsHistory) deletedMonthsHistory = imported.deletedMonthsHistory;
                         const sorted = [...generatedMonths].sort();
                         activeMonth = sorted.length > 0 ? sorted[sorted.length - 1] : "";
@@ -1364,6 +1468,7 @@
                 generatedMonths = ["2026-07"];
                 incomeCustomOrder = defaultIncomeOrder;
                 expenseCustomOrder = {};
+                incomeCustomOrderPerMonth = {};
                 deletedMonthsHistory = {};
                 activeMonth = "2026-07";
                 currentView = "home";
