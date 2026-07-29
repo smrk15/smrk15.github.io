@@ -193,13 +193,12 @@
         function getMaxDaysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
         function getAdjustedDay(year, month, targetDay) { return Math.min(targetDay || 5, getMaxDaysInMonth(year, month)); }
 
-        // Vrací pole čísel dnů v měsíci, kdy připadá daný den v týdnu (např. všechna pondělí v měsíci)
         function getWeekdayDatesInMonth(year, month, targetDayOfWeek) {
             let dates = [];
             const daysInMonth = getMaxDaysInMonth(year, month);
             for (let d = 1; d <= daysInMonth; d++) {
                 const date = new Date(year, month - 1, d);
-                let dayOfWeek = date.getDay(); // 0 = neděle, 1 = pondělí, ..., 6 = sobota
+                let dayOfWeek = date.getDay();
                 if (dayOfWeek === 0) dayOfWeek = 7;
                 if (dayOfWeek === targetDayOfWeek) {
                     dates.push(d);
@@ -219,13 +218,14 @@
         let expenseCustomOrder = JSON.parse(localStorage.getItem("finExpenseOrderV16")) || {};
         let incomeCustomOrderPerMonth = JSON.parse(localStorage.getItem("finIncomeOrderMonthV16")) || {};
         let deletedMonthsHistory = JSON.parse(localStorage.getItem("finDeletedMonthsV16")) || {};
+        let overviewExcludedIds = JSON.parse(localStorage.getItem("finOverviewExcludedV16")) || [];
         
         let activeMonth = localStorage.getItem("finActiveMonthV16") || "2026-07";
         let currentView = localStorage.getItem("finCurrentViewV16") || "home";
         let checkedSimItems = {};
         let openMusterSettings = {};
         let comparedMusterMonths = [];
-        let isMusterOverviewOpen = false;
+        let isMusterOverviewOpen = true; // Výchozí otevřený, aby byly checkboxy hned vidět
         let musterOverviewTab = 'vydaje';
         let musterOverviewMode = 'vse';
         let isEditMode = false;
@@ -241,6 +241,7 @@
                 expenseCustomOrder: JSON.parse(JSON.stringify(expenseCustomOrder)),
                 incomeCustomOrderPerMonth: JSON.parse(JSON.stringify(incomeCustomOrderPerMonth)),
                 deletedMonthsHistory: JSON.parse(JSON.stringify(deletedMonthsHistory)),
+                overviewExcludedIds: JSON.parse(JSON.stringify(overviewExcludedIds)),
                 activeMonth: activeMonth,
                 currentView: currentView
             };
@@ -260,6 +261,7 @@
             expenseCustomOrder = previousState.expenseCustomOrder;
             incomeCustomOrderPerMonth = previousState.incomeCustomOrderPerMonth || {};
             deletedMonthsHistory = previousState.deletedMonthsHistory;
+            overviewExcludedIds = previousState.overviewExcludedIds || [];
             activeMonth = previousState.activeMonth;
             currentView = previousState.currentView;
             save(false);
@@ -288,6 +290,7 @@
             localStorage.setItem("finExpenseOrderV16", JSON.stringify(expenseCustomOrder));
             localStorage.setItem("finIncomeOrderMonthV16", JSON.stringify(incomeCustomOrderPerMonth));
             localStorage.setItem("finDeletedMonthsV16", JSON.stringify(deletedMonthsHistory));
+            localStorage.setItem("finOverviewExcludedV16", JSON.stringify(overviewExcludedIds));
             localStorage.setItem("finActiveMonthV16", activeMonth);
             localStorage.setItem("finCurrentViewV16", currentView);
             render();
@@ -390,6 +393,16 @@
 
                 save(false);
             }
+        }
+
+        function toggleOverviewInclude(id) {
+            const strId = String(id);
+            if (overviewExcludedIds.includes(strId)) {
+                overviewExcludedIds = overviewExcludedIds.filter(i => i !== strId);
+            } else {
+                overviewExcludedIds.push(strId);
+            }
+            save();
         }
 
         function moveIncomeItem(monthKey, uniqueId, direction) {
@@ -516,15 +529,19 @@
             if (musterOverviewMode === 'vse') {
                 Object.keys(accountBalances).forEach(key => {
                     const val = accountBalances[key] || 0;
-                    if (key === "CC") {
-                        expenses += Math.abs(val);
-                    } else {
-                        incomes += val;
+                    if (!overviewExcludedIds.includes(`acc_${key}`)) {
+                        if (key === "CC") {
+                            expenses += Math.abs(val);
+                        } else {
+                            incomes += val;
+                        }
                     }
                 });
             }
 
             muster.forEach(template => {
+                if (overviewExcludedIds.includes(String(template.id))) return;
+
                 if (template.hasExpiry && template.validUntilYear && template.validUntilMonth) {
                     if (targetYear > template.validUntilYear || (targetYear === template.validUntilYear && targetMonthNum > template.validUntilMonth)) return;
                 }
@@ -716,7 +733,6 @@
             const finalExpensesList = [];
             const finalIncomesList = [];
 
-            // Zpracování výdajů přes horizont
             activeMonthsInHorizon.forEach((monthKey) => {
                 const [y, m] = monthKey.split("-").map(Number);
 
@@ -837,7 +853,6 @@
                 }
             });
 
-            // Zpracování příjmů přes horizont
             activeMonthsInHorizon.forEach((monthKey) => {
                 const [y, m] = monthKey.split("-").map(Number);
 
@@ -956,7 +971,6 @@
                 }
             });
 
-            // Přidání statických stavů účtů
             Object.keys(accountBalances).forEach(key => {
                 let val = accountBalances[key] || 0;
                 const uniqueId = `staticky-${key}`;
@@ -974,7 +988,6 @@
                 if (checkedSimItems[uniqueId]) simIncomes += val;
             });
 
-            // Řazení výdajů
             if (!expenseCustomOrder[targetMonthKey]) {
                 finalExpensesList.sort((a, b) => {
                     if (a.itemMonth && b.itemMonth && a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
@@ -992,7 +1005,6 @@
                 });
             }
 
-            // Řazení příjmů
             if (!incomeCustomOrderPerMonth[targetMonthKey]) {
                 finalIncomesList.sort((a, b) => {
                     if (a.isStaticAccount && !b.isStaticAccount) return -1;
@@ -1307,6 +1319,32 @@
                                         </div>
                                     </div>
 
+                                    <!-- VÝBĚR POLOŽEK DO PŘEHLEDU (CHECKBOXE) -->
+                                    <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl">
+                                        <div class="text-xs font-bold uppercase tracking-wider text-orange-400 mb-2">⚙️ Zahrnout do výpočtu přehledu (odškrtnutím vyřadíš):</div>
+                                        <div class="flex flex-wrap gap-3">
+                                            ${muster.map(item => {
+                                                const isIncluded = !overviewExcludedIds.includes(String(item.id));
+                                                return `
+                                                    <label class="flex items-center gap-1.5 bg-gray-950 border border-gray-850 px-3 py-1.5 rounded-lg text-xs cursor-pointer select-none hover:border-gray-700">
+                                                        <input type="checkbox" ${isIncluded ? 'checked' : ''} onchange="toggleOverviewInclude('${item.id}')" class="accent-orange-500 h-4 w-4">
+                                                        <span class="${item.typ === 'prijem' ? 'text-emerald-400' : 'text-rose-400'} font-bold">${item.nazev}</span>
+                                                    </label>
+                                                `;
+                                            }).join('')}
+                                            ${musterOverviewMode === 'vse' ? Object.keys(accountBalances).map(accKey => {
+                                                const token = `acc_${accKey}`;
+                                                const isInc = !overviewExcludedIds.includes(token);
+                                                return `
+                                                    <label class="flex items-center gap-1.5 bg-gray-950 border border-gray-850 px-3 py-1.5 rounded-lg text-xs cursor-pointer select-none hover:border-gray-700">
+                                                        <input type="checkbox" ${isInc ? 'checked' : ''} onchange="toggleOverviewInclude('${token}')" class="accent-orange-500 h-4 w-4">
+                                                        <span class="text-gray-300 font-bold">Zůstatek ${accKey}</span>
+                                                    </label>
+                                                `;
+                                            }).join('') : ''}
+                                        </div>
+                                    </div>
+
                                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                             ` : ''}
 
@@ -1558,7 +1596,7 @@
             const incomes = muster.filter(i => i.typ === "prijem").sort((a, b) => (a.den || 5) - (b.den || 5));
             const sortedMuster = [...expenses, ...incomes];
 
-            const dataStr = JSON.stringify({ muster: sortedMuster, accountBalances, modifiedData, generatedMonths, incomeCustomOrder, expenseCustomOrder, incomeCustomOrderPerMonth, deletedMonthsHistory }, null, 2);
+            const dataStr = JSON.stringify({ muster: sortedMuster, accountBalances, modifiedData, generatedMonths, incomeCustomOrder, expenseCustomOrder, incomeCustomOrderPerMonth, deletedMonthsHistory, overviewExcludedIds }, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const exportFileDefaultName = 'domaci_finance_zaloha.json';
             
@@ -1585,6 +1623,7 @@
                         if (imported.expenseCustomOrder) expenseCustomOrder = imported.expenseCustomOrder;
                         if (imported.incomeCustomOrderPerMonth) incomeCustomOrderPerMonth = imported.incomeCustomOrderPerMonth;
                         if (imported.deletedMonthsHistory) deletedMonthsHistory = imported.deletedMonthsHistory;
+                        if (imported.overviewExcludedIds) overviewExcludedIds = imported.overviewExcludedIds;
                         const sorted = [...generatedMonths].sort();
                         activeMonth = sorted.length > 0 ? sorted[sorted.length - 1] : "";
                         save();
@@ -1609,6 +1648,7 @@
                 expenseCustomOrder = {};
                 incomeCustomOrderPerMonth = {};
                 deletedMonthsHistory = {};
+                overviewExcludedIds = [];
                 activeMonth = "2026-07";
                 currentView = "home";
                 save();
