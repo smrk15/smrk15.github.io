@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cestovní seznam věcí</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #f97316;
+            --accent-hover: #ea580c;
+            --border: #334155;
+            --done-bg: rgba(133, 77, 14, 0.25);
+            --done-border: #a16207;
+            --done-text: #fef08a;
+            --skip-text: #f87171;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links .nav-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-links .nav-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:disabled:hover {
+            color: var(--text-muted);
+            border-color: var(--border);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            gap: 6px;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .view-section {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        .icon-action-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .icon-action-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .icon-action-btn.danger {
+            border-color: var(--skip-text);
+            color: var(--skip-text);
+        }
+
+        .icon-action-btn.danger:hover {
+            background: var(--skip-text);
+            color: white;
+        }
+
+        .collapsible-form {
+            display: none;
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .collapsible-form.open {
+            display: block;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        input[type="text"], select {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-color);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .checkbox-option input {
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        button.btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        button.btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .control-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .control-bar span {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-right: 5px;
+        }
+
+        .btn-submuster {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-submuster:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .filter-btn {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(249, 115, 22, 0.1);
+        }
+
+        .columns-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .columns-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .column-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        ul.item-list {
+            list-style: none;
+        }
+
+        li.item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+
+        li.item-row.is-done {
+            background: var(--done-bg);
+            border-color: var(--done-border);
+        }
+
+        li.item-row.is-done .item-text {
+            color: var(--done-text);
+            text-decoration: line-through;
+        }
+
+        li.item-row.is-skipped {
+            opacity: 0.6;
+        }
+
+        li.item-row.is-skipped .item-text {
+            color: var(--skip-text);
+            text-decoration: line-through;
+        }
+
+        .item-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .item-badges {
+            display: flex;
+            gap: 6px;
+            margin-left: 8px;
+            align-items: center;
+        }
+
+        .badge-interactive {
+            cursor: pointer;
+            opacity: 0.3;
+            padding: 3px 6px;
+            border-radius: 4px;
+            background: var(--border);
+            display: inline-flex;
+            align-items: center;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .badge-interactive.active {
+            opacity: 1.0;
+            background: var(--accent);
+            color: white;
+        }
+
+        .badge-interactive:hover {
+            transform: scale(1.05);
+        }
+
+        .type-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 8px;
+            transition: transform 0.1s;
+        }
+
+        .type-toggle-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--accent);
+        }
+
+        .icon-img {
+            width: 24px;
+            height: 18px;
+            object-fit: contain;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-color);
+        }
+
+        .action-btn.skip-active {
+            color: var(--skip-text);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-left">
+            <h1>Cestovní seznam věcí</h1>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('current')" title="Aktuální seznam">📝</button>
+                <button class="tab-btn" onclick="switchTab('muster')" title="Muster (Šablony)">🗂️</button>
+            </div>
+        </div>
+        <div class="nav-links">
+            <button class="nav-btn" id="undoBtn" onclick="undoAction()" title="Zpět (Undo)" disabled>↩️</button>
+            <button class="nav-btn" onclick="exportData()" title="Export">💾</button>
+            <button class="nav-btn" onclick="document.getElementById('importFile').click()" title="Import">📂</button>
+            <input type="file" id="importFile" style="display: none" accept=".json" onchange="importData(event)">
+        </div>
+    </header>
+
+    <!-- AKTUÁLNÍ SEZNAM -->
+    <div id="view-current" class="view-section active">
+        <div class="control-bar">
+            <span>Načíst muster:</span>
+            <div id="submusterButtons" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+            <button class="icon-action-btn" onclick="toggleForm('currentForm')" title="Přidat položku" style="margin-left: auto;">➕</button>
+            <button class="icon-action-btn danger" onclick="clearCurrentList()" title="Vyčistit seznam">🧹</button>
+        </div>
+
+        <div id="currentForm" class="collapsible-form">
+            <form onsubmit="addItemCurrent(event)" class="form-group">
+                <input type="text" id="newItemName" placeholder="Nová položka..." required>
+                <select id="newItemType">
+                    <option value="auto">🚗 Auto (sbalit/povézt)</option>
+                    <option value="house">🏠 Dům (úkol doma)</option>
+                </select>
+                <div class="checkbox-group">
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">Přidat do musterů:</span>
+                    <div id="newCheckboxes" style="display: flex; gap: 12px; flex-wrap: wrap;"></div>
+                </div>
+                <button type="submit" class="btn-primary">Přidat</button>
+            </form>
+        </div>
+
+        <div class="control-bar">
+            <span>Filtr:</span>
+            <button class="filter-btn active" id="filter-all" onclick="toggleFilter('all')" title="Vše">🌐</button>
+            <button class="filter-btn active" id="filter-active" onclick="toggleFilter('active')" title="Zbývá">⏳</button>
+            <button class="filter-btn active" id="filter-done" onclick="toggleFilter('done')" title="Hotovo">✅</button>
+            <button class="filter-btn active" id="filter-skipped" onclick="toggleFilter('skipped')" title="Vynecháno">⏭️</button>
+        </div>
+
+        <div class="columns-container" id="currentContainer"></div>
+    </div>
+
+    <!-- MUSTER -->
+    <div id="view-muster" class="view-section">
+        <div class="control-bar" style="justify-content: space-between;">
+            <div class="tabs" id="musterTabs" style="margin-bottom: 0; border: none;"></div>
+            <div style="display: flex; gap: 8px;">
+                <button class="icon-action-btn" onclick="toggleForm('musterForm')" title="Přidat položku / kategorii">➕</button>
+                <button class="icon-action-btn danger" onclick="clearGlobalMasterDatabase()" title="Vyčistit databázi musterů">🧹</button>
+            </div>
+        </div>
+
+        <div class="control-bar" id="musterFilterBar" style="margin-top: 15px; display: none; align-items: center;">
+            <div id="musterFilterButtons" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;"></div>
+        </div>
+
+        <div id="musterForm" class="collapsible-form">
+            <form onsubmit="addItemMusterGlobal(event)" class="form-group" style="margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px;" id="globalMusterAddBox">
+                <span style="font-size: 0.9rem; color: var(--text-muted); width: 100%;">Nová položka do databáze:</span>
+                <input type="text" id="newGlobalMusterName" placeholder="Název položky..." required style="flex: 2;">
+                <select id="newGlobalMusterType" style="flex: 1;">
+                    <option value="auto">🚗 Auto</option>
+                    <option value="house">🏠 Dům</option>
+                </select>
+                <div class="checkbox-group" style="width: 100%;">
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">Zařadit do musterů:</span>
+                    <div id="globalMusterCheckboxes" style="display: flex; gap: 12px; flex-wrap: wrap;"></div>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-left: 0;">Přidat položku</button>
+            </form>
+
+            <form onsubmit="addCategory(event)" class="form-group">
+                <span style="font-size: 0.9rem; color: var(--text-muted); width: 100%;">Nová kategorie (šablona):</span>
+                <input type="text" id="newCatId" placeholder="Název (např. Hory)" required style="flex: 2; min-width: 150px;">
+                <input type="text" id="newCatIcon" placeholder="Ikona / Emoji (např. 🏔️)" required style="flex: 1; min-width: 120px;">
+                <button type="submit" class="btn-primary" style="margin-left: 0;">Přidat kategorii</button>
+            </form>
+        </div>
+
+        <ul id="musterList" class="item-list"></ul>
+    </div>
+</div>
+
+<script>
+    const czFlagPng = 'https://flagcdn.com/w80/cz.png';
+    const skFlagPng = 'https://flagcdn.com/w80/sk.png';
+
+    let savedCategories = JSON.parse(localStorage.getItem('smrk_travel_categories'));
+    if (savedCategories && savedCategories.chata && savedCategories.chata.label.includes('🍻')) {
+        savedCategories.chata.label = '🍺';
+        localStorage.setItem('smrk_travel_categories', JSON.stringify(savedCategories));
+    }
+
+    let categories = savedCategories || {
+        'cz': { label: `<img src="${czFlagPng}" class="icon-img" alt="CZ">` },
+        'sk': { label: `<img src="${skFlagPng}" class="icon-img" alt="SK">` },
+        'chata': { label: '🍺' }
+    };
+
+    let currentList = JSON.parse(localStorage.getItem('smrk_travel_current')) || [
+        { id: 1, text: 'pasy', type: 'auto', status: 'normal' },
+        { id: 2, text: 'pivo', type: 'auto', status: 'normal' }
+    ];
+
+    let musters = JSON.parse(localStorage.getItem('smrk_travel_musters')) || {
+        'cz': [
+            { text: 'pasy', type: 'auto' },
+            { text: 'peníze CZK', type: 'auto' },
+            { text: 'nabíječka', type: 'auto' }
+        ],
+        'sk': [
+            { text: 'pasy', type: 'auto' },
+            { text: 'eur', type: 'auto' },
+            { text: 'dálniční slovensko', type: 'auto' }
+        ],
+        'chata': [
+            { text: 'pivo', type: 'auto' },
+            { text: 'gril', type: 'auto' },
+            { text: 'repro', type: 'auto' },
+            { text: 'pozamykat', type: 'house' }
+        ]
+    };
+
+    let historyStack = [];
+    const maxHistorySteps = 20;
+
+    function pushHistory() {
+        historyStack.push({
+            currentList: JSON.parse(JSON.stringify(currentList)),
+            musters: JSON.parse(JSON.stringify(musters)),
+            categories: JSON.parse(JSON.stringify(categories)),
+            masterList: window.globalMusterMasterList ? JSON.parse(JSON.stringify(window.globalMusterMasterList)) : []
+        });
+        if (historyStack.length > maxHistorySteps) {
+            historyStack.shift();
+        }
+        updateUndoButton();
+    }
+
+    function undoAction() {
+        if (historyStack.length === 0) return;
+        const prevState = historyStack.pop();
+        currentList = prevState.currentList;
+        musters = prevState.musters;
+        categories = prevState.categories;
+        if (prevState.masterList) {
+            window.globalMusterMasterList = prevState.masterList;
+        }
+        
+        saveDataSilent();
+        renderCurrent();
+        renderMuster();
+        updateUndoButton();
+    }
+
+    function updateUndoButton() {
+        const btn = document.getElementById('undoBtn');
+        if (btn) {
+            btn.disabled = historyStack.length === 0;
+        }
+    }
+
+    function saveData() {
+        pushHistory();
+        saveDataSilent();
+    }
+
+    function saveDataSilent() {
+        localStorage.setItem('smrk_travel_current', JSON.stringify(currentList));
+        localStorage.setItem('smrk_travel_categories', JSON.stringify(categories));
+        localStorage.setItem('smrk_travel_musters', JSON.stringify(musters));
+        localStorage.setItem('smrk_travel_master', JSON.stringify(window.globalMusterMasterList || []));
+    }
+
+    function exportData() {
+        const data = {
+            currentList: currentList,
+            categories: categories,
+            musters: musters,
+            masterList: window.globalMusterMasterList || []
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "cestovni_seznam_backup.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                pushHistory();
+                currentList = Array.isArray(imported.currentList) ? imported.currentList : currentList;
+                categories = (imported.categories && typeof imported.categories === 'object') ? imported.categories : categories;
+                musters = (imported.musters && typeof imported.musters === 'object') ? imported.musters : musters;
+                if (imported.masterList && Array.isArray(imported.masterList)) {
+                    window.globalMusterMasterList = imported.masterList;
+                }
+                
+                saveDataSilent();
+                renderCurrent();
+                renderMuster();
+                alert("Data byla úspěšně importována!");
+            } catch (err) {
+                alert("Neplatný formát souboru (soubor není platný JSON).");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    function toggleForm(formId) {
+        const form = document.getElementById(formId);
+        form.classList.toggle('open');
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach((b, idx) => {
+            if(idx < 2) b.classList.toggle('active', (idx === 0 && tab === 'current') || (idx === 1 && tab === 'muster'));
+        });
+        document.getElementById('view-current').classList.toggle('active', tab === 'current');
+        document.getElementById('view-muster').classList.toggle('active', tab === 'muster');
+        if(tab === 'current') renderCurrent();
+        if(tab === 'muster') renderMuster();
+    }
+
+    let activeMusterKey = 'all';
+    
+    let filterState = {
+        active: true,
+        done: true,
+        skipped: true
+    };
+
+    function toggleFilter(type) {
+        if (type === 'all') {
+            let allOn = filterState.active && filterState.done && filterState.skipped;
+            filterState.active = !allOn;
+            filterState.done = !allOn;
+            filterState.skipped = !allOn;
+        } else {
+            filterState[type] = !filterState[type];
+        }
+        updateFilterButtonsUI();
+        renderCurrent();
+    }
+
+    function updateFilterButtonsUI() {
+        document.getElementById('filter-active').classList.toggle('active', filterState.active);
+        document.getElementById('filter-done').classList.toggle('active', filterState.done);
+        document.getElementById('filter-skipped').classList.toggle('active', filterState.skipped);
+        
+        let allActive = filterState.active && filterState.done && filterState.skipped;
+        document.getElementById('filter-all').classList.toggle('active', allActive);
+    }
+
+    let musterMissingFilter = 'none';
+
+    function switchMuster(key) {
+        activeMusterKey = key;
+        musterMissingFilter = 'none';
+        renderMuster();
+    }
+
+    function setMusterMissingFilter(filterType) {
+        if (musterMissingFilter === filterType) {
+            musterMissingFilter = 'none';
+        } else {
+            musterMissingFilter = filterType;
+        }
+        renderMuster();
+    }
+
+    function getItemCategories(text) {
+        let matchedLabels = [];
+        for (let [catKey, items] of Object.entries(musters)) {
+            if (Array.isArray(items) && items.some(i => i.text.toLowerCase() === text.toLowerCase())) {
+                if (categories[catKey]) {
+                    matchedLabels.push(`<span class="badge-interactive active" style="opacity:1;">${categories[catKey].label}</span>`);
+                }
+            }
+        }
+        return matchedLabels.join(' ');
+    }
+
+    function getUnassignedItems() {
+        let allMaster = window.globalMusterMasterList || [];
+        return allMaster.filter(item => {
+            let assignedInAny = false;
+            for (let [catKey, items] of Object.entries(musters)) {
+                if (Array.isArray(items) && items.some(i => i.text.toLowerCase() === item.text.toLowerCase())) {
+                    assignedInAny = true;
+                    break;
+                }
+            }
+            return !assignedInAny;
+        });
+    }
+
+    function loadUnassignedSubmuster() {
+        let unassigned = getUnassignedItems();
+        let addedAny = false;
+        unassigned.forEach(templateItem => {
+            if (!currentList.some(i => i.text.toLowerCase() === templateItem.text.toLowerCase())) {
+                if (!addedAny) {
+                    saveData();
+                    addedAny = true;
+                }
+                currentList.push({
+                    id: Date.now() + Math.random(),
+                    text: templateItem.text,
+                    type: templateItem.type || 'auto',
+                    status: 'normal'
+                });
+            }
+        });
+        if (addedAny) {
+            saveDataSilent();
+            renderCurrent();
+            if (activeMusterKey === 'all') renderMuster();
+        }
+    }
+
+    function renderCurrent() {
+        const subBar = document.getElementById('submusterButtons');
+        subBar.innerHTML = '';
+        const chkGroup = document.getElementById('newCheckboxes');
+        chkGroup.innerHTML = '';
+
+        for (let [key, cat] of Object.entries(categories)) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-submuster';
+            btn.innerHTML = `${cat.label}`;
+            btn.onclick = () => loadSubmuster(key);
+            subBar.appendChild(btn);
+
+            const label = document.createElement('label');
+            label.className = 'checkbox-option';
+            label.innerHTML = `<input type="checkbox" id="chkMuster_${key}" value="${key}"> ${cat.label}`;
+            chkGroup.appendChild(label);
+        }
+
+        const unassignedBtn = document.createElement('button');
+        unassignedBtn.className = 'btn-submuster';
+        unassignedBtn.innerHTML = `❓`;
+        unassignedBtn.title = 'Načíst nezařazené';
+        unassignedBtn.onclick = () => loadUnassignedSubmuster();
+        subBar.appendChild(unassignedBtn);
+
+        const container = document.getElementById('currentContainer');
+        container.innerHTML = '';
+
+        let filtered = currentList.filter(item => {
+            if (item.status === 'normal' && filterState.active) return true;
+            if (item.status === 'done' && filterState.done) return true;
+            if (item.status === 'skipped' && filterState.skipped) return true;
+            return false;
+        });
+
+        let autoItems = filtered.filter(i => i.type === 'auto');
+        let houseItems = filtered.filter(i => i.type === 'house');
+
+        renderColumn(container, '🚗', 'Auto (Sbalit a odvézt)', autoItems);
+        renderColumn(container, '🏠', 'Dům (Úkoly před odjezdem)', houseItems);
+        updateFilterButtonsUI();
+    }
+
+    function renderColumn(container, icon, titleTooltip, items) {
+        const col = document.createElement('div');
+        col.className = 'column-box';
+
+        const title = document.createElement('div');
+        title.className = 'section-title';
+        title.innerText = icon;
+        title.title = titleTooltip;
+        col.appendChild(title);
+
+        const ul = document.createElement('ul');
+        ul.className = 'item-list';
+
+        let sorted = [...items].sort((a, b) => {
+            let aVal = (a.status === 'normal') ? 0 : 1;
+            let bVal = (b.status === 'normal') ? 0 : 1;
+            if (aVal !== bVal) return aVal - bVal;
+            return a.text.localeCompare(b.text, 'cs');
+        });
+
+        if (sorted.length === 0) {
+            const emptyLi = document.createElement('li');
+            emptyLi.className = 'item-row';
+            emptyLi.style.color = 'var(--text-muted)';
+            emptyLi.style.justifyContent = 'center';
+            emptyLi.innerText = 'Žádné položky';
+            ul.appendChild(emptyLi);
+        } else {
+            sorted.forEach(item => {
+                const li = document.createElement('li');
+                li.className = `item-row ${item.status === 'done' ? 'is-done' : ''} ${item.status === 'skipped' ? 'is-skipped' : ''}`;
+                
+                let badgesHtml = getItemCategories(item.text);
+
+                li.innerHTML = `
+                    <div class="item-content" onclick="toggleStatus(${item.id})">
+                        <input type="checkbox" ${item.status === 'done' ? 'checked' : ''} onclick="event.stopPropagation(); toggleStatus(${item.id})">
+                        <span class="item-text">${item.text}</span>
+                        <span class="item-badges">${badgesHtml}</span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn ${item.status === 'skipped' ? 'skip-active' : ''}" onclick="toggleSkip(${item.id})" title="Vynechat">⏭️</button>
+                        <button class="action-btn" onclick="deleteCurrent(${item.id})" title="Smazat">❌</button>
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+        }
+        col.appendChild(ul);
+        container.appendChild(col);
+    }
+
+    function renderMuster() {
+        const tabsContainer = document.getElementById('musterTabs');
+        tabsContainer.innerHTML = `<button class="tab-btn ${activeMusterKey === 'all' ? 'active' : ''}" onclick="switchMuster('all')" title="Vše">📚</button>`;
+
+        for (let [key, cat] of Object.entries(categories)) {
+            const btn = document.createElement('button');
+            btn.className = `tab-btn ${activeMusterKey === key ? 'active' : ''}`;
+            btn.innerHTML = `${cat.label}`;
+            btn.onclick = () => switchMuster(key);
+            tabsContainer.appendChild(btn);
+        }
+
+        const unassignedTabBtn = document.createElement('button');
+        unassignedTabBtn.className = `tab-btn ${activeMusterKey === 'unassigned' ? 'active' : ''}`;
+        unassignedTabBtn.innerHTML = `❓`;
+        unassignedTabBtn.title = 'Nezařazené';
+        unassignedTabBtn.onclick = () => switchMuster('unassigned');
+        tabsContainer.appendChild(unassignedTabBtn);
+
+        const globalBox = document.getElementById('globalMusterAddBox');
+        globalBox.style.display = (activeMusterKey === 'all') ? 'flex' : 'none';
+
+        const filterBar = document.getElementById('musterFilterBar');
+        filterBar.style.display = (activeMusterKey === 'all') ? 'flex' : 'none';
+
+        if (activeMusterKey === 'all') {
+            const globalChk = document.getElementById('globalMusterCheckboxes');
+            globalChk.innerHTML = '';
+            for (let [key, cat] of Object.entries(categories)) {
+                const label = document.createElement('label');
+                label.className = 'checkbox-option';
+                label.innerHTML = `<input type="checkbox" id="globalChk_${key}" value="${key}"> ${cat.label}`;
+                globalChk.appendChild(label);
+            }
+
+            const filterBtnsContainer = document.getElementById('musterFilterButtons');
+            filterBtnsContainer.innerHTML = '';
+            
+            let allBtn = document.createElement('button');
+            allBtn.className = `filter-btn ${musterMissingFilter === 'none' ? 'active' : ''}`;
+            allBtn.innerHTML = '🌐';
+            allBtn.title = 'Vše';
+            allBtn.onclick = () => setMusterMissingFilter('none');
+            filterBtnsContainer.appendChild(allBtn);
+
+            let currBtn = document.createElement('button');
+            currBtn.className = `filter-btn ${musterMissingFilter === 'current' ? 'active' : ''}`;
+            currBtn.innerHTML = '📝';
+            currBtn.title = 'Chybí v aktuálním seznamu';
+            currBtn.onclick = () => setMusterMissingFilter('current');
+            filterBtnsContainer.appendChild(currBtn);
+
+            let autoBtn = document.createElement('button');
+            autoBtn.className = `filter-btn ${musterMissingFilter === 'type_auto' ? 'active' : ''}`;
+            autoBtn.innerHTML = '🚗';
+            autoBtn.title = 'Auto';
+            autoBtn.onclick = () => setMusterMissingFilter('type_auto');
+            filterBtnsContainer.appendChild(autoBtn);
+
+            let houseBtn = document.createElement('button');
+            houseBtn.className = `filter-btn ${musterMissingFilter === 'type_house' ? 'active' : ''}`;
+            houseBtn.innerHTML = '🏠';
+            houseBtn.title = 'Dům';
+            houseBtn.onclick = () => setMusterMissingFilter('type_house');
+            filterBtnsContainer.appendChild(houseBtn);
+
+            for (let [key, cat] of Object.entries(categories)) {
+                let fBtn = document.createElement('button');
+                fBtn.className = `filter-btn ${musterMissingFilter === key ? 'active' : ''}`;
+                fBtn.innerHTML = `${cat.label}`;
+                fBtn.title = `Chybí v kategorii`;
+                fBtn.onclick = () => setMusterMissingFilter(key);
+                filterBtnsContainer.appendChild(fBtn);
+            }
+
+            let unassignedFilterBtn = document.createElement('button');
+            unassignedFilterBtn.className = `filter-btn ${musterMissingFilter === 'unassigned' ? 'active' : ''}`;
+            unassignedFilterBtn.innerHTML = '❓';
+            unassignedFilterBtn.title = 'Nezařazené';
+            unassignedFilterBtn.onclick = () => setMusterMissingFilter('unassigned');
+            filterBtnsContainer.appendChild(unassignedFilterBtn);
+        }
+
+        const ul = document.getElementById('musterList');
+        ul.innerHTML = '';
+
+        let categoryKeys = Object.keys(categories);
+
+        if (activeMusterKey === 'all') {
+            let allItemsMap = new Map();
+            
+            if (window.globalMusterMasterList && Array.isArray(window.globalMusterMasterList)) {
+                window.globalMusterMasterList.forEach(i => {
+                    allItemsMap.set(i.text.toLowerCase(), { text: i.text, type: i.type });
+                });
+            }
+
+            Object.values(musters).forEach(list => {
+                if (Array.isArray(list)) {
+                    list.forEach(i => {
+                        if (!allItemsMap.has(i.text.toLowerCase())) {
+                            allItemsMap.set(i.text.toLowerCase(), { text: i.text, type: i.type });
+                        }
+                    });
+                }
+            });
+
+            let itemsArray = Array.from(allItemsMap.values());
+
+            if (musterMissingFilter === 'current') {
+                itemsArray = itemsArray.filter(item => {
+                    let inCurrent = currentList.some(i => i.text.toLowerCase() === item.text.toLowerCase());
+                    return !inCurrent;
+                });
+            } else if (musterMissingFilter === 'type_auto') {
+                itemsArray = itemsArray.filter(item => item.type === 'auto');
+            } else if (musterMissingFilter === 'type_house') {
+                itemsArray = itemsArray.filter(item => item.type === 'house');
+            } else if (musterMissingFilter === 'unassigned') {
+                let unassignedList = getUnassignedItems();
+                itemsArray = itemsArray.filter(item => unassignedList.some(u => u.text.toLowerCase() === item.text.toLowerCase()));
+            } else if (musterMissingFilter !== 'none') {
+                itemsArray = itemsArray.filter(item => {
+                    let inCat = (musters[musterMissingFilter] || []).some(i => i.text.toLowerCase() === item.text.toLowerCase());
+                    return !inCat;
+                });
+            }
+
+            itemsArray.sort((a,b) => a.text.localeCompare(b.text, 'cs')).forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'item-row';
+                
+                let typeIcon = item.type === 'house' ? '🏠' : '🚗';
+
+                let badgesHtml = '';
+                categoryKeys.forEach(catKey => {
+                    let catObj = categories[catKey];
+                    let inThisCat = (musters[catKey] || []).some(i => i.text.toLowerCase() === item.text.toLowerCase());
+                    let activeClass = inThisCat ? 'active' : '';
+                    badgesHtml += `<span class="badge-interactive ${activeClass}" onclick="toggleItemCategory('${item.text.replace(/'/g, "\\'")}', '${catKey}')" title="Přepnout v šabloně">${catObj.label}</span>`;
+                });
+
+                li.innerHTML = `
+                    <div class="item-content" onclick="addOneToCurrent('${item.text.replace(/'/g, "\\'")}', '${item.type}')" title="Přidat do aktuálního">
+                        <span class="item-text">${item.text}</span>
+                    </div>
+                    <div class="item-actions" style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+                        <span class="item-badges" style="margin-left: 0;">${badgesHtml}</span>
+                        <button class="type-toggle-btn" onclick="toggleGlobalItemType('${item.text.replace(/'/g, "\\'")}')" title="Přepnout typ (Auto/Dům)">${typeIcon}</button>
+                        <button class="action-btn" onclick="deleteGlobalMusterItem('${item.text.replace(/'/g, "\\'")}')" title="Smazat úplně">❌</button>
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+        } else if (activeMusterKey === 'unassigned') {
+            let unassignedItems = getUnassignedItems();
+            let sortedItems = [...unassignedItems].sort((a, b) => a.text.localeCompare(b.text, 'cs'));
+
+            sortedItems.forEach((item) => {
+                const li = document.createElement('li');
+                li.className = 'item-row';
+                
+                let typeIcon = item.type === 'house' ? '🏠' : '🚗';
+
+                let badgesHtml = '';
+                categoryKeys.forEach(catKey => {
+                    let catObj = categories[catKey];
+                    let inThisCat = (musters[catKey] || []).some(i => i.text.toLowerCase() === item.text.toLowerCase());
+                    let activeClass = inThisCat ? 'active' : '';
+                    badgesHtml += `<span class="badge-interactive ${activeClass}" onclick="toggleItemCategory('${item.text.replace(/'/g, "\\'")}', '${catKey}')" title="Přepnout v šabloně">${catObj.label}</span>`;
+                });
+
+                li.innerHTML = `
+                    <div class="item-content" onclick="addOneToCurrent('${item.text.replace(/'/g, "\\'")}', '${item.type}')" title="Přidat do aktuálního">
+                        <span class="item-text">${item.text}</span>
+                    </div>
+                    <div class="item-actions" style="display: flex; gap: 8px; align-items: center;">
+                        <span class="item-badges" style="margin-left: 0;">${badgesHtml}</span>
+                        <button class="type-toggle-btn" onclick="toggleGlobalItemType('${item.text.replace(/'/g, "\\'")}')" title="Přepnout typ (Auto/Dům)">${typeIcon}</button>
+                        <button class="action-btn" onclick="deleteGlobalMusterItem('${item.text.replace(/'/g, "\\'")}')" title="Smazat úplně">❌</button>
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+        } else {
+            let items = musters[activeMusterKey] || [];
+            let sortedItems = [...items].sort((a, b) => a.text.localeCompare(b.text, 'cs'));
+
+            sortedItems.forEach((item) => {
+                const li = document.createElement('li');
+                li.className = 'item-row';
+                
+                let typeIcon = item.type === 'house' ? '🏠' : '🚗';
+
+                let badgesHtml = '';
+                categoryKeys.forEach(catKey => {
+                    let catObj = categories[catKey];
+                    let inThisCat = (musters[catKey] || []).some(i => i.text.toLowerCase() === item.text.toLowerCase());
+                    let activeClass = inThisCat ? 'active' : '';
+                    badgesHtml += `<span class="badge-interactive ${activeClass}" onclick="toggleItemCategory('${item.text.replace(/'/g, "\\'")}', '${catKey}')" title="Přepnout v šabloně">${catObj.label}</span>`;
+                });
+
+                li.innerHTML = `
+                    <div class="item-content" onclick="addOneToCurrent('${item.text.replace(/'/g, "\\'")}', '${item.type}')" title="Přidat do aktuálního">
+                        <span class="item-text">${item.text}</span>
+                    </div>
+                    <div class="item-actions" style="display: flex; gap: 8px; align-items: center;">
+                        <span class="item-badges" style="margin-left: 0;">${badgesHtml}</span>
+                        <button class="type-toggle-btn" onclick="toggleGlobalItemType('${item.text.replace(/'/g, "\\'")}')" title="Přepnout typ (Auto/Dům)">${typeIcon}</button>
+                        <button class="action-btn" onclick="deleteMusterByName('${item.text.replace(/'/g, "\\'")}')" title="Smazat">❌</button>
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+        }
+    }
+
+    let savedMaster = JSON.parse(localStorage.getItem('smrk_travel_master'));
+    if (savedMaster && Array.isArray(savedMaster)) {
+        window.globalMusterMasterList = savedMaster;
+    } else {
+        window.globalMusterMasterList = [];
+        let map = new Map();
+        Object.values(musters).forEach(list => {
+            if (Array.isArray(list)) {
+                list.forEach(i => map.set(i.text.toLowerCase(), { text: i.text, type: i.type || 'auto' }));
+            }
+        });
+        window.globalMusterMasterList = Array.from(map.values());
+    }
+
+    function toggleGlobalItemType(text) {
+        saveData();
+        if (window.globalMusterMasterList) {
+            let found = window.globalMusterMasterList.find(i => i.text.toLowerCase() === text.toLowerCase());
+            if (found) {
+                found.type = found.type === 'house' ? 'auto' : 'house';
+            }
+        }
+        for (let key of Object.keys(musters)) {
+            if (Array.isArray(musters[key])) {
+                let foundInMuster = musters[key].find(i => i.text.toLowerCase() === text.toLowerCase());
+                if (foundInMuster) {
+                    foundInMuster.type = foundInMuster.type === 'house' ? 'auto' : 'house';
+                }
+            }
+        }
+        saveDataSilent();
+        renderMuster();
+    }
+
+    function toggleItemCategory(text, catKey) {
+        saveData();
+        if (!musters[catKey]) musters[catKey] = [];
+        let idx = musters[catKey].findIndex(i => i.text.toLowerCase() === text.toLowerCase());
+        
+        let foundType = 'auto';
+        for (let list of Object.values(musters)) {
+            if (Array.isArray(list)) {
+                let found = list.find(i => i.text.toLowerCase() === text.toLowerCase());
+                if (found) {
+                    foundType = found.type;
+                    break;
+                }
+            }
+        }
+        if (window.globalMusterMasterList) {
+            let foundMaster = window.globalMusterMasterList.find(i => i.text.toLowerCase() === text.toLowerCase());
+            if (foundMaster) foundType = foundMaster.type;
+        }
+
+        if (idx > -1) {
+            musters[catKey].splice(idx, 1);
+        } else {
+            musters[catKey].push({ text: text, type: foundType });
+        }
+        saveDataSilent();
+        renderMuster();
+    }
+
+    function deleteGlobalMusterItem(text) {
+        saveData();
+        for (let key of Object.keys(musters)) {
+            musters[key] = musters[key].filter(i => i.text.toLowerCase() !== text.toLowerCase());
+        }
+        if (window.globalMusterMasterList) {
+            window.globalMusterMasterList = window.globalMusterMasterList.filter(i => i.text.toLowerCase() !== text.toLowerCase());
+        }
+        saveDataSilent();
+        renderMuster();
+    }
+
+    function clearGlobalMasterDatabase() {
+        if (confirm("Opravdu chceš vymazat celou databázi musterů?")) {
+            saveData();
+            for (let key of Object.keys(musters)) {
+                musters[key] = [];
+            }
+            window.globalMusterMasterList = [];
+            saveDataSilent();
+            renderMuster();
+        }
+    }
+
+    function addOneToCurrent(text, type) {
+        if (!currentList.some(i => i.text.toLowerCase() === text.toLowerCase())) {
+            saveData();
+            currentList.push({
+                id: Date.now() + Math.random(),
+                text: text,
+                type: type,
+                status: 'normal'
+            });
+            saveDataSilent();
+            renderMuster();
+            renderCurrent();
+        }
+    }
+
+    function toggleStatus(id) {
+        saveData();
+        const item = currentList.find(i => i.id === id);
+        if (!item) return;
+        item.status = item.status === 'done' ? 'normal' : 'done';
+        saveDataSilent();
+        renderCurrent();
+    }
+
+    function toggleSkip(id) {
+        saveData();
+        const item = currentList.find(i => i.id === id);
+        if (!item) return;
+        item.status = item.status === 'skipped' ? 'normal' : 'skipped';
+        saveDataSilent();
+        renderCurrent();
+    }
+
+    function addItemCurrent(e) {
+        e.preventDefault();
+        const input = document.getElementById('newItemName');
+        const typeSelect = document.getElementById('newItemType');
+        const text = input.value.trim();
+        const type = typeSelect.value;
+        if (!text) return;
+
+        saveData();
+
+        if (!currentList.some(i => i.text.toLowerCase() === text.toLowerCase())) {
+            currentList.push({
+                id: Date.now(),
+                text: text,
+                type: type,
+                status: 'normal'
+            });
+        }
+
+        for (let key of Object.keys(categories)) {
+            const chk = document.getElementById(`chkMuster_${key}`);
+            if (chk && chk.checked) {
+                if (!musters[key]) musters[key] = [];
+                if (!musters[key].some(i => i.text.toLowerCase() === text.toLowerCase())) {
+                    musters[key].push({ text: text, type: type });
+                }
+                chk.checked = false;
+            }
+        }
+
+        if (!window.globalMusterMasterList) window.globalMusterMasterList = [];
+        if (!window.globalMusterMasterList.some(i => i.text.toLowerCase() === text.toLowerCase())) {
+            window.globalMusterMasterList.push({ text: text, type: type });
+        }
+
+        input.value = '';
+        saveDataSilent();
+        renderCurrent();
+        if (activeMusterKey === 'all') renderMuster();
+    }
+
+    function addItemMusterGlobal(e) {
+        e.preventDefault();
+        const input = document.getElementById('newGlobalMusterName');
+        const typeSelect = document.getElementById('newGlobalMusterType');
+        const text = input.value.trim();
+        const type = typeSelect.value;
+        if (!text) return;
+
+        saveData();
+
+        for (let key of Object.keys(categories)) {
+            const chk = document.getElementById(`globalChk_${key}`);
+            if (chk && chk.checked) {
+                if (!musters[key]) musters[key] = [];
+                if (!musters[key].some(i => i.text.toLowerCase() === text.toLowerCase())) {
+                    musters[key].push({ text: text, type: type });
+                }
+                chk.checked = false;
+            }
+        }
+
+        if (!window.globalMusterMasterList) window.globalMusterMasterList = [];
+        let existingMaster = window.globalMusterMasterList.find(i => i.text.toLowerCase() === text.toLowerCase());
+        if (existingMaster) {
+            existingMaster.type = type;
+        } else {
+            window.globalMusterMasterList.push({ text: text, type: type });
+        }
+
+        input.value = '';
+        saveDataSilent();
+        renderMuster();
+    }
+
+    function deleteCurrent(id) {
+        saveData();
+        currentList = currentList.filter(i => i.id !== id);
+        saveDataSilent();
+        renderCurrent();
+        if (activeMusterKey === 'all') renderMuster();
+    }
+
+    function clearCurrentList() {
+        if(confirm("Opravdu chceš vyčistit celý aktuální seznam?")) {
+            saveData();
+            currentList = [];
+            saveDataSilent();
+            renderCurrent();
+            if (activeMusterKey === 'all') renderMuster();
+        }
+    }
+
+    function loadSubmuster(key) {
+        const template = musters[key] || [];
+        let addedAny = false;
+        
+        template.forEach(templateItem => {
+            if (!currentList.some(i => i.text.toLowerCase() === templateItem.text.toLowerCase())) {
+                if (!addedAny) {
+                    saveData();
+                    addedAny = true;
+                }
+                currentList.push({
+                    id: Date.now() + Math.random(),
+                    text: templateItem.text,
+                    type: templateItem.type || 'auto',
+                    status: 'normal'
+                });
+            }
+        });
+        if (addedAny) {
+            saveDataSilent();
+            renderCurrent();
+            if (activeMusterKey === 'all') renderMuster();
+        }
+    }
+
+    function deleteMusterByName(text) {
+        if (activeMusterKey === 'all' || activeMusterKey === 'unassigned') return;
+        saveData();
+        musters[activeMusterKey] = musters[activeMusterKey].filter(i => i.text !== text);
+        saveDataSilent();
+        renderMuster();
+    }
+
+    function addCategory(e) {
+        e.preventDefault();
+        let labelInput = document.getElementById('newCatId').value.trim();
+        let iconInput = document.getElementById('newCatIcon').value.trim();
+        if (!labelInput || !iconInput) return;
+
+        saveData();
+
+        let key = labelInput.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+        categories[key] = { label: iconInput };
+        if (!musters[key]) musters[key] = [];
+
+        document.getElementById('newCatId').value = '';
+        document.getElementById('newCatIcon').value = '';
+
+        saveDataSilent();
+        renderMuster();
+        renderCurrent();
+    }
+
+    renderCurrent();
+    updateUndoButton();
+</script>
+
+</body>
+</html>
