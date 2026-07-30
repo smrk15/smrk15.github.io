@@ -17,6 +17,9 @@
             --done-border: #a16207;
             --done-text: #fef08a;
             --skip-text: #f87171;
+            --important-bg: rgba(249, 115, 22, 0.15);
+            --important-border: #f97316;
+            --important-text: #fdba74;
         }
 
         * {
@@ -357,6 +360,16 @@
             text-decoration: line-through;
         }
 
+        li.item-row.is-important {
+            background: var(--important-bg);
+            border-color: var(--important-border);
+        }
+
+        li.item-row.is-important .item-text {
+            color: var(--important-text);
+            font-weight: 600;
+        }
+
         .item-content {
             display: flex;
             align-items: center;
@@ -437,6 +450,10 @@
 
         .action-btn.skip-active {
             color: var(--skip-text);
+        }
+
+        .action-btn.important-active {
+            color: var(--accent);
         }
     </style>
 </head>
@@ -552,26 +569,165 @@
     };
 
     let currentList = JSON.parse(localStorage.getItem('smrk_travel_current')) || [
-        { id: 1, text: 'pasy', type: 'auto', status: 'normal' },
-        { id: 2, text: 'pivo', type: 'auto', status: 'normal' }
+        { id: 1, text: 'Pasy', type: 'auto', status: 'normal', important: false },
+        { id: 2, text: 'Pivo', type: 'auto', status: 'normal', important: false }
     ];
 
     let musters = JSON.parse(localStorage.getItem('smrk_travel_musters')) || {
-        'cz': [
-            { text: 'pasy', type: 'auto' },
-            { text: 'peníze CZK', type: 'auto' },
-            { text: 'nabíječka', type: 'auto' }
+        "cz": [
+            {"text": "€", "type": "auto"},
+            {"text": "Baterky", "type": "auto"},
+            {"text": "CZK", "type": "auto"},
+            {"text": "Čítačky", "type": "auto"},
+            {"text": "Kamery rybičky", "type": "auto"},
+            {"text": "Lednička převozní", "type": "auto"},
+            {"text": "Léky", "type": "auto"},
+            {"text": "Macbook", "type": "auto"},
+            {"text": "Nabíječka hodinky", "type": "auto"},
+            {"text": "Nehty", "type": "auto"},
+            {"text": "Pasy", "type": "auto"},
+            {"text": "Pití cesta", "type": "auto"},
+            {"text": "Power auto", "type": "auto"},
+            {"text": "Powerbanka", "type": "auto"},
+            {"text": "Red bull", "type": "auto"},
+            {"text": "Sledovací karty", "type": "auto"},
+            {"text": "Šipky", "type": "auto"},
+            {"text": "Telefony", "type": "auto"},
+            {"text": "Teploměr", "type": "auto"},
+            {"text": "Stolek pc", "type": "auto"},
+            {"text": "Helmy", "type": "auto"},
+            {"text": "Tužka", "type": "auto"},
+            {"text": "Joystick", "type": "auto"},
+            {"text": "Jídlo lednička", "type": "auto"},
+            {"text": "Batohy", "type": "auto"},
+            {"text": "Ntb", "type": "auto"},
+            {"text": "Chladící pc", "type": "auto"},
+            {"text": "Air/smart tag", "type": "auto"},
+            {"text": "Kufry", "type": "auto"},
+            {"text": "Kosmetika", "type": "auto"},
+            {"text": "Nabíjerná + kabely", "type": "auto"},
+            {"text": "Ntb taška", "type": "auto"},
+            {"text": "Sluchátka", "type": "auto"},
+            {"text": "Tablety", "type": "auto"},
+            {"text": "Odšťavňovač", "type": "auto"},
+            {"text": "Kotel", "type": "house"},
+            {"text": "Topení", "type": "house"},
+            {"text": "Bazén", "type": "house"},
+            {"text": "Myčka", "type": "house"},
+            {"text": "Odpadky", "type": "house"},
+            {"text": "Okna", "type": "house"},
+            {"text": "Popelnice Dirk/Pam", "type": "house"},
+            {"text": "Rybičky jídlo", "type": "auto"},
+            {"text": "Kamery", "type": "auto"},
+            {"text": "Pozamykat", "type": "house"},
+            {"text": "Úklid zahrada", "type": "house"},
+            {"text": "Záhon", "type": "house"},
+            {"text": "Nuki nabít", "type": "auto"},
+            {"text": "Vypnout klimy", "type": "house"},
+            {"text": "Server", "type": "house"},
+            {"text": "Zaplé pc", "type": "auto"},
+            {"text": "Oholit", "type": "house"},
+            {"text": "Vysprchovat", "type": "house"},
+            {"text": "Rybičky Dirk/Pam", "type": "auto"},
+            {"text": "Pošta Dirk", "type": "house"},
+            {"text": "Dálniční česko", "type": "auto"},
+            {"text": "Sudy pivo", "type": "auto"}
         ],
-        'sk': [
-            { text: 'pasy', type: 'auto' },
-            { text: 'eur', type: 'auto' },
-            { text: 'dálniční slovensko', type: 'auto' }
+        "sk": [
+            {"text": "€", "type": "auto"},
+            {"text": "Baterky", "type": "auto"},
+            {"text": "CZK", "type": "auto"},
+            {"text": "Čítačky", "type": "auto"},
+            {"text": "Kamery rybičky", "type": "auto"},
+            {"text": "Lednička převozní", "type": "auto"},
+            {"text": "Léky", "type": "auto"},
+            {"text": "Macbook", "type": "auto"},
+            {"text": "Nabíječka hodinky", "type": "auto"},
+            {"text": "Nákup NR+HC", "type": "auto"},
+            {"text": "Nehty", "type": "auto"},
+            {"text": "Pasy", "type": "auto"},
+            {"text": "Pití cesta", "type": "auto"},
+            {"text": "Power auto", "type": "auto"},
+            {"text": "Powerbanka", "type": "auto"},
+            {"text": "Red bull", "type": "auto"},
+            {"text": "Sledovací karty", "type": "auto"},
+            {"text": "Šipky", "type": "auto"},
+            {"text": "Telefony", "type": "auto"},
+            {"text": "Teploměr", "type": "auto"},
+            {"text": "Stolek pc", "type": "auto"},
+            {"text": "Helmy", "type": "auto"},
+            {"text": "Tužka", "type": "auto"},
+            {"text": "Joystick", "type": "auto"},
+            {"text": "Jídlo lednička", "type": "auto"},
+            {"text": "Batohy", "type": "auto"},
+            {"text": "Ntb", "type": "auto"},
+            {"text": "Dálníční slovensko", "type": "auto"},
+            {"text": "Chladící pc", "type": "auto"},
+            {"text": "Air/smart tag", "type": "auto"},
+            {"text": "Kufry", "type": "auto"},
+            {"text": "Kosmetika", "type": "auto"},
+            {"text": "Nabíjerná + kabely", "type": "auto"},
+            {"text": "Ntb taška", "type": "auto"},
+            {"text": "Sluchátka", "type": "auto"},
+            {"text": "Tablety", "type": "auto"},
+            {"text": "Odšťavňovač", "type": "auto"},
+            {"text": "Kotel", "type": "house"},
+            {"text": "Topení", "type": "house"},
+            {"text": "Bazén", "type": "house"},
+            {"text": "Myčka", "type": "house"},
+            {"text": "Odpadky", "type": "house"},
+            {"text": "Okna", "type": "house"},
+            {"text": "Popelnice Dirk/Pam", "type": "house"},
+            {"text": "Rybičky jídlo", "type": "auto"},
+            {"text": "Kamery", "type": "auto"},
+            {"text": "Pozamykat", "type": "house"},
+            {"text": "Úklid zahrada", "type": "house"},
+            {"text": "Záhon", "type": "house"},
+            {"text": "Nuki nabít", "type": "auto"},
+            {"text": "Vypnout klimy", "type": "house"},
+            {"text": "Server", "type": "house"},
+            {"text": "Zaplé pc", "type": "auto"},
+            {"text": "Oholit", "type": "house"},
+            {"text": "Vysprchovat", "type": "house"},
+            {"text": "Rybičky Dirk/Pam", "type": "auto"},
+            {"text": "Pošta Dirk", "type": "house"},
+            {"text": "Dálniční česko", "type": "auto"}
         ],
-        'chata': [
-            { text: 'pivo', type: 'auto' },
-            { text: 'gril', type: 'auto' },
-            { text: 'repro', type: 'auto' },
-            { text: 'pozamykat', type: 'house' }
+        "chata": [
+            {"text": "€", "type": "auto"},
+            {"text": "Baterky", "type": "auto"},
+            {"text": "CZK", "type": "auto"},
+            {"text": "Lednička převozní", "type": "auto"},
+            {"text": "Macbook", "type": "auto"},
+            {"text": "Nabíječka hodinky", "type": "auto"},
+            {"text": "Nehty", "type": "auto"},
+            {"text": "Pití cesta", "type": "auto"},
+            {"text": "Power auto", "type": "auto"},
+            {"text": "Powerbanka", "type": "auto"},
+            {"text": "Red bull", "type": "auto"},
+            {"text": "Šipky", "type": "auto"},
+            {"text": "Telefony", "type": "auto"},
+            {"text": "Stolek pc", "type": "auto"},
+            {"text": "Tužka", "type": "auto"},
+            {"text": "Ntb", "type": "auto"},
+            {"text": "Chladící pc", "type": "auto"},
+            {"text": "Nabíjerná + kabely", "type": "auto"},
+            {"text": "Ntb taška", "type": "auto"},
+            {"text": "Sluchátka", "type": "auto"},
+            {"text": "Odšťavňovač", "type": "auto"},
+            {"text": "Kotel", "type": "house"},
+            {"text": "Topení", "type": "house"},
+            {"text": "Bazén", "type": "house"},
+            {"text": "Myčka", "type": "house"},
+            {"text": "Odpadky", "type": "house"},
+            {"text": "Kamery", "type": "auto"},
+            {"text": "Záhon", "type": "house"},
+            {"text": "Nuki nabít", "type": "auto"},
+            {"text": "Vypnout klimy", "type": "house"},
+            {"text": "Server", "type": "house"},
+            {"text": "Zaplé pc", "type": "auto"},
+            {"text": "Oholit", "type": "house"},
+            {"text": "Vysprchovat", "type": "house"}
         ]
     };
 
@@ -770,7 +926,8 @@
                     id: Date.now() + Math.random(),
                     text: templateItem.text,
                     type: templateItem.type || 'auto',
-                    status: 'normal'
+                    status: 'normal',
+                    important: false
                 });
             }
         });
@@ -842,6 +999,11 @@
             let aVal = (a.status === 'normal') ? 0 : 1;
             let bVal = (b.status === 'normal') ? 0 : 1;
             if (aVal !== bVal) return aVal - bVal;
+
+            let aImp = a.important ? 0 : 1;
+            let bImp = b.important ? 0 : 1;
+            if (aImp !== bImp) return aImp - bImp;
+
             return a.text.localeCompare(b.text, 'cs');
         });
 
@@ -855,7 +1017,7 @@
         } else {
             sorted.forEach(item => {
                 const li = document.createElement('li');
-                li.className = `item-row ${item.status === 'done' ? 'is-done' : ''} ${item.status === 'skipped' ? 'is-skipped' : ''}`;
+                li.className = `item-row ${item.status === 'done' ? 'is-done' : ''} ${item.status === 'skipped' ? 'is-skipped' : ''} ${item.important ? 'is-important' : ''}`;
                 
                 let badgesHtml = getItemCategories(item.text);
 
@@ -865,7 +1027,8 @@
                         <span class="item-text">${item.text}</span>
                         <span class="item-badges">${badgesHtml}</span>
                     </div>
-                    <div class="item-actions">
+                    <div class="item-actions" style="display: flex; gap: 4px; align-items: center;">
+                        <button class="action-btn ${item.important ? 'important-active' : ''}" onclick="toggleImportant(${item.id})" title="Důležité">❗</button>
                         <button class="action-btn ${item.status === 'skipped' ? 'skip-active' : ''}" onclick="toggleSkip(${item.id})" title="Vynechat">⏭️</button>
                         <button class="action-btn" onclick="deleteCurrent(${item.id})" title="Smazat">❌</button>
                     </div>
@@ -1188,7 +1351,8 @@
                 id: Date.now() + Math.random(),
                 text: text,
                 type: type,
-                status: 'normal'
+                status: 'normal',
+                important: false
             });
             saveDataSilent();
             renderMuster();
@@ -1214,6 +1378,15 @@
         renderCurrent();
     }
 
+    function toggleImportant(id) {
+        saveData();
+        const item = currentList.find(i => i.id === id);
+        if (!item) return;
+        item.important = !item.important;
+        saveDataSilent();
+        renderCurrent();
+    }
+
     function addItemCurrent(e) {
         e.preventDefault();
         const input = document.getElementById('newItemName');
@@ -1229,7 +1402,8 @@
                 id: Date.now(),
                 text: text,
                 type: type,
-                status: 'normal'
+                status: 'normal',
+                important: false
             });
         }
 
@@ -1321,7 +1495,8 @@
                     id: Date.now() + Math.random(),
                     text: templateItem.text,
                     type: templateItem.type || 'auto',
-                    status: 'normal'
+                    status: 'normal',
+                    important: false
                 });
             }
         });
