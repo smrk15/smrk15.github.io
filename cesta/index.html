@@ -466,6 +466,62 @@
         .action-btn.important-active {
             color: var(--accent);
         }
+
+        /* STYLY PRO TISK */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0;
+            }
+            header, .control-bar, .collapsible-form, .action-btn, .type-toggle-btn, .badge-interactive {
+                display: none !important;
+            }
+            .view-section {
+                display: block !important;
+                background: white !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+            .columns-container {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 15px !important;
+            }
+            .column-box {
+                background: white !important;
+                border: 1px solid #ccc !important;
+                border-radius: 6px !important;
+                padding: 10px !important;
+                break-inside: avoid;
+            }
+            .section-title {
+                border-bottom: 2px solid #333 !important;
+                color: black !important;
+            }
+            li.item-row {
+                background: white !important;
+                border: 1px solid #eee !important;
+                color: black !important;
+                padding: 6px 10px !important;
+                margin-bottom: 4px !important;
+            }
+            li.item-row.is-done .item-text {
+                color: #555 !important;
+                text-decoration: line-through;
+            }
+            li.item-row.is-skipped {
+                display: none !important; /* Vynechané položky se netisknou */
+            }
+            li.item-row.is-important {
+                background: #fff3e0 !important;
+                border-color: #f97316 !important;
+                font-weight: bold;
+            }
+            .item-text {
+                color: black !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -481,6 +537,7 @@
         </div>
         <div class="nav-links">
             <button class="nav-btn" id="undoBtn" onclick="undoAction()" title="Zpět (Undo)" disabled>↩️</button>
+            <button class="nav-btn" onclick="window.print()" title="Tisk">🖨️</button>
             <button class="nav-btn" onclick="exportData()" title="Export">💾</button>
             <button class="nav-btn" onclick="document.getElementById('importFile').click()" title="Import">📂</button>
             <input type="file" id="importFile" style="display: none" accept=".json" onchange="importData(event)">
