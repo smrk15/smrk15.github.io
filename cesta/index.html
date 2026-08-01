@@ -316,7 +316,7 @@
         }
 
         .section-title {
-            font-size: 1.4rem;
+            font-size: 1.8rem;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
@@ -489,11 +489,14 @@
             <form onsubmit="addItemCurrent(event)" class="form-group">
                 <input type="text" id="newItemName" placeholder="Nová položka..." required>
                 <select id="newItemType">
-                    <option value="auto">🚗 Auto (sbalit/povézt)</option>
-                    <option value="house">🏠 Dům (úkol doma)</option>
+                    <option value="auto">🚗 Auto</option>
+                    <option value="house">🏠 Dům</option>
                 </select>
                 <div class="checkbox-group">
-                    <span style="font-size: 0.9rem; color: var(--text-muted);">Přidat do musterů:</span>
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">Uložit do musterů:</span>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="chkMasterSave" value="master"> 📚 Globální muster
+                    </label>
                     <div id="newCheckboxes" style="display: flex; gap: 12px; flex-wrap: wrap;"></div>
                 </div>
                 <button type="submit" class="btn-primary">Přidat</button>
@@ -977,19 +980,18 @@
         let autoItems = filtered.filter(i => i.type === 'auto');
         let houseItems = filtered.filter(i => i.type === 'house');
 
-        renderColumn(container, '🚗', 'Auto (Sbalit a odvézt)', autoItems);
-        renderColumn(container, '🏠', 'Dům (Úkoly před odjezdem)', houseItems);
+        renderColumn(container, '🚗', autoItems);
+        renderColumn(container, '🏠', houseItems);
         updateFilterButtonsUI();
     }
 
-    function renderColumn(container, icon, titleTooltip, items) {
+    function renderColumn(container, icon, items) {
         const col = document.createElement('div');
         col.className = 'column-box';
 
         const title = document.createElement('div');
         title.className = 'section-title';
         title.innerText = icon;
-        title.title = titleTooltip;
         col.appendChild(title);
 
         const ul = document.createElement('ul');
@@ -1407,6 +1409,19 @@
             });
         }
 
+        const masterChk = document.getElementById('chkMasterSave');
+        const shouldSaveMaster = masterChk && masterChk.checked;
+
+        if (shouldSaveMaster) {
+            if (!window.globalMusterMasterList) window.globalMusterMasterList = [];
+            let existingMaster = window.globalMusterMasterList.find(i => i.text.toLowerCase() === text.toLowerCase());
+            if (existingMaster) {
+                existingMaster.type = type;
+            } else {
+                window.globalMusterMasterList.push({ text: text, type: type });
+            }
+        }
+
         for (let key of Object.keys(categories)) {
             const chk = document.getElementById(`chkMuster_${key}`);
             if (chk && chk.checked) {
@@ -1418,11 +1433,7 @@
             }
         }
 
-        if (!window.globalMusterMasterList) window.globalMusterMasterList = [];
-        if (!window.globalMusterMasterList.some(i => i.text.toLowerCase() === text.toLowerCase())) {
-            window.globalMusterMasterList.push({ text: text, type: type });
-        }
-
+        if (masterChk) masterChk.checked = false;
         input.value = '';
         saveDataSilent();
         renderCurrent();
