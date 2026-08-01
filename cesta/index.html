@@ -189,25 +189,36 @@
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
-            align-items: flex-start;
+            align-items: center;
         }
 
-        input[type="text"], select {
+        input[type="text"] {
             background: var(--bg-color);
             border: 1px solid var(--border);
             color: var(--text-color);
             padding: 10px 14px;
             border-radius: 8px;
             font-size: 1rem;
-            flex: 1;
-            min-width: 200px;
+            flex: 2;
+            min-width: 220px;
+        }
+
+        select {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-color);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            flex: 0 0 90px;
+            text-align-last: center;
+            text-align: center;
         }
 
         .checkbox-group {
             display: flex;
             gap: 12px;
             align-items: center;
-            padding-top: 8px;
             flex-wrap: wrap;
         }
 
@@ -488,14 +499,14 @@
         <div id="currentForm" class="collapsible-form">
             <form onsubmit="addItemCurrent(event)" class="form-group">
                 <input type="text" id="newItemName" placeholder="Nová položka..." required>
-                <select id="newItemType">
-                    <option value="auto">🚗 Auto</option>
-                    <option value="house">🏠 Dům</option>
+                <select id="newItemType" title="Typ položky">
+                    <option value="auto">🚗</option>
+                    <option value="house">🏠</option>
                 </select>
                 <div class="checkbox-group">
                     <span style="font-size: 0.9rem; color: var(--text-muted);">Uložit do musterů:</span>
-                    <label class="checkbox-option">
-                        <input type="checkbox" id="chkMasterSave" value="master"> 📚 Globální muster
+                    <label class="checkbox-option" title="Globální muster">
+                        <input type="checkbox" id="chkMasterSave" value="master"> 📚
                     </label>
                     <div id="newCheckboxes" style="display: flex; gap: 12px; flex-wrap: wrap;"></div>
                 </div>
@@ -532,9 +543,9 @@
             <form onsubmit="addItemMusterGlobal(event)" class="form-group" style="margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px;" id="globalMusterAddBox">
                 <span style="font-size: 0.9rem; color: var(--text-muted); width: 100%;">Nová položka do databáze:</span>
                 <input type="text" id="newGlobalMusterName" placeholder="Název položky..." required style="flex: 2;">
-                <select id="newGlobalMusterType" style="flex: 1;">
-                    <option value="auto">🚗 Auto</option>
-                    <option value="house">🏠 Dům</option>
+                <select id="newGlobalMusterType" title="Typ položky" style="flex: 0 0 90px; text-align-last: center; text-align: center;">
+                    <option value="auto">🚗</option>
+                    <option value="house">🏠</option>
                 </select>
                 <div class="checkbox-group" style="width: 100%;">
                     <span style="font-size: 0.9rem; color: var(--text-muted);">Zařadit do musterů:</span>
