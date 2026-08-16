@@ -1405,8 +1405,8 @@
                         card.innerHTML = `
                             <div class="flex items-center gap-4 flex-1">
                                 <div onclick="toggleEditMatch(${m.id})" class="bg-gray-800 hover:bg-gray-750 cursor-pointer px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px] transition group" title="${translations[currentLang].tooltipClickEdit}">
-                                    <p class="text-[10px] text-gray-400 uppercase font-bold group-hover:text-orange-400 transition">${m.date ? translations[currentLang].termLabel : translations[currentLang].noTermLabel}</p>
-                                    <p class="text-sm font-black text-white">${formattedDate || translations[currentLang].noTermLabel}</p>
+                                    <p class="text-[10px] text-gray-400 uppercase font-bold group-hover:text-orange-400 transition">${translations[currentLang].termLabel}</p>
+                                    <p class="text-sm font-black ${m.date ? 'text-white' : 'text-gray-400'}">${formattedDate || translations[currentLang].noTermLabel}</p>
                                     <p class="text-xs text-orange-400 font-semibold">${m.time || '--:--'}</p>
                                 </div>
                                 <div class="truncate flex-1">
