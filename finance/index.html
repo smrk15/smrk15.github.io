@@ -313,6 +313,14 @@
         function goHome() { currentView = "home"; save(false); }
         function selectMonth(monthKey) { currentView = "home"; activeMonth = monthKey; checkedSimItems = {}; save(false); }
 
+        function sortMonthNaturally(targetMonthKey) {
+            pushToHistory();
+            delete expenseCustomOrder[targetMonthKey];
+            delete incomeCustomOrderPerMonth[targetMonthKey];
+            save(false);
+            render();
+        }
+
         function generateNextMonth() {
             const sorted = [...generatedMonths].sort();
             let nextYear, nextMonth;
@@ -341,6 +349,8 @@
                 generatedMonths = generatedMonths.filter(m => m !== monthKey);
                 delete modifiedData.deleted[monthKey];
                 delete modifiedData.added[monthKey];
+                delete expenseCustomOrder[monthKey];
+                delete incomeCustomOrderPerMonth[monthKey];
                 
                 const sorted = [...generatedMonths].sort();
                 activeMonth = sorted.length > 0 ? sorted[sorted.length - 1] : "";
@@ -604,6 +614,10 @@
                 if (!modifiedData.added[activeMonth]) modifiedData.added[activeMonth] = [];
                 modifiedData.added[activeMonth].push({ id: Date.now().toString(), typ: type, nazev: name, castka: amount, den: day });
             }
+
+            // Vyčistit custom order pro aktivní měsíc, aby se nové položky správně zařadily podle data
+            delete expenseCustomOrder[activeMonth];
+            delete incomeCustomOrderPerMonth[activeMonth];
 
             document.getElementById("formName").value = "";
             document.getElementById("formAmount").value = "";
@@ -993,6 +1007,7 @@
                 if (checkedSimItems[uniqueId]) simIncomes += val;
             });
 
+            // Inteligentní řazení výdajů: pokud se objevily nové položky, správně je chronologicky vložezme nebo seřadíme
             if (!expenseCustomOrder[targetMonthKey]) {
                 finalExpensesList.sort((a, b) => {
                     if (a.itemMonth && b.itemMonth && a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
@@ -1001,15 +1016,42 @@
                 expenseCustomOrder[targetMonthKey] = finalExpensesList.map(i => i.uniqueId);
             } else {
                 const currentOrder = expenseCustomOrder[targetMonthKey];
+                const currentSet = new Set(currentOrder);
+                
+                // Přidáme nové ID, která v custom order ještě nebyla, na správné místo podle data namísto na konec
+                const newItems = finalExpensesList.filter(i => !currentSet.has(i.uniqueId));
+                if (newItems.length > 0) {
+                    newItems.sort((a, b) => {
+                        if (a.itemMonth && b.itemMonth && a.itemMonth !== b.itemMonth) return a.itemMonth.localeCompare(b.itemMonth);
+                        return a.den - b.den;
+                    });
+                    // Vložíme je do pořadí podle jejich měsíce a dne
+                    newItems.forEach(ni => {
+                        let inserted = false;
+                        for (let i = 0; i < currentOrder.length; i++) {
+                            const existingItem = finalExpensesList.find(x => x.uniqueId === currentOrder[i]);
+                            if (existingItem) {
+                                if (ni.itemMonth < existingItem.itemMonth || (ni.itemMonth === existingItem.itemMonth && ni.den < existingItem.den)) {
+                                    currentOrder.splice(i, 0, ni.uniqueId);
+                                    inserted = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!inserted) currentOrder.push(ni.uniqueId);
+                    });
+                }
+
                 finalExpensesList.sort((a, b) => {
                     let idxA = currentOrder.indexOf(a.uniqueId);
                     let idxB = currentOrder.indexOf(b.uniqueId);
-                    if (idxA === -1) { currentOrder.push(a.uniqueId); idxA = currentOrder.length - 1; }
-                    if (idxB === -1) { currentOrder.push(b.uniqueId); idxB = currentOrder.length - 1; }
+                    if (idxA === -1) idxA = 9999;
+                    if (idxB === -1) idxB = 9999;
                     return idxA - idxB;
                 });
             }
 
+            // Totéž pro příjmy
             if (!incomeCustomOrderPerMonth[targetMonthKey]) {
                 finalIncomesList.sort((a, b) => {
                     if (a.isStaticAccount && !b.isStaticAccount) return -1;
@@ -1020,11 +1062,18 @@
                 incomeCustomOrderPerMonth[targetMonthKey] = finalIncomesList.map(i => i.uniqueId);
             } else {
                 const currentOrder = incomeCustomOrderPerMonth[targetMonthKey];
+                const currentSet = new Set(currentOrder);
+                const newItems = finalIncomesList.filter(i => !currentSet.has(i.uniqueId));
+                
+                if (newItems.length > 0) {
+                    newItems.forEach(ni => currentOrder.push(ni.uniqueId));
+                }
+
                 finalIncomesList.sort((a, b) => {
                     let idxA = currentOrder.indexOf(a.uniqueId);
                     let idxB = currentOrder.indexOf(b.uniqueId);
-                    if (idxA === -1) { currentOrder.push(a.uniqueId); idxA = currentOrder.length - 1; }
-                    if (idxB === -1) { currentOrder.push(b.uniqueId); idxB = currentOrder.length - 1; }
+                    if (idxA === -1) idxA = 9999;
+                    if (idxB === -1) idxB = 9999;
                     return idxA - idxB;
                 });
             }
@@ -1151,9 +1200,14 @@
                     <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-6 max-w-3xl mx-auto shadow-lg">
                         <div class="flex justify-between items-center mb-2">
                             <h2 class="text-lg font-bold text-gray-200">Plánovaný horizont</h2>
-                            <button onclick="toggleEditMode()" class="${isEditMode ? 'bg-orange-600 text-white border-orange-500' : 'bg-gray-950 text-gray-400 border-gray-800 hover:text-white'} border px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
-                                ${isEditMode ? '✓ Hotovo' : '✏️ Upravit přehled'}
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button onclick="sortMonthNaturally('${activeMonth}')" class="bg-gray-950 hover:bg-gray-850 text-gray-400 hover:text-white border border-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5" title="Srovná všechny položky v tomto měsíci podle data">
+                                    🔄 Srovnat podle data
+                                </button>
+                                <button onclick="toggleEditMode()" class="${isEditMode ? 'bg-orange-600 text-white border-orange-500' : 'bg-gray-950 text-gray-400 border-gray-800 hover:text-white'} border px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                    ${isEditMode ? '✓ Hotovo' : '✏️ Upravit přehled'}
+                                </button>
+                            </div>
                         </div>
                 `;
 
