@@ -68,9 +68,10 @@
             </div>
         </aside>
 
-        <!-- HLAVNÍ OBSAH (FIXNÍ HORNÍ ČÁST, SCROLLUJE SE JEN SEZNAM) -->
+        <!-- HLAVNÍ OBSAH -->
         <main class="flex-1 h-screen overflow-y-auto bg-[#121214] p-6 md:p-8 flex flex-col">
-            <div class="sticky top-0 z-20 bg-[#121214] pb-4">
+            <!-- FIXNÍ HORNÍ ČÁST -->
+            <div class="sticky top-0 z-30 bg-[#121214] pb-4">
                 <header class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
                     <h1 class="text-3xl font-bold text-orange-500 flex items-center gap-3" id="pageTitle">
                         <svg class="w-8 h-8 text-orange-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -107,8 +108,8 @@
                 </div>
             </div>
 
-            <!-- FORMULÁŘ -->
-            <div id="itemForm" class="hidden bg-gray-900 p-6 rounded-xl mb-8 border border-gray-850">
+            <!-- FORMULÁŘ (Plovoucí/Pod horní částí) -->
+            <div id="itemForm" class="hidden bg-gray-900 p-6 rounded-xl my-4 border border-gray-850 z-40 relative">
                 <h2 class="text-xl font-semibold text-orange-400 mb-4" id="formTitle">Přidat platbu / šablonu</h2>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
@@ -145,11 +146,12 @@
                 </div>
             </div>
 
-            <div id="mainContent" class="space-y-6 flex-1 mt-4"></div>
+            <div id="mainContent" class="space-y-6 flex-1 mt-2"></div>
         </main>
     </div>
 
     <script>
+        // ... (zbytek JavaScriptu zůstává nezměněn) ...
         const defaultMuster = [
             { id: 1, typ: "prijem", nazev: "Lohn", castka: 4000, den: 1, frekvence: "kazdy_mesic", mesice: [] },
             { id: 2, typ: "prijem", nazev: "KG", castka: 518, den: 20, frekvence: "kazdy_mesic", mesice: [] },
@@ -1295,7 +1297,7 @@
                 }
 
                 let html = `
-                    <div class="space-y-6 max-w-4xl mx-auto">
+                    <div class="space-y-6 max-w-4xl mx-auto pb-12">
                         
                         <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-lg">
                             <button onclick="toggleMusterOverview()" class="w-full p-4 flex justify-between items-center bg-gray-900 hover:bg-gray-850 transition cursor-pointer">
@@ -1463,7 +1465,7 @@
                                         <input type="text" value="${item.nazev}" onchange="updateMusterName(${item.id}, this.value)" class="bg-transparent font-bold text-white text-base focus:outline-none focus:border-orange-500 border-b border-transparent">
                                         <span class="text-[10px] ${isIncome ? 'text-emerald-400 bg-emerald-950/40 border-emerald-900/30' : 'text-rose-400 bg-rose-950/40 border-rose-900/30'} px-2 py-0.5 rounded border">${isIncome ? 'Příjem (+)' : 'Výdaj (-)'}</span>
                                         ${isWeekly ? '<span class="text-[10px] text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30">Týdně (samostatné řádky)</span>' : ''}
-                                        ${splitCount > 0 ? `<span class="text-[10px] text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-900/30">Rozděleno na ${splitCount} části</span>` : ''}
+                                        ${splitCount > 0 ? `<span class="text-[10px] text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-900/30">Rozděleno na ${splitCount} části</span>' : ''}
                                         
                                         ${isIrregular ? `
                                             <div class="flex items-center gap-1 ml-1">
@@ -1592,6 +1594,7 @@
             }
         }
 
+        // ... exportData, importData, resetToDefault zůstávají ...
         function exportData() {
             const expenses = muster.filter(i => i.typ === "vydaj").sort((a, b) => (a.den || 5) - (b.den || 5));
             const incomes = muster.filter(i => i.typ === "prijem").sort((a, b) => (a.den || 5) - (b.den || 5));
