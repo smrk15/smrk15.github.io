@@ -1610,7 +1610,7 @@
             linkElement.click();
         }
 
-        function importData(event) {
+      function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -1618,25 +1618,32 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    if (imported.muster && imported.accountBalances && imported.modifiedData && imported.generatedMonths) {
+                    
+                    // Základní validace - vyžadujeme jen to nejnutnější pro běh
+                    if (imported.muster && imported.accountBalances) {
                         muster = imported.muster;
                         accountBalances = imported.accountBalances;
-                        modifiedData = imported.modifiedData;
-                        generatedMonths = imported.generatedMonths;
-                        if (imported.incomeCustomOrder) incomeCustomOrder = imported.incomeCustomOrder;
-                        if (imported.expenseCustomOrder) expenseCustomOrder = imported.expenseCustomOrder;
-                        if (imported.incomeCustomOrderPerMonth) incomeCustomOrderPerMonth = imported.incomeCustomOrderPerMonth;
-                        if (imported.deletedMonthsHistory) deletedMonthsHistory = imported.deletedMonthsHistory;
-                        if (imported.overviewExcludedIds) overviewExcludedIds = imported.overviewExcludedIds;
+                        
+                        // Bezpečné načtení volitelných dat
+                        modifiedData = imported.modifiedData || defaultModifiedData;
+                        generatedMonths = imported.generatedMonths || ["2026-07"];
+                        incomeCustomOrder = imported.incomeCustomOrder || defaultIncomeOrder;
+                        expenseCustomOrder = imported.expenseCustomOrder || {};
+                        incomeCustomOrderPerMonth = imported.incomeCustomOrderPerMonth || {};
+                        deletedMonthsHistory = imported.deletedMonthsHistory || {};
+                        overviewExcludedIds = imported.overviewExcludedIds || [];
+                        
                         const sorted = [...generatedMonths].sort();
                         activeMonth = sorted.length > 0 ? sorted[sorted.length - 1] : "";
+                        
                         save();
                         alert("Data úspěšně nahrána!");
                     } else {
-                        alert("Neplatný formát souboru zálohy.");
+                        alert("Soubor neobsahuje potřebná data (muster nebo accountBalances).");
                     }
                 } catch (err) {
-                    alert("Chyba při čtení souboru.");
+                    console.error("Chyba při importu:", err);
+                    alert("Chyba při čtení souboru (zkontroluj konzoli F12).");
                 }
             }
             reader.readAsText(file);
