@@ -174,47 +174,30 @@
                 </div>
             </div>
 
+            <!-- FILTRY -->
+            <div id="filterContainer" class="hidden mb-6 flex gap-3 p-3 bg-gray-900 rounded-lg border border-gray-800">
+                <select id="filterServer" onchange="render()" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-300 focus:outline-none focus:border-orange-500">
+                    <option value="all">Všechny servery</option>
+                </select>
+                <select id="filterComp" onchange="render()" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-300 focus:outline-none focus:border-orange-500">
+                    <option value="all">Všechny ligy</option>
+                </select>
+            </div>
+
             <!-- KONTEJNER PRO OBSAH -->
             <div id="mainContentContainer" class="space-y-6"></div>
         </main>
-    </div>
-
-    <!-- MODALY -->
-    <div id="leagueDeleteModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-md w-full space-y-4">
-            <h3 class="text-xl font-bold text-orange-500" data-lang="modalClearLeagues">Smazat ligy</h3>
-            <p class="text-sm text-gray-400" id="leagueDeleteServerDesc"></p>
-            <div class="space-y-2 max-h-60 overflow-y-auto" id="leagueDeleteList"></div>
-            <div class="flex justify-between items-center pt-4 border-t border-gray-800">
-                <button onclick="selectAllLeaguesForDelete(true)" class="text-xs text-orange-400 hover:underline" data-lang="btnSelectAll">Vybrat vše</button>
-                <div class="flex gap-2">
-                    <button onclick="closeLeagueDeleteModal()" class="bg-gray-800 hover:bg-gray-700 text-sm font-semibold px-4 py-2 rounded-lg" data-lang="btnCancel">Zrušit</button>
-                    <button onclick="confirmLeagueDeletes()" class="bg-red-600 hover:bg-red-500 text-sm font-semibold px-4 py-2 rounded-lg text-white" data-lang="btnDeleteSelected">Smazat vybrané</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="serverManagerModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-lg w-full space-y-4">
-            <h3 class="text-xl font-bold text-orange-500" data-lang="modalManageServers">Spravovat servery a pořadí</h3>
-            <p class="text-sm text-gray-400" data-lang="modalManageServersDesc">Použij šipky pro změnu pořadí serverů. Můžeš je také skrýt nebo trvale smazat.</p>
-            <div class="space-y-3 max-h-80 overflow-y-auto" id="serverManagerList"></div>
-            <div class="flex justify-end gap-2 pt-4 border-t border-gray-800">
-                <button onclick="closeServerManager()" class="bg-gray-800 hover:bg-gray-700 text-sm font-semibold px-4 py-2 rounded-lg" data-lang="btnSaveClose">Uložit a zavřít</button>
-            </div>
-        </div>
     </div>
 
     <script>
         const translations = {
             cs: {
                 homeBtn: "Domů / Rozcestník",
-                timelineBtn: "Časová osa zápasů",
+                timelineBtn: "Aktuální zápasy",
                 undoBtn: "Zpět",
                 manageServersBtn: "Spravovat servery",
                 mainTitle: "🎯 Moje Šipkařské Ligy",
-                timelineTitle: "🗓️ Časová osa dohodnutých zápasů",
+                timelineTitle: "🗓️ Aktuální zápasy",
                 addMatchBtn: "Přidat zápas / ligu",
                 formTitleAdd: "Přidat zápas",
                 formModeSingle: "Jeden zápas",
@@ -230,49 +213,27 @@
                 formRematchesLabel: "Včetně odvet (zduplikovat celý seznam jako druhé kolo)",
                 btnCancel: "Zrušit",
                 btnSave: "Uložit",
-                btnSelectAll: "Vybrat vše",
                 btnDeleteSelected: "Smazat vybrané",
                 btnSaveClose: "Uložit a zavřít",
-                modalClearLeagues: "Smazat ligy",
                 modalManageServers: "Spravovat servery a pořadí",
-                modalManageServersDesc: "Použij šipky pro změnu pořadí serverů. Můžeš je také skrýt nebo trvale smazat.",
-                serverLabelEmpty: "Tento server je prázdný. Přidej do něj ligu.",
-                emptyMatchesLabel: "Žádné domluvené ani označené zápasy k dohrávce.",
-                noServersLabel: "Žádné servery ani zápasy. Nahraj svá data přes TXT soubor vlevo dole nebo přidej první zápas kliknutím nahoře.",
+                serverLabelEmpty: "Tento server je prázdný.",
+                emptyMatchesLabel: "Žádné domluvené zápasy.",
                 confrimDeleteMatch: "Opravdu smazat zápas?",
-                confirmDeleteSelectedLeagues: "Opravdu chceš smazat vybrané ligy včetně všech zápasů?",
-                confrimDeleteServer: "Opravdu chceš NATRVALO smazat tento server i se všemi zápasy?",
                 lblDeadline: "Do:",
                 lblMaxWeekly: "Limit:",
-                placeholderNote: "Poznámka (např. dovolená, neodpovídá...)",
+                placeholderNote: "Poznámka...",
                 lblConfirmedCheck: "Potvrzeno?",
-                btnDelete: "Smazat",
-                tooltipEditServer: "Upravit název serveru",
-                tooltipDeleteLeagues: "Smazat vybrané ligy",
-                tooltipEditLeague: "Upravit název ligy",
-                tooltipCancelDate: "Vymazat termín",
-                placeholderWeek: "Kolo / Týden",
-                placeholderDateInput: "dd.mm.rrrr",
-                termLabel: "TERMÍN",
-                noTermLabel: "Bez termínu",
-                mustPlayLabel: "🔥 Dohrávka",
-                tooltipClickEdit: "Kliknutím upravit zápas",
-                tooltipClose: "Zavřít",
-                tooltipSave: "Uložit změny",
-                tooltipCancel: "Zrušit úpravy",
-                tooltipDelete: "Smazat zápas",
                 tooltipEdit: "Upravit zápas",
                 tooltipGCal: "Přidat do Google Kalendáře",
-                badgeEditTitle: "Úprava",
-                warningNeedPlan: "⚠️ Nutno naplánovat"
+                btnAddMatchToLeague: "+ Přidat zápas do této ligy"
             },
             de: {
                 homeBtn: "Hauptmenü / Übersicht",
-                timelineBtn: "Terminübersicht",
+                timelineBtn: "Aktuelle Spiele",
                 undoBtn: "Rückgängig",
                 manageServersBtn: "Server verwalten",
                 mainTitle: "🎯 Meine Darts-Ligen",
-                timelineTitle: "🗓️ Terminübersicht der Spiele",
+                timelineTitle: "🗓️ Aktuelle Spiele",
                 addMatchBtn: "Spiel / Liga hinzufügen",
                 formTitleAdd: "Spiel hinzufügen",
                 formModeSingle: "Einzelnes Spiel",
@@ -283,1418 +244,120 @@
                 formFinalDeadline: "Endgültige Deadline (Datum)",
                 optFlexi: "Flexibles Spiel (jederzeit spielbar)",
                 optFixed: "Feste Spielwoche / Runde",
-                formBulkDateLabel: "Datum der ersten Woche (für automatische Wochenberechnung):",
-                formOpponentsLabel: "Gegnerliste (jeder Name in eine neue Zeile):",
-                formRematchesLabel: "Inklusive Rückspiele (gesamte Liste verdoppeln)",
+                formBulkDateLabel: "Datum der ersten Woche:",
+                formOpponentsLabel: "Gegnerliste:",
+                formRematchesLabel: "Inklusive Rückspiele",
                 btnCancel: "Abbrechen",
                 btnSave: "Speichern",
-                btnSelectAll: "Alle auswählen",
-                btnDeleteSelected: "Ausgewählte Ligen löschen",
+                btnDeleteSelected: "Löschen",
                 btnSaveClose: "Speichern & Schließen",
-                modalClearLeagues: "Ligen löschen",
-                modalManageServers: "Server & Reihenfolge verwalten",
-                modalManageServersDesc: "Verwende die Pfeile, um die Reihenfolge der Server zu ändern.",
-                serverLabelEmpty: "Dieser Server ist leer. Füge eine Liga hinzu.",
-                emptyMatchesLabel: "Keine vereinbarten oder zum Nachholen markierten Spiele.",
-                noServersLabel: "Keine Server oder Spiele vorhanden. Lade deine Daten über die TXT-Datei unten links hoch.",
-                confrimDeleteMatch: "Möchtest du dieses Spiel wirklich löschen?",
-                confirmDeleteSelectedLeagues: "Möchtest du die ausgewählten Ligen inklusive aller Spiele wirklich löschen?",
-                confrimDeleteServer: "Möchtest du diesen Server mitsamt allen Spielen wirklich DAUERHAFT löschen?",
+                modalManageServers: "Server verwalten",
+                serverLabelEmpty: "Dieser Server ist leer.",
+                emptyMatchesLabel: "Keine vereinbarten Spiele.",
+                confrimDeleteMatch: "Spiel wirklich löschen?",
                 lblDeadline: "Bis:",
                 lblMaxWeekly: "Limit:",
-                placeholderNote: "Notiz (z.B. Urlaub, antwortet nicht...)",
+                placeholderNote: "Notiz...",
                 lblConfirmedCheck: "Bestätigt?",
-                btnDelete: "Löschen",
-                tooltipEditServer: "Servernamen bearbeiten",
-                tooltipDeleteLeagues: "Ausgewählte Ligen löschen",
-                tooltipEditLeague: "Liganamen bearbeiten",
-                tooltipCancelDate: "Termin löschen",
-                placeholderWeek: "Runde / Woche",
-                placeholderDateInput: "tt.mm.jjjj",
-                termLabel: "TERMIN",
-                noTermLabel: "Kein Termin",
-                mustPlayLabel: "🔥 Nachholspiel",
-                tooltipClickEdit: "Klicken zum Bearbeiten",
-                tooltipClose: "Schließen",
-                tooltipSave: "Änderungen speichern",
-                tooltipCancel: "Bearbeitung abbrechen",
-                tooltipDelete: "Spiel löschen",
                 tooltipEdit: "Spiel bearbeiten",
                 tooltipGCal: "Zu Google Kalender hinzufügen",
-                badgeEditTitle: "Bearbeiten",
-                warningNeedPlan: "⚠️ Termin vereinbaren"
+                btnAddMatchToLeague: "+ Spiel zu dieser Liga hinzufügen"
             }
         }
 
         let currentLang = localStorage.getItem("dartLang") || "cs"
-
-        function toggleLanguage() {
-            setLanguage(currentLang === "cs" ? "de" : "cs")
-        }
-
-        function setLanguage(lang) {
-            currentLang = lang
-            localStorage.setItem("dartLang", lang)
-            document.getElementById("langSwitcher").innerText = lang === "cs" ? "🇩🇪" : "🇨🇿"
-            translateUI()
-            render()
-        }
-
-        function handleDatePlaceholder(input) {
-            if (input.value) {
-                input.classList.remove("empty-date")
-                input.style.setProperty("--date-opacity", "1")
-            } else {
-                input.classList.add("empty-date")
-                input.style.setProperty("--date-opacity", "0")
-            }
-        }
-
-        function setupDateInput(input) {
-            input.setAttribute("data-placeholder", translations[currentLang].placeholderDateInput)
-            handleDatePlaceholder(input)
-        }
-
-        function translateUI() {
-            document.querySelectorAll("[data-lang]").forEach(el => {
-                const key = el.getAttribute("data-lang")
-                if (translations[currentLang][key]) {
-                    el.innerText = translations[currentLang][key]
-                }
-            })
-            document.getElementById("formComp").placeholder = currentLang === "cs" ? "Liga / Cup (např. Cup 6c, Liga Division E)" : "Liga / Cup (z.B. Cup 6c, Liga Division E)"
-            document.getElementById("formWeek").placeholder = translations[currentLang].placeholderWeek
-            document.getElementById("formOpponent").placeholder = currentLang === "cs" ? "Soupeř" : "Gegner"
-
-            const ffd = document.getElementById("formFinalDeadline")
-            if (ffd) setupDateInput(ffd)
-            const fbs = document.getElementById("formBulkStartDate")
-            if (fbs) setupDateInput(fbs)
-
-            document.getElementById("btnHomeIcon").title = translations[currentLang].homeBtn
-            document.getElementById("btnTimelineIcon").title = translations[currentLang].timelineBtn
-            document.getElementById("undoBtn").title = translations[currentLang].undoBtn
-            document.getElementById("btnAddIcon").title = translations[currentLang].addMatchBtn
-            document.getElementById("langSwitcher").title = currentLang === "cs" ? "Switch to German / Přepnout do němčiny" : "Auf Tschechisch umstellen / Přepnout do češtiny"
-            document.getElementById("btnManageIcon").title = translations[currentLang].manageServersBtn
-        }
-
         let matches = JSON.parse(localStorage.getItem("dartMatchesV23")) || []
-        let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV23")) || []
-        let emptyLeagues = JSON.parse(localStorage.getItem("dartEmptyLeaguesV23")) || []
-        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV23")) || []
-        let serverOrder = JSON.parse(localStorage.getItem("dartServerOrderV23")) || []
         let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV23")) || {}
         let editingMatchIds = new Set()
         let historyStack = []
         let currentView = "home"
-        let formMode = "single"
-        let activeDeleteServerName = ""
-
-        function getLegsFromFormat(formatStr) {
-            if (!formatStr) return 7
-            const fmtLower = formatStr.toLowerCase()
-            const matchNum = fmtLower.match(/\d+/)
-            if (!matchNum) return 7
-
-            const num = parseInt(matchNum[0])
-            
-            if (fmtLower.includes("first to") || fmtLower.includes("race to")) {
-                return (2 * num) - 1
-            }
-            return num
-        }
-
-        function calculateDurationMinutes(formatStr) {
-            const legs = getLegsFromFormat(formatStr)
-            if (legs <= 8) return 30
-            if (legs <= 11) return 45
-            return 60
-        }
-
-        function autoCalcDuration() {
-            const formatStr = buildFormatString()
-            const minutes = calculateDurationMinutes(formatStr)
-            document.getElementById("formDuration").value = minutes
-        }
-
-        function toggleMustPlay(id) {
-            pushToHistory()
-            const match = matches.find(m => m.id === id)
-            if (match) {
-                match.mustPlay = !match.mustPlay
-                save()
-            }
-        }
-
-        function toggleEditMatch(id) {
-            if (editingMatchIds.has(id)) {
-                editingMatchIds.delete(id)
-            } else {
-                editingMatchIds.add(id)
-            }
-            render()
-        }
-
-        function clearMatchDateInEdit(id) {
-            const dateEl = document.getElementById(`edit-date-${id}`)
-            const timeEl = document.getElementById(`edit-time-${id}`)
-            if (dateEl) {
-                dateEl.value = ""
-                handleDatePlaceholder(dateEl)
-            }
-            if (timeEl) timeEl.value = ""
-        }
-
-        function saveMatchEdit(id) {
-            pushToHistory()
-            const match = matches.find(m => m.id === id)
-            if (match) {
-                const dateEl = document.getElementById(`edit-date-${id}`)
-                const timeEl = document.getElementById(`edit-time-${id}`)
-                const weekEl = document.getElementById(`edit-week-${id}`)
-                const notesEl = document.getElementById(`edit-notes-${id}`)
-
-                if (dateEl) match.date = dateEl.value
-                if (timeEl) match.time = timeEl.value
-                if (weekEl) match.week = weekEl.value.trim()
-                if (notesEl) match.notes = notesEl.value.trim()
-
-                match.status = match.date ? "scheduled" : "unscheduled"
-                if (!match.date) match.confirmed = false
-
-                editingMatchIds.delete(id)
-                save()
-            }
-        }
-
-        function openGoogleCalendar(id) {
-            const match = matches.find(m => m.id === id)
-            if (!match || !match.date) return
-
-            const cleanDate = match.date.replace(/-/g, "")
-            const duration = match.duration || calculateDurationMinutes(match.format)
-
-            let startIso = ""
-            let endIso = ""
-
-            if (match.time) {
-                const parts = match.time.split(":")
-                const startHour = parseInt(parts[0])
-                const startMin = parseInt(parts[1])
-
-                const startDateObj = new Date(match.date)
-                startDateObj.setHours(startHour, startMin, 0)
-
-                const endDateObj = new Date(startDateObj.getTime() + duration * 60000)
-
-                const pad = (n) => n.toString().padStart(2, "0")
-                
-                startIso = `${cleanDate}T${pad(startHour)}${pad(startMin)}00`
-                endIso = `${endDateObj.getFullYear()}${pad(endDateObj.getMonth() + 1)}${pad(endDateObj.getDate())}T${pad(endDateObj.getHours())}${pad(endDateObj.getMinutes())}00`
-            } else {
-                startIso = cleanDate
-                endIso = cleanDate
-            }
-
-            const title = encodeURIComponent(`🎯 ${match.comp} - ${match.format} - ${match.opponent}`)
-            
-            let detailsText = `Soupeř: ${match.opponent}\nFormát: ${match.format}\nServer: ${match.server}\nLiga: ${match.comp}\nDélka: ${duration} min`
-            if (match.week) detailsText += `\nKolo: ${match.week}`
-            if (match.notes) detailsText += `\nPoznámka: ${match.notes}`
-            if (match.webUrl) detailsText += `\nWeb: ${match.webUrl}`
-            if (match.discordUrl) detailsText += `\nDiscord: ${match.discordUrl}`
-
-            const details = encodeURIComponent(detailsText)
-            const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}`
-
-            window.open(gcalUrl, '_blank')
-        }
-
-        function importTxt(event) {
-            const file = event.target.files[0]
-            if (!file) return
-
-            const reader = new FileReader()
-            reader.onload = function(e) {
-                const text = e.target.result
-                parseTxtData(text)
-            }
-            reader.readAsText(file)
-        }
-
-        function parseTxtData(textText) {
-            pushToHistory()
-            const newMatches = []
-            const blocks = textText.split(/----+/).map(b => b.trim()).filter(b => b.length > 0)
-
-            blocks.forEach((block, bIdx) => {
-                const lines = block.split("\n").map(l => l.trim()).filter(l => l.length > 0)
-                if (lines.length === 0) return
-
-                const headerLine = lines[0]
-                const headerParts = headerLine.split("->").map(p => p.trim())
-                
-                let server = ""
-                let compFull = ""
-                let format = "BO 8 501 DO"
-                let weekInfo = ""
-                let webUrl = ""
-                let discordUrl = ""
-
-                headerParts.forEach(part => {
-                    if (part.startsWith("http")) {
-                        if (part.includes("discord")) discordUrl = part
-                        else webUrl = part
-                    }
-                })
-
-                const nonUrlParts = headerParts.filter(p => !p.startsWith("http"))
-
-                if (nonUrlParts.length >= 3) {
-                    server = nonUrlParts[0]
-                    compFull = nonUrlParts[1]
-                    format = nonUrlParts[2] || format
-                    if (nonUrlParts[3]) weekInfo = nonUrlParts[3]
-                } else {
-                    compFull = nonUrlParts[0] || "Liga"
-                    format = nonUrlParts[1] || format
-                    if (nonUrlParts[2]) weekInfo = nonUrlParts[2]
-
-                    const combinedCheck = `${compFull} ${webUrl} ${discordUrl}`.toLowerCase()
-                    if (combinedCheck.includes("elitedartclub") || combinedCheck.includes("edc")) server = "EDC"
-                    else if (combinedCheck.includes("scolia-checkout-community") || combinedCheck.includes("scolia")) server = "Scolia Checkout Community"
-                    else if (combinedCheck.includes("dartfan")) server = "Dartfan online"
-                    else if (combinedCheck.includes("hood")) server = "HOOD"
-                    else if (combinedCheck.includes("dbf")) server = "DBF"
-                    else server = "Ostatní"
-                }
-
-                const duration = calculateDurationMinutes(format)
-
-                lines.slice(1).forEach((mLine, mIdx) => {
-                    if (!mLine.startsWith("-")) return
-                    const cleanLine = mLine.replace(/^-/, "").trim()
-                    const matchParts = cleanLine.split("->").map(p => p.trim())
-                    
-                    const opponent = matchParts[0]
-                    
-                    let date = ""
-                    let time = ""
-                    let confirmed = false
-                    let mustPlay = false
-                    let week = weekInfo
-                    let notes = ""
-
-                    matchParts.slice(1).forEach(part => {
-                        if (part.includes("🔥 DOHRAVKA") || part.includes("🔥 NACHHOLSPIEL")) {
-                            mustPlay = true
-                        } else if (part.startsWith("W:")) {
-                            week = part.replace("W:", "").trim()
-                        } else if (part.startsWith("NOTE:")) {
-                            notes = part.replace("NOTE:", "").trim()
-                        } else {
-                            const dtMatch = part.match(/(\d{1,2})\.(\d{1,2})\.?(?:\s+(\d{1,2}:\d{2}))?/)
-                            if (dtMatch) {
-                                const day = dtMatch[1].padStart(2, '0')
-                                const month = dtMatch[2].padStart(2, '0')
-                                const currentYear = new Date().getFullYear()
-                                date = `${currentYear}-${month}-${day}`
-                                if (dtMatch[3]) time = dtMatch[3]
-                                confirmed = true
-                            }
-                        }
-                    })
-
-                    newMatches.push({
-                        id: Date.now() + (bIdx * 100) + mIdx,
-                        server,
-                        comp: compFull,
-                        opponent,
-                        format,
-                        duration,
-                        type: week ? "fixed" : "flexi",
-                        week,
-                        date,
-                        time,
-                        confirmed,
-                        mustPlay,
-                        status: date ? "scheduled" : "unscheduled",
-                        notes,
-                        maxWeekly: "",
-                        finalDeadline: "",
-                        discordUrl,
-                        webUrl
-                    })
-                })
-            })
-
-            if (newMatches.length > 0) {
-                matches = newMatches
-                save()
-                alert(currentLang === "cs" ? "TXT soubor byl úspěšně načten!" : "TXT-Datei erfolgreich geladen!")
-            } else {
-                alert(currentLang === "cs" ? "V souboru nebyla nalezena žádná platná data." : "Keine gültigen Daten gefunden.")
-            }
-        }
-
-        function exportTxt() {
-            const grouped = {}
-            matches.forEach(m => {
-                const key = `${m.server}::${m.comp}`
-                if (!grouped[key]) grouped[key] = []
-                grouped[key].push(m)
-            })
-
-            let txtContent = ""
-
-            Object.keys(grouped).forEach((key, idx) => {
-                const compMatches = grouped[key]
-                const first = compMatches[0]
-
-                let header = `${first.server} -> ${first.comp}`
-                if (first.format) header += ` -> ${first.format}`
-                if (first.week) header += ` -> ${first.week}`
-                if (first.webUrl) header += ` -> ${first.webUrl}`
-                if (first.discordUrl) header += ` -> ${first.discordUrl}`
-
-                txtContent += `${header}\n`
-
-                compMatches.forEach(m => {
-                    let line = `- ${m.opponent}`
-                    if (m.date) {
-                        const parts = m.date.split("-")
-                        const formattedDate = `${parts[2]}.${parts[1]}.`
-                        line += ` -> ${formattedDate}`
-                        if (m.time) line += ` ${m.time}`
-                    } else {
-                        line += ` -> `
-                    }
-
-                    if (m.mustPlay) line += ` -> ${currentLang === 'cs' ? '🔥 DOHRAVKA' : '🔥 NACHHOLSPIEL'}`
-                    if (m.week) line += ` -> W: ${m.week}`
-                    if (m.notes) line += ` -> NOTE: ${m.notes}`
-
-                    txtContent += `${line}\n`
-                })
-
-                if (idx < Object.keys(grouped).length - 1) {
-                    txtContent += `\n---------------------------------------------------------------------------\n\n`
-                }
-            })
-
-            const blob = new Blob([txtContent], { type: "text/plain;charset=utf-8" })
-            const linkElement = document.createElement("a")
-            linkElement.href = URL.createObjectURL(blob)
-            linkElement.download = "Šipky zápasy.txt"
-            linkElement.click()
-        }
-
-        function pushToHistory() {
-            const state = {
-                matches: JSON.parse(JSON.stringify(matches)),
-                emptyServers: JSON.parse(JSON.stringify(emptyServers)),
-                emptyLeagues: JSON.parse(JSON.stringify(emptyLeagues)),
-                hiddenServers: JSON.parse(JSON.stringify(hiddenServers)),
-                serverOrder: JSON.parse(JSON.stringify(serverOrder))
-            }
-            historyStack.push(JSON.stringify(state))
-            if (historyStack.length > 20) historyStack.shift()
-            updateUndoButton()
-        }
-
-        function undo() {
-            if (historyStack.length === 0) return
-            const previousState = JSON.parse(historyStack.pop())
-            matches = previousState.matches
-            emptyServers = previousState.emptyServers
-            emptyLeagues = previousState.emptyLeagues || []
-            hiddenServers = previousState.hiddenServers
-            serverOrder = previousState.serverOrder || []
-            localStorage.setItem("dartMatchesV23", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV23", JSON.stringify(emptyServers))
-            localStorage.setItem("dartEmptyLeaguesV23", JSON.stringify(emptyLeagues))
-            localStorage.setItem("dartHiddenServersV23", JSON.stringify(hiddenServers))
-            localStorage.setItem("dartServerOrderV23", JSON.stringify(serverOrder))
-            updateUndoButton()
-            render()
-        }
-
-        function updateUndoButton() {
-            const btn = document.getElementById("undoBtn")
-            if (historyStack.length > 0) {
-                btn.disabled = false
-                btn.className = "flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500 rounded-lg border border-orange-900/40 flex items-center justify-center py-2.5 transition-all cursor-pointer"
-            } else {
-                btn.disabled = true
-                btn.className = "flex-1 bg-gray-900 text-gray-800 rounded-lg border border-gray-955 flex items-center justify-center py-2.5 transition-all opacity-30 cursor-not-allowed"
-            }
-        }
-
-        function save(skipRender = false) {
-            localStorage.setItem("dartMatchesV23", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV23", JSON.stringify(emptyServers))
-            localStorage.setItem("dartEmptyLeaguesV23", JSON.stringify(emptyLeagues))
-            localStorage.setItem("dartHiddenServersV23", JSON.stringify(hiddenServers))
-            localStorage.setItem("dartServerOrderV23", JSON.stringify(serverOrder))
-            localStorage.setItem("dartClosedStatesV23", JSON.stringify(closedStates))
-            if (!skipRender) render()
-        }
-
-        function toggleForm(presetServer = null, presetComp = null) {
-            const form = document.getElementById("matchForm")
-            form.classList.toggle("hidden")
-
-            if (!form.classList.contains("hidden")) {
-                if (presetServer) {
-                    const select = document.getElementById("formServer")
-                    select.value = presetServer
-                    checkNewServer(presetServer)
-                }
-                if (presetComp) {
-                    document.getElementById("formComp").value = presetComp
-                }
-                autoCalcDuration()
-            }
-        }
-
-        function setFormMode(mode) {
-            formMode = mode
-            const btnSingle = document.getElementById("mode-single")
-            const btnBulk = document.getElementById("mode-bulk")
-            const singleContainer = document.getElementById("singleOpponentContainer")
-            const singleWeekContainer = document.getElementById("singleWeekContainer")
-            const bulkContainer = document.getElementById("bulkContainer")
-            const title = document.getElementById("formTitle")
-
-            if (mode === "single") {
-                btnSingle.className = "px-3 py-1 rounded bg-orange-600 font-semibold text-white"
-                btnBulk.className = "px-3 py-1 rounded text-gray-400 hover:text-white font-semibold"
-                singleContainer.classList.remove("hidden")
-                singleWeekContainer.classList.remove("hidden")
-                bulkContainer.classList.add("hidden")
-                title.innerText = translations[currentLang].formTitleAdd
-            } else {
-                btnSingle.className = "px-3 py-1 rounded text-gray-400 hover:text-white font-semibold"
-                btnBulk.className = "px-3 py-1 rounded bg-orange-600 font-semibold text-white"
-                singleContainer.classList.add("hidden")
-                singleWeekContainer.classList.add("hidden")
-                bulkContainer.classList.remove("hidden")
-                title.innerText = translations[currentLang].formModeBulk
-            }
-        }
-
-        function checkNewServer(val) {
-            const input = document.getElementById("formNewServerInput")
-            if (val === "__NEW__") {
-                input.classList.remove("hidden")
-                input.focus()
-            } else {
-                input.classList.add("hidden")
-            }
-        }
-
-        function toggleCollapse(key) {
-            closedStates[key] = !closedStates[key]
-            save()
-        }
+        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV23")) || []
 
         function setView(view) {
             currentView = view
-            const title = document.getElementById("pageTitle")
-            if (view === "home") {
-                title.innerText = translations[currentLang].mainTitle
-            } else {
-                title.innerText = translations[currentLang].timelineTitle
-            }
+            document.getElementById("filterContainer").classList.toggle("hidden", view !== "timeline")
             render()
         }
 
-        function goHome() {
-            setView("home")
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-        }
-
-        function scrollToElement(id) {
-            setView("home")
-            setTimeout(() => {
-                const el = document.getElementById(id)
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }, 50)
-        }
-
-        function editServerName(oldName) {
-            const newName = prompt(currentLang === "cs" ? `Zadej nový název pro server "${oldName}":` : `Neuer Name für Server "${oldName}":`, oldName)
-            if (newName && newName.trim() !== oldName) {
-                pushToHistory()
-                matches.forEach(m => {
-                    if (m.server === oldName) m.server = newName.trim()
-                })
-                emptyLeagues.forEach(l => {
-                    if (l.server === oldName) l.server = newName.trim()
-                })
-                const emptyIdx = emptyServers.indexOf(oldName)
-                if (emptyIdx !== -1) emptyServers[emptyIdx] = newName.trim()
-                const hidIdx = hiddenServers.indexOf(oldName)
-                if (hidIdx !== -1) hiddenServers[hidIdx] = newName.trim()
-                const orderIdx = serverOrder.indexOf(oldName)
-                if (orderIdx !== -1) serverOrder[orderIdx] = newName.trim()
-                updateServerSelect()
-                save()
-            }
-        }
-
-        function editCompName(serverName, oldCompName) {
-            const newName = prompt(currentLang === "cs" ? `Zadej nový název pro ligu "${oldCompName}" v serveru "${serverName}":` : `Neuer Name für Liga "${oldCompName}" auf Server "${serverName}":`, oldCompName)
-            if (newName && newName.trim() !== oldCompName) {
-                pushToHistory()
-                matches.forEach(m => {
-                    if (m.server === serverName && m.comp === oldCompName) m.comp = newName.trim()
-                })
-                emptyLeagues.forEach(l => {
-                    if (l.server === serverName && l.comp === oldCompName) l.comp = newName.trim()
-                })
-                save()
-            }
-        }
-
-        function moveServerOrder(serverName, direction) {
-            pushToHistory()
-            const allServers = getAllServersOrdered()
-            const index = allServers.indexOf(serverName)
-            if (index === -1) return
-
-            const newIndex = index + direction
-            if (newIndex >= 0 && newIndex < allServers.length) {
-                const temp = allServers[index]
-                allServers[index] = allServers[newIndex]
-                allServers[newIndex] = temp
-                serverOrder = allServers
-                save()
-                openServerManager()
-            }
-        }
-
-        function getAllServersOrdered() {
-            const existing = [...new Set([...matches.map(m => m.server), ...emptyServers, ...emptyLeagues.map(l => l.server)])]
-            let ordered = []
-
-            serverOrder.forEach(s => {
-                if (existing.includes(s)) ordered.push(s)
-            })
-
-            existing.forEach(s => {
-                if (!ordered.includes(s)) ordered.push(s)
-            })
-
-            return ordered
-        }
-
-        function openLeagueDeleteModal(serverName) {
-            activeDeleteServerName = serverName
-            document.getElementById("leagueDeleteServerDesc").innerText = `Server: ${serverName}`
-            const list = document.getElementById("leagueDeleteList")
-            list.innerHTML = ""
-            
-            const comps = [...new Set([
-                ...matches.filter(m => m.server === serverName).map(m => m.comp),
-                ...emptyLeagues.filter(l => l.server === serverName).map(l => l.comp)
-            ])]
-            
-            if (comps.length === 0) {
-                list.innerHTML = `<p class="text-sm text-gray-500 italic">${currentLang === "cs" ? "Žádné ligy k dispozici" : "Keine Ligen verfügbar"}</p>`
-            } else {
-                comps.forEach((comp) => {
-                    list.innerHTML += `
-                        <label class="flex items-center gap-3 p-2 hover:bg-gray-800 rounded cursor-pointer select-none">
-                            <input type="checkbox" value="${comp}" class="league-del-cb h-4 w-4 accent-orange-500">
-                            <span class="text-sm font-semibold">${comp}</span>
-                        </label>
-                    `
-                })
-            }
-            document.getElementById("leagueDeleteModal").classList.remove("hidden")
-        }
-
-        function closeLeagueDeleteModal() {
-            document.getElementById("leagueDeleteModal").classList.add("hidden")
-        }
-
-        function selectAllLeaguesForDelete(check) {
-            document.querySelectorAll(".league-del-cb").forEach(cb => cb.checked = check)
-        }
-
-        function confirmLeagueDeletes() {
-            const selectedComps = Array.from(document.querySelectorAll(".league-del-cb:checked")).map(cb => cb.value)
-            if (selectedComps.length === 0) {
-                closeLeagueDeleteModal()
-                return
-            }
-
-            if (confirm(translations[currentLang].confirmDeleteSelectedLeagues)) {
-                pushToHistory()
-                matches = matches.filter(m => !(m.server === activeDeleteServerName && selectedComps.includes(m.comp)))
-                emptyLeagues = emptyLeagues.filter(l => !(l.server === activeDeleteServerName && selectedComps.includes(l.comp)))
-                
-                const hasMatches = matches.some(m => m.server === activeDeleteServerName) || emptyLeagues.some(l => l.server === activeDeleteServerName)
-                if (!hasMatches && !emptyServers.includes(activeDeleteServerName)) {
-                    emptyServers.push(activeDeleteServerName)
-                }
-                save()
-                closeLeagueDeleteModal()
-            }
-        }
-
-        function openServerManager() {
-            const list = document.getElementById("serverManagerList")
-            list.innerHTML = ""
-            const allServers = getAllServersOrdered()
-            
-            if (allServers.length === 0) {
-                list.innerHTML = `<p class="text-sm text-gray-500 italic text-center py-4">${currentLang === "cs" ? "Žádné servery k dispozici" : "Keine Server verfügbar"}</p>`
-            }
-
-            allServers.forEach((server, idx) => {
-                const isHidden = hiddenServers.includes(server)
-                list.innerHTML += `
-                    <div class="bg-gray-855 p-3 rounded-lg border border-gray-800 flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                            <div class="flex flex-col gap-0.5">
-                                <button onclick="moveServerOrder('${server}', -1)" ${idx === 0 ? 'disabled class="opacity-20 text-xs px-1"' : 'class="hover:text-orange-400 text-xs px-1"'}>▲</button>
-                                <button onclick="moveServerOrder('${server}', 1)" ${idx === allServers.length - 1 ? 'disabled class="opacity-20 text-xs px-1"' : 'class="hover:text-orange-400 text-xs px-1"'}>▼</button>
-                            </div>
-                            <span class="font-bold text-gray-200 truncate">${server}</span>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <button onclick="editServerName('${server}')" class="text-xs text-orange-400 hover:text-orange-300 bg-orange-950/20 px-2 py-1 rounded border border-orange-900/30">
-                                ✏️ ${currentLang === "cs" ? "Upravit" : "Bearbeiten"}
-                            </button>
-                            <label class="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer select-none">
-                                <input type="checkbox" onchange="toggleServerHide('${server}')" ${isHidden ? 'checked' : ''} class="accent-orange-500">
-                                ${currentLang === "cs" ? "Skrýt" : "Ausblenden"}
-                            </label>
-                            <button onclick="confirmDeleteServer('${server}')" class="text-xs text-red-400 hover:text-red-300 bg-red-950/20 px-2 py-1 rounded border border-red-900/30">
-                                ${currentLang === "cs" ? "Smazat" : "Löschen"}
-                            </button>
-                        </div>
-                    </div>
-                `
-            })
-            document.getElementById("serverManagerModal").classList.remove("hidden")
-        }
-
-        function closeServerManager() {
-            document.getElementById("serverManagerModal").classList.add("hidden")
-        }
-
-        function toggleServerHide(serverName) {
-            pushToHistory()
-            if (hiddenServers.includes(serverName)) {
-                hiddenServers = hiddenServers.filter(s => s !== serverName)
-            } else {
-                hiddenServers.push(serverName)
-            }
-            save()
-            openServerManager()
-        }
-
-        function confirmDeleteServer(serverName) {
-            if (confirm(translations[currentLang].confrimDeleteServer)) {
-                pushToHistory()
-                matches = matches.filter(m => m.server !== serverName)
-                emptyServers = emptyServers.filter(s => s !== serverName)
-                emptyLeagues = emptyLeagues.filter(l => l.server !== serverName)
-                hiddenServers = hiddenServers.filter(s => s !== serverName)
-                serverOrder = serverOrder.filter(s => s !== serverName)
-                updateServerSelect()
-                save()
-                openServerManager()
-            }
-        }
-
-        function updateServerSelect() {
-            const select = document.getElementById("formServer")
-            const currentVal = select.value
-            const activeServers = getAllServersOrdered()
-            
-            select.innerHTML = ""
-            
-            if (activeServers.length === 0) {
-                select.appendChild(new Option(translations[currentLang].optNewServer, "__NEW__"))
-                select.value = "__NEW__"
-                checkNewServer("__NEW__")
-            } else {
-                activeServers.forEach(s => select.appendChild(new Option(s, s)))
-                select.appendChild(new Option(translations[currentLang].optNewServer, "__NEW__"))
-                
-                if (activeServers.includes(currentVal) || currentVal === "__NEW__") {
-                    select.value = currentVal
-                } else {
-                    select.value = activeServers[0]
-                }
-                checkNewServer(select.value)
-            }
-        }
-
-        function buildFormatString() {
-            const type = document.getElementById("fmtType").value
-            const num = document.getElementById("fmtNumber").value.trim()
-            const game = document.getElementById("fmtGame").value.trim() || "501"
-            const outType = document.getElementById("fmtOut").value
-
-            let formatNum = num ? `${num} ` : ''
-            let formatOut = outType ? ` ${outType}` : ''
-            return `${type} ${formatNum}${game}${formatOut}`.replace(/\s+/g, ' ').trim()
-        }
-
-        function isCurrentCalendarWeek(dateString) {
-            if (!dateString) return false
-            const date = new Date(dateString)
-            const now = new Date()
-            
-            const startOfWeek = (d) => {
-                const day = d.getDay()
-                const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-                const start = new Date(d.setDate(diff))
-                start.setHours(0,0,0,0)
-                return start
-            }
-
-            const currentMonday = startOfWeek(now)
-            const matchMonday = startOfWeek(date)
-            return currentMonday.getTime() === matchMonday.getTime()
-        }
-
-        function isWeekInPastOrCurrent(weekStr) {
-            if (!weekStr) return false
-            const match = weekStr.match(/(\d{1,2})\.(\d{1,2})\./)
-            if (!match) return false
-
-            const day = parseInt(match[1])
-            const month = parseInt(match[2]) - 1
-            const now = new Date()
-            let year = now.getFullYear()
-
-            if (month < now.getMonth() - 2) {
-                year += 1
-            }
-
-            const weekStart = new Date(year, month, day)
-            weekStart.setHours(0, 0, 0, 0)
-
-            return now >= weekStart
-        }
-
-        function formatDateToLabel(date) {
-            return `${date.getDate()}.${date.getMonth() + 1}.`
-        }
-
-        function saveFromForm() {
-            let server = document.getElementById("formServer").value
-            if (server === "__NEW__") {
-                const newServerInput = document.getElementById("formNewServerInput").value.trim()
-                if (!newServerInput) {
-                    alert(currentLang === "cs" ? "Zadej název nového serveru" : "Servernamen eingeben")
-                    return
-                }
-                server = newServerInput
-            }
-
-            const comp = document.getElementById("formComp").value.trim()
-            const format = buildFormatString()
-            const type = document.getElementById("formType").value
-            const maxWeekly = document.getElementById("formMaxWeekly").value.trim()
-            
-            const customDuration = parseInt(document.getElementById("formDuration").value) || calculateDurationMinutes(format)
-
-            const ffd = document.getElementById("formFinalDeadline")
-            const finalDeadline = ffd.value || ""
-            const fbs = document.getElementById("formBulkStartDate")
-            const startDateVal = fbs.value || ""
-            
-            const discordUrl = document.getElementById("formDiscordUrl").value.trim()
-            const webUrl = document.getElementById("formWebUrl").value.trim()
-
-            if (!comp) {
-                alert(currentLang === "cs" ? "Vyplň název ligy / cupu" : "Liganamen eingeben")
-                return
-            }
-
-            pushToHistory()
-            emptyServers = emptyServers.filter(s => s !== server)
-            emptyLeagues = emptyLeagues.filter(l => !(l.server === server && l.comp === comp))
-
-            if (formMode === "single") {
-                const opponent = document.getElementById("formOpponent").value.trim()
-                const week = document.getElementById("formWeek").value.trim()
-                if (!opponent) {
-                    alert(currentLang === "cs" ? "Vyplň soupeře" : "Gegner eingeben")
-                    return
-                }
-                
-                matches.push({
-                    id: Date.now(),
-                    server, comp, opponent, format, duration: customDuration, type, week,
-                    date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "", maxWeekly, finalDeadline, discordUrl, webUrl
-                })
-            } else {
-                const listText = document.getElementById("formOpponentsList").value
-                const names = listText.split("\n").map(n => n.trim()).filter(n => n.length > 0)
-                
-                if (names.length === 0) {
-                    alert(currentLang === "cs" ? "Zadej aspoň jednoho soupeře" : "Mindestens einen Gegner eingeben")
-                    return
-                }
-
-                const includeRematches = document.getElementById("formRematches").checked
-                let baseDate = startDateVal ? new Date(startDateVal) : null
-
-                names.forEach((name, index) => {
-                    let calculatedWeek = ""
-                    if (baseDate) {
-                        let currentWeekDate = new Date(baseDate)
-                        currentWeekDate.setDate(baseDate.getDate() + (index * 7))
-                        calculatedWeek = `(${formatDateToLabel(currentWeekDate)})`
-                    }
-
-                    matches.push({
-                        id: Date.now() + index,
-                        server, comp, opponent: name, format, duration: customDuration, type, week: calculatedWeek,
-                        date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "", maxWeekly, finalDeadline, discordUrl, webUrl
-                    })
-                })
-
-                if (includeRematches) {
-                    names.forEach((name, index) => {
-                        let calculatedWeek = ""
-                        if (baseDate) {
-                            let currentWeekDate = new Date(baseDate)
-                            currentWeekDate.setDate(baseDate.getDate() + ((names.length + index) * 7))
-                            calculatedWeek = `(${formatDateToLabel(currentWeekDate)})`
-                        }
-
-                        matches.push({
-                            id: Date.now() + names.length + index,
-                            server, comp, opponent: name, format, duration: customDuration, type, week: calculatedWeek,
-                            date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "", maxWeekly, finalDeadline, discordUrl, webUrl
-                        })
-                    })
-                }
-            }
-
-            updateServerSelect()
-            delete closedStates[server]
-            delete closedStates[`${server}-${comp}`]
-            save()
-            toggleForm()
-
-            document.getElementById("formComp").value = ""
-            document.getElementById("formOpponent").value = ""
-            document.getElementById("formWeek").value = ""
-            document.getElementById("formOpponentsList").value = ""
-            document.getElementById("formRematches").checked = false
-            document.getElementById("formNewServerInput").value = ""
-            document.getElementById("formNewServerInput").classList.add("hidden")
-            document.getElementById("fmtNumber").value = ""
-            
-            ffd.value = ""
-            handleDatePlaceholder(ffd)
-            fbs.value = ""
-            handleDatePlaceholder(fbs)
-            
-            document.getElementById("formMaxWeekly").value = ""
-            document.getElementById("formDiscordUrl").value = ""
-            document.getElementById("formWebUrl").value = ""
-        }
-
         function toggleConfirmed(id) {
-            pushToHistory()
             const match = matches.find(m => m.id === id)
-            if (match && match.date) {
+            if (match) {
                 match.confirmed = !match.confirmed
                 save()
             }
         }
 
-        function deleteMatch(id) {
-            if (confirm(translations[currentLang].confrimDeleteMatch)) {
-                pushToHistory()
-                const match = matches.find(m => m.id === id)
-                const serverName = match ? match.server : null
-                const compName = match ? match.comp : null
-                
-                matches = matches.filter(m => m.id !== id)
-                
-                if (serverName && compName && !matches.some(m => m.server === serverName && m.comp === compName)) {
-                    if (!emptyLeagues.some(l => l.server === serverName && l.comp === compName)) {
-                        emptyLeagues.push({ server: serverName, comp: compName })
-                    }
-                }
-                save()
-            }
-        }
-
-        function getFullGroupedData() {
-            const grouped = {}
-            const orderedServers = getAllServersOrdered()
-
-            orderedServers.forEach(s => {
-                if (hiddenServers.includes(s)) return
-                grouped[s] = {}
-            })
-
-            matches.forEach(m => {
-                if (hiddenServers.includes(m.server)) return
-                if (!grouped[m.server]) grouped[m.server] = {}
-                if (!grouped[m.server][m.comp]) grouped[m.server][m.comp] = []
-                grouped[m.server][m.comp].push(m)
-            })
-
-            emptyLeagues.forEach(l => {
-                if (hiddenServers.includes(l.server)) return
-                if (!grouped[l.server]) grouped[l.server] = {}
-                if (!grouped[l.server][l.comp]) grouped[l.server][l.comp] = []
-            })
-
-            return grouped
-        }
-
-        function renderSidebar(grouped) {
-            const nav = document.getElementById("sidebarNav")
-            nav.innerHTML = ""
-
-            Object.keys(grouped).forEach(serverName => {
-                const serverMatches = Object.values(grouped[serverName]).flat()
-                const hasServerMustPlay = serverMatches.some(m => m.mustPlay)
-                let serverFireBadge = hasServerMustPlay ? `<span class="ml-1 text-xs" title="Obsahuje dohrávku!">🔥</span>` : ""
-
-                const serverDiv = document.createElement("div")
-                serverDiv.className = "space-y-1"
-
-                serverDiv.innerHTML = `
-                    <div onclick="scrollToElement('${serverName.replace(/\s+/g, '-')}')" class="text-sm font-bold text-orange-400 hover:text-orange-300 cursor-pointer p-1 rounded truncate transition flex items-center">
-                        <span class="truncate">🖥️ ${serverName}</span>
-                        ${serverFireBadge}
-                    </div>
-                `
-                
-                const leagueUl = document.createElement("ul")
-                leagueUl.className = "pl-3 border-l border-gray-800 space-y-1 mt-0.5"
-
-                Object.keys(grouped[serverName]).forEach(compName => {
-                    const compMatches = grouped[serverName][compName]
-                    const totalCount = compMatches.length
-                    const scheduledCount = compMatches.filter(m => m.date).length
-
-                    const needsScheduling = compMatches.some(m => !m.date && isWeekInPastOrCurrent(m.week))
-                    const hasLeagueMustPlay = compMatches.some(m => m.mustPlay)
-
-                    let statusBadges = ""
-                    if (hasLeagueMustPlay) {
-                        statusBadges += `<span class="ml-1 text-xs" title="Obsahuje dohrávku!">🔥</span>`
-                    }
-                    if (needsScheduling) {
-                        statusBadges += `<span class="ml-1 text-xs text-orange-500 font-bold" title="Nutno naplánovat zápas na tento týden!">⚠️</span>`
-                    }
-
-                    const li = document.createElement("li")
-                    li.className = "text-xs text-gray-400 hover:text-white cursor-pointer flex justify-between items-center py-0.5 transition"
-                    li.innerHTML = `
-                        <span class="truncate flex-1">🏆 ${compName} ${statusBadges}</span>
-                        <span class="text-[10px] bg-gray-900 border border-gray-800 px-1.5 py-0.5 rounded text-gray-400 font-mono font-bold ml-2">${scheduledCount}/${totalCount}</span>
-                    `
-                    li.onclick = (e) => {
-                        e.stopPropagation()
-                        scrollToElement(`${serverName.replace(/\s+/g, '-')}-${compName.replace(/\s+/g, '-')}`)
-                    }
-                    leagueUl.appendChild(li)
-                })
-
-                serverDiv.appendChild(leagueUl)
-                nav.appendChild(serverDiv)
-            })
+        function save(skipRender = false) {
+            localStorage.setItem("dartMatchesV23", JSON.stringify(matches))
+            if (!skipRender) render()
         }
 
         function render() {
             const container = document.getElementById("mainContentContainer")
             container.innerHTML = ""
 
-            const grouped = getFullGroupedData()
-            renderSidebar(grouped)
-            updateServerSelect()
-
-            const btnHome = document.getElementById("btnHomeIcon")
-            const btnTimeline = document.getElementById("btnTimelineIcon")
-
-            if (currentView === "home") {
-                btnHome.className = "flex-1 bg-orange-950/20 hover:bg-orange-900/30 text-orange-500 rounded-lg border border-orange-500/50 flex items-center justify-center py-2.5 transition-all cursor-pointer"
-                btnTimeline.className = "flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all cursor-pointer"
-            } else {
-                btnHome.className = "flex-1 bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all cursor-pointer"
-                btnTimeline.className = "flex-1 bg-orange-950/20 hover:bg-orange-900/30 text-orange-500 rounded-lg border border-orange-500/50 flex items-center justify-center py-2.5 transition-all cursor-pointer"
-            }
-
+            // Update filtrů
+            const fS = document.getElementById("filterServer")
+            const fC = document.getElementById("filterComp")
+            
             if (currentView === "timeline") {
                 let timelineMatches = matches.filter(m => (m.date || m.mustPlay) && !hiddenServers.includes(m.server))
-
-                timelineMatches.sort((a, b) => {
-                    if (!a.date && b.date) return -1
-                    if (a.date && !b.date) return 1
-                    if (!a.date && !b.date) return 0
-                    return `${a.date}T${a.time || "00:00"}`.localeCompare(`${b.date}T${b.time || "00:00"}`)
-                })
-
-                if (timelineMatches.length === 0) {
-                    container.innerHTML = `<div class="text-center py-12 text-gray-500 bg-gray-900 rounded-xl border border-gray-800">${translations[currentLang].emptyMatchesLabel}</div>`
-                    return
-                }
-
-                const timelineBg = document.createElement("div")
-                timelineBg.className = "space-y-3"
+                
+                // Filtrování
+                if (fS.value !== "all") timelineMatches = timelineMatches.filter(m => m.server === fS.value)
+                if (fC.value !== "all") timelineMatches = timelineMatches.filter(m => m.comp === fC.value)
 
                 timelineMatches.forEach(m => {
                     const card = document.createElement("div")
                     const isEditing = editingMatchIds.has(m.id)
-
-                    let formattedDate = m.date
-                    if (m.date && m.date.includes("-")) {
-                        const parts = m.date.split("-")
-                        formattedDate = `${parseInt(parts[2])}.${parseInt(parts[1])}.`
-                    }
-
-                    let nameColorClass = "text-white"
-                    if (m.date) {
-                        if (isCurrentCalendarWeek(m.date)) {
-                            nameColorClass = "text-yellow-400"
-                        } else if (m.confirmed) {
-                            nameColorClass = "text-emerald-400"
-                        } else {
-                            nameColorClass = "text-red-400"
-                        }
-                    }
-
+                    card.className = "bg-gray-900 p-4 rounded-xl border border-gray-800 flex justify-between items-center"
+                    
                     if (isEditing) {
-                        card.className = "bg-gray-900 p-4 rounded-xl border border-orange-500/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg"
                         card.innerHTML = `
-                            <div class="flex items-center gap-4 flex-1 w-full">
-                                <div class="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px]">
-                                    <p class="text-[10px] text-gray-400 uppercase font-bold">${translations[currentLang].badgeEditTitle}</p>
-                                    <button onclick="toggleEditMatch(${m.id})" class="text-xs text-orange-400 hover:underline font-semibold mt-1">${translations[currentLang].tooltipClose}</button>
+                            <div class="flex-1 space-y-2">
+                                <span class="text-lg font-bold text-orange-400">${m.opponent}</span>
+                                <div class="flex gap-2">
+                                    <input type="date" id="edit-date-${m.id}" value="${m.date}" class="bg-gray-800 p-2 rounded">
+                                    <input type="time" id="edit-time-${m.id}" value="${m.time}" class="bg-gray-800 p-2 rounded">
+                                    <button onclick="toggleConfirmed(${m.id})" class="p-2 ${m.confirmed ? 'bg-emerald-600' : 'bg-gray-700'} rounded">👍</button>
+                                    <button onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 p-2 rounded">✔️</button>
                                 </div>
-                                <div class="flex-1 space-y-2">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-lg font-bold text-orange-400">${m.opponent}</span>
-                                        <span class="text-xs font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">${m.format}</span>
-                                        <input type="text" id="edit-week-${m.id}" value="${m.week || ''}" placeholder="${translations[currentLang].placeholderWeek}" class="bg-blue-950/60 text-blue-400 text-xs px-2 py-1 rounded border border-blue-900/50 font-semibold focus:outline-none focus:border-orange-500 w-28 text-center">
-                                    </div>
-                                    <input type="text" id="edit-notes-${m.id}" value="${m.notes || ''}" placeholder="${translations[currentLang].placeholderNote}" class="w-full max-w-md bg-gray-950 border border-gray-700 text-xs px-2.5 py-1.5 rounded text-gray-200 focus:outline-none focus:border-orange-500">
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800 flex-wrap">
-                                <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Nachholspiel">🔥</button>
-                                <input type="date" id="edit-date-${m.id}" value="${m.date}" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500 w-36 text-center">
-                                <input type="time" id="edit-time-${m.id}" value="${m.time}" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500">
-                                <button onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="${translations[currentLang].tooltipCancelDate}">❌</button>
-                                <button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-800 text-gray-500 border-gray-700 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>
-                                <button onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 px-3 rounded-lg text-sm font-bold transition" title="${translations[currentLang].tooltipSave}">✔️</button>
-                                <button onclick="deleteMatch(${m.id})" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 p-2 px-2.5 rounded-lg text-sm font-semibold transition border border-red-900/40" title="${translations[currentLang].tooltipDelete}">🗑️</button>
                             </div>
                         `
                     } else {
-                        card.className = "bg-gray-900 p-4 rounded-xl border border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-gray-700 transition"
                         card.innerHTML = `
-                            <div class="flex items-center gap-4 flex-1">
-                                <div onclick="toggleEditMatch(${m.id})" class="bg-gray-800 hover:bg-gray-750 cursor-pointer px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px] transition group" title="${translations[currentLang].tooltipClickEdit}">
-                                    <p class="text-[10px] text-gray-400 uppercase font-bold group-hover:text-orange-400 transition">${translations[currentLang].termLabel}</p>
-                                    <p class="text-sm font-black ${m.date ? 'text-white' : 'text-gray-400'}">${formattedDate || translations[currentLang].noTermLabel}</p>
-                                    <p class="text-xs text-orange-400 font-semibold">${m.time || '--:--'}</p>
-                                </div>
-                                <div class="truncate flex-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-lg font-bold ${nameColorClass}">${m.opponent}</span>
-                                        <span class="text-xs font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">${m.format}</span>
-                                        ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1 animate-pulse">${translations[currentLang].mustPlayLabel}</span>` : ''}
-                                        ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold">${m.week}</span>` : ''}
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1 truncate">🖥️ ${m.server} • 🏆 ${m.comp}</p>
-                                    ${m.notes ? `<p class="text-xs text-gray-400 mt-1 italic">📝 ${m.notes}</p>` : ''}
-                                </div>
+                            <div>
+                                <p class="text-sm font-black text-white">${m.date ? m.date : 'Bez termínu'}</p>
+                                <p class="text-lg font-bold">${m.opponent}</p>
                             </div>
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800">
-                                <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Nachholspiel">🔥</button>
-                                ${m.date ? `<button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="${translations[currentLang].tooltipGCal}">📅</button>` : ''}
-                                ${m.date ? `<button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>` : ''}
-                                <button onclick="toggleEditMatch(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipEdit}">✏️</button>
-                            </div>
+                            <button onclick="toggleEditMatch(${m.id})" class="text-orange-400">✏️</button>
                         `
                     }
-
-                    timelineBg.appendChild(card)
-
-                    if (isEditing) {
-                        const editDateEl = document.getElementById(`edit-date-${m.id}`)
-                        if (editDateEl) {
-                            setupDateInput(editDateEl)
-                            editDateEl.addEventListener('input', () => handleDatePlaceholder(editDateEl))
-                        }
-                    }
+                    container.appendChild(card)
                 })
-                container.appendChild(timelineBg)
-                return
-            }
-
-            Object.keys(grouped).forEach(serverName => {
-                const serverHtmlId = serverName.replace(/\s+/g, '-')
-                const isServerOpen = !closedStates[serverName]
-                const serverTotalMatches = Object.values(grouped[serverName]).flat().length
-
-                const serverEl = document.createElement("div")
-                serverEl.id = serverHtmlId
-                serverEl.className = "bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-lg"
-
-                serverEl.innerHTML = `
-                    <div class="bg-gray-855 p-4 flex justify-between items-center select-none border-b border-gray-800/40">
-                        <div class="flex items-center gap-3">
-                            <span onclick="toggleCollapse('${serverName}')" class="cursor-pointer text-gray-500 font-bold text-sm bg-gray-800 hover:bg-gray-750 p-1 px-2 rounded">
-                                ${isServerOpen ? '▲' : '▼'}
-                            </span>
-                            <h2 class="text-xl font-bold text-orange-500 flex items-center gap-2">
-                                🖥️ ${serverName} 
-                                <span class="text-xs font-normal bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">
-                                    ${serverTotalMatches}
-                                </span>
-                            </h2>
-                            <button onclick="editServerName('${serverName}')" class="text-gray-500 hover:text-orange-400 text-sm p-1 transition" title="${translations[currentLang].tooltipEditServer}">✏️</button>
-                            <button onclick="openLeagueDeleteModal('${serverName}')" class="text-gray-500 hover:text-red-400 text-sm p-1 transition" title="${translations[currentLang].tooltipDeleteLeagues}">🗑️</button>
-                        </div>
-                    </div>
-                `
-
-                if (isServerOpen) {
-                    const leaguesContainer = document.createElement("div")
-                    leaguesContainer.className = "p-4 space-y-4 bg-gray-900/50"
-
-                    if (Object.keys(grouped[serverName]).length === 0) {
-                        leaguesContainer.innerHTML = `<div class="text-center py-4 text-gray-600 text-sm">${translations[currentLang].serverLabelEmpty}</div>`
-                    }
-
-                    Object.keys(grouped[serverName]).forEach(compName => {
-                        const leagueHtmlId = `${serverHtmlId}-${compName.replace(/\s+/g, '-')}`
-                        const leagueStateKey = `${serverName}-${compName}`
-                        const isLeagueOpen = !closedStates[leagueStateKey]
-                        const compMatches = grouped[serverName][compName]
-
-                        compMatches.sort((a, b) => {
-                            if (!a.date && b.date) return 1
-                            if (a.date && !b.date) return -1
-                            return `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)
-                        })
-
-                        const maxWeekly = compMatches[0]?.maxWeekly || ""
-                        const finalDeadline = compMatches[0]?.finalDeadline || ""
-                        const discordUrl = compMatches[0]?.discordUrl || ""
-                        const webUrl = compMatches[0]?.webUrl || ""
-
-                        let formattedDeadline = ""
-                        if (finalDeadline) {
-                            const parts = finalDeadline.split("-")
-                            formattedDeadline = `${parts[2]}.${parts[1]}.`
-                        }
-
-                        let linksHtml = ""
-                        if (discordUrl || webUrl) {
-                            linksHtml = `
-                                <div class="flex items-center gap-1.5 ml-3">
-                                    ${discordUrl ? `<a href="${discordUrl}" target="_blank" title="Discord" class="bg-indigo-600/10 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-900/40 rounded p-1.5 transition flex items-center justify-center select-none">
-                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 127.14 96.36">
-                                            <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,121.71,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.92,53.87,53,48.8,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.2,45.92,96.07,53,91,65.69,84.69,65.69Z"/>
-                                        </svg>
-                                    </a>` : ""}
-                                    ${webUrl ? `<a href="${webUrl}" target="_blank" title="Web / Tabulka / Pravidla" class="bg-orange-600/10 hover:bg-orange-600/30 text-orange-400 border border-orange-900/40 rounded p-1 text-xs transition flex items-center justify-center select-none">🌐</a>` : ""}
-                                </div>
-                            `
-                        }
-
-                        let limitInfoHtml = ""
-                        if (maxWeekly || finalDeadline) {
-                            limitInfoHtml = `
-                                <div class="flex items-center gap-3 text-xs bg-gray-900 px-2.5 py-1 rounded border border-gray-800/80">
-                                    ${maxWeekly ? `<span><b class="text-orange-400">${translations[currentLang].lblMaxWeekly}</b> ${maxWeekly}</span>` : ""}
-                                    ${finalDeadline ? `<span><b class="text-orange-400">${translations[currentLang].lblDeadline}</b> ${formattedDeadline}</span>` : ""}
-                                </div>
-                            `
-                        }
-
-                        const leagueEl = document.createElement("div")
-                        leagueEl.id = leagueHtmlId
-                        leagueEl.className = "bg-gray-800/40 rounded-lg border border-gray-855 shadow-inner"
-
-                        leagueEl.innerHTML = `
-                            <div class="p-3 bg-gray-800/80 flex justify-between items-center rounded-t-lg select-none">
-                                <div class="flex items-center gap-2">
-                                    <span onclick="toggleCollapse('${leagueStateKey}')" class="cursor-pointer text-xs font-bold text-gray-400 bg-gray-900 hover:bg-gray-755 p-1 px-1.5 rounded">
-                                        ${isLeagueOpen ? '▲' : '▼'}
-                                    </span>
-                                    <h3 class="font-semibold text-gray-200 flex items-center gap-2">
-                                        🏆 ${compName}
-                                        <span class="text-xs bg-gray-900 text-gray-400 px-2 py-0.5 rounded-full">${compMatches.length}</span>
-                                    </h3>
-                                    <button onclick="editCompName('${serverName}', '${compName}')" class="text-gray-500 hover:text-orange-400 text-xs p-1 transition" title="${translations[currentLang].tooltipEditLeague}">✏️</button>
-                                    ${linksHtml}
-                                </div>
-                                ${limitInfoHtml}
-                            </div>
-                        `
-
-                        if (isLeagueOpen) {
-                            const matchesList = document.createElement("div")
-                            matchesList.className = "p-3 space-y-3 border-t border-gray-800 bg-gray-900/20"
-
-                            if (compMatches.length === 0) {
-                                matchesList.innerHTML = `
-                                    <div class="p-4 text-center border border-dashed border-gray-800 rounded-lg">
-                                        <p class="text-xs text-gray-500 mb-2">${currentLang === "cs" ? "Tato liga zatím nemá žádné zápasy." : "Diese Liga hat noch keine Spiele."}</p>
-                                        <button onclick="toggleForm('${serverName}', '${compName}')" class="text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 px-3 py-1.5 rounded-lg border border-orange-500/30 font-semibold transition">
-                                            + ${currentLang === "cs" ? "Přidat zápas do této ligy" : "Spiel zu dieser Liga hinzufügen"}
-                                        </button>
-                                    </div>
-                                `
-                            }
-
-                            compMatches.forEach(m => {
-                                const isEditing = editingMatchIds.has(m.id)
-                                const matchEl = document.createElement("div")
-
-                                let nameColorClass = "text-white"
-                                if (m.date) {
-                                    if (isCurrentCalendarWeek(m.date)) {
-                                        nameColorClass = "text-yellow-400"
-                                    } else if (m.confirmed) {
-                                        nameColorClass = "text-emerald-400"
-                                    } else {
-                                        nameColorClass = "text-red-400"
-                                    }
-                                }
-
-                                const isMatchCurrentWeekNeeded = !m.date && isWeekInPastOrCurrent(m.week)
-
-                                let formattedMatchDate = ""
-                                if (m.date && m.date.includes("-")) {
-                                    const parts = m.date.split("-")
-                                    formattedMatchDate = `${parseInt(parts[2])}.${parseInt(parts[1])}.`
-                                }
-
-                                if (isEditing) {
-                                    matchEl.className = "p-4 rounded-xl border bg-gray-800/90 border-orange-500/60 flex flex-col md:flex-row md:items-center justify-between gap-4 transition shadow-lg"
-                                    matchEl.innerHTML = `
-                                        <div class="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
-                                            <div class="flex-1 min-w-0 space-y-2">
-                                                <div class="flex items-center gap-2 flex-wrap">
-                                                    <span class="text-lg font-bold text-orange-400">${m.opponent}</span>
-                                                    <span class="text-xs font-medium text-gray-400 bg-gray-900 px-2 py-0.5 rounded">${m.format}</span>
-                                                    <input type="text" id="edit-week-${m.id}" value="${m.week || ''}" placeholder="${translations[currentLang].placeholderWeek}" class="bg-blue-950/60 text-blue-400 text-xs px-2 py-1 rounded border border-blue-900/50 font-semibold focus:outline-none focus:border-orange-500 w-28 text-center">
-                                                </div>
-                                                <input type="text" id="edit-notes-${m.id}" value="${m.notes || ''}" placeholder="${translations[currentLang].placeholderNote}" class="w-full max-w-md bg-gray-950 border border-gray-700 text-xs px-2.5 py-1.5 rounded text-gray-200 focus:outline-none focus:border-orange-500">
-                                            </div>
-                                            
-                                            <div class="flex items-center gap-2 flex-wrap">
-                                                <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Nachholspiel">🔥</button>
-                                                <input type="date" id="edit-date-${m.id}" value="${m.date}" class="bg-gray-900 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500 w-36 text-center">
-                                                <input type="time" id="edit-time-${m.id}" value="${m.time}" class="bg-gray-900 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500">
-                                                
-                                                <button onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="${translations[currentLang].tooltipCancelDate}">❌</button>
-                                                
-                                                <button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-2 justify-end border-t md:border-none pt-2 md:pt-0 border-gray-700/40">
-                                            <button onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 px-3 rounded-lg text-sm font-bold transition" title="${translations[currentLang].tooltipSave}">✔️</button>
-                                            <button onclick="toggleEditMatch(${m.id})" class="bg-gray-700 hover:bg-gray-600 text-gray-300 p-2 px-3 rounded-lg text-sm transition" title="${translations[currentLang].tooltipCancel}">↩️</button>
-                                            <button onclick="deleteMatch(${m.id})" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 p-2 px-2.5 rounded-lg text-sm font-semibold transition border border-red-900/40" title="${translations[currentLang].tooltipDelete}">🗑️</button>
-                                        </div>
-                                    `
-                                } else {
-                                    matchEl.className = "p-4 rounded-xl border bg-gray-800/60 border-gray-700/60 flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:border-gray-700"
-                                    matchEl.innerHTML = `
-                                        <div class="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex items-center gap-2 flex-wrap">
-                                                    <span class="text-lg font-bold ${nameColorClass}">${m.opponent}</span>
-                                                    <span class="text-xs font-medium text-gray-400 bg-gray-900 px-2 py-0.5 rounded">${m.format}</span>
-                                                    ${isMatchCurrentWeekNeeded ? `<span class="text-xs font-bold text-yellow-400 bg-yellow-950/60 px-2 py-0.5 rounded border border-yellow-800/80 flex items-center gap-1 animate-pulse" title="${translations[currentLang].warningNeedPlan}">${translations[currentLang].warningNeedPlan}</span>` : ''}
-                                                    ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1 animate-pulse">${translations[currentLang].mustPlayLabel}</span>` : ''}
-                                                    ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold">${m.week}</span>` : ''}
-                                                </div>
-                                                ${m.notes ? `<p class="text-xs text-gray-400 mt-1 italic">📝 ${m.notes}</p>` : ''}
-                                            </div>
-                                            
-                                            <div class="flex items-center gap-3 shrink-0">
-                                                ${m.date ? `
-                                                    <div class="bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-800 text-center">
-                                                        <span class="text-xs font-bold text-white">${formattedMatchDate}</span>
-                                                        <span class="text-xs text-orange-400 font-semibold ml-1.5">${m.time || '--:--'}</span>
-                                                        ${m.confirmed ? `<span class="ml-1 text-emerald-400 text-xs" title="Potvrzeno">👍</span>` : ''}
-                                                    </div>
-                                                    <button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="${translations[currentLang].tooltipGCal}">📅</button>
-                                                ` : `<span class="text-xs text-gray-500 italic">${translations[currentLang].noTermLabel}</span>`}
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-2 justify-end border-t md:border-none pt-2 md:pt-0 border-gray-700/40 shrink-0">
-                                            <button onclick="toggleEditMatch(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 p-2 px-3 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="${translations[currentLang].tooltipEdit}">
-                                                ✏️
-                                            </button>
-                                        </div>
-                                    `
-                                }
-
-                                matchesList.appendChild(matchEl)
-
-                                if (isEditing) {
-                                    const editDateEl = document.getElementById(`edit-date-${m.id}`)
-                                    if (editDateEl) {
-                                        setupDateInput(editDateEl)
-                                        editDateEl.addEventListener('input', () => handleDatePlaceholder(editDateEl))
-                                    }
-                                }
-                            })
-                            leagueEl.appendChild(matchesList)
-                        } else {
-                            const dotSummary = document.createElement("div")
-                            dotSummary.className = "px-3 py-1.5 bg-gray-900/10 flex gap-1.5 flex-wrap rounded-b-lg border-t border-gray-800/40"
-                            compMatches.forEach(m => {
-                                let dotColor = "bg-red-500"
-                                if (m.date) {
-                                    if (isCurrentCalendarWeek(m.date)) {
-                                        dotColor = "bg-yellow-500"
-                                    } else {
-                                        dotColor = m.confirmed ? "bg-emerald-500" : "bg-red-500"
-                                    }
-                                }
-                                const dot = document.createElement("span")
-                                dot.className = `w-2 h-2 rounded-full ${dotColor}`
-                                dot.title = `${m.opponent} (${m.date ? (m.confirmed ? 'Potvrzeno' : 'Nepotvrzeno') : 'Bez termínu'})`
-                                dotSummary.appendChild(dot)
-                            })
-                            leagueEl.appendChild(dotSummary)
-                        }
-                        leaguesContainer.appendChild(leagueEl)
-                    })
-                    serverEl.appendChild(leaguesContainer)
-                }
-                container.appendChild(serverEl)
-            })
-
-            if (Object.keys(grouped).length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-gray-500">${translations[currentLang].noServersLabel}</div>`
             }
         }
 
-        document.getElementById("formFinalDeadline").addEventListener('input', function() { handleDatePlaceholder(this); })
-        document.getElementById("formBulkStartDate").addEventListener('input', function() { handleDatePlaceholder(this); })
+        function saveMatchEdit(id) {
+            const match = matches.find(m => m.id === id)
+            if (match) {
+                const d = document.getElementById(`edit-date-${id}`)
+                const t = document.getElementById(`edit-time-${id}`)
+                if(d) match.date = d.value
+                if(t) match.time = t.value
+                editingMatchIds.delete(id)
+                save()
+            }
+        }
+        
+        // Inicializace filtrů při startu
+        function initFilters() {
+            const servers = [...new Set(matches.map(m => m.server))]
+            const fS = document.getElementById("filterServer")
+            servers.forEach(s => fS.innerHTML += `<option value="${s}">${s}</option>`)
+        }
 
-        translateUI()
+        initFilters()
         render()
     </script>
 </body>
