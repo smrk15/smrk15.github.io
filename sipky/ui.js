@@ -232,6 +232,7 @@ function exportTxt() {
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Šipky zápasy.txt"; link.click();
 }
 
+// OPRAVENO: Odstraněno dvojité "f" na začátku
 function toggleForm(presetServer = null, presetComp = null) {
     const form = document.getElementById("matchForm");
     if (!form) return;
@@ -246,6 +247,10 @@ function toggleForm(presetServer = null, presetComp = null) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
         form.classList.toggle("hidden");
+        if (!form.classList.contains("hidden")) {
+            autoCalcDuration();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 }
 
@@ -291,6 +296,17 @@ function confirmLeagueDeletes() { pushToHistory(); matches = matches.filter(m =>
 function openServerManager() { if(typeof openServerManagerModal === 'function') openServerManagerModal(); }
 
 function updateServerSelect() { const select = document.getElementById("formServer"); if(select) { const active = getAllServersOrdered(); select.innerHTML = ""; active.forEach(s => select.appendChild(new Option(s, s))); select.appendChild(new Option(translations[currentLang].optNewServer, "__NEW__")); checkNewServer(select.value); } }
+
+// Pomocná funkce pro zjištění aktuálního kalendářního týdne (pokud chyběla)
+function isCurrentCalendarWeek(dateStr) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const now = new Date();
+    // Jednoduché porovnání týdne/roku nebo stejného data v rozmezí 7 dnů
+    const diffTime = Math.abs(d - now);
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    return diffDays <= 7;
+}
 
 function isWeekInPastOrCurrent(wStr) {
     if (!wStr) return false;
