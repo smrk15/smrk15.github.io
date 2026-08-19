@@ -29,16 +29,16 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             </button>
             
-            <!-- Export TXT -->
-            <button onclick="exportTxt()" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-blue-400 flex items-center justify-center transition cursor-pointer" title="Export TXT">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            </button>
-
-            <!-- Import TXT -->
+       <!-- Import TXT -->
             <label class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-emerald-400 flex items-center justify-center transition cursor-pointer" title="Import TXT">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <input type="file" accept=".txt" onchange="importTxt(event)" class="hidden">
             </label>
+
+            <!-- Export TXT -->
+            <button onclick="exportTxt()" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-blue-400 flex items-center justify-center transition cursor-pointer" title="Export TXT">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            </button>
 
             <!-- Nastavení / Servery -->
             <button onclick="openServerManager()" id="btnManageIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 flex items-center justify-center transition cursor-pointer" title="Spravovat servery">
