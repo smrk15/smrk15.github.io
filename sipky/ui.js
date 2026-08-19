@@ -232,7 +232,7 @@ function exportTxt() {
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Šipky zápasy.txt"; link.click();
 }
 
-ffunction toggleForm(presetServer = null, presetComp = null) {
+function toggleForm(presetServer = null, presetComp = null) {
     const form = document.getElementById("matchForm");
     if (!form) return;
     
