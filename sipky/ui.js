@@ -76,9 +76,41 @@ function calculateDurationMinutes(formatStr) {
     return 60;
 }
 
-function toggleMustPlay(id) { pushToHistory(); const match = matches.find(m => m.id === id); if (match) { match.mustPlay = !match.mustPlay; save(); } }
+function toggleMustPlay(id) { 
+    pushToHistory(); 
+    const match = matches.find(m => m.id === id); 
+    if (match) { 
+        match.mustPlay = !match.mustPlay; 
+        save(); 
+    } 
+}
 
-function toggleConfirmed(id) { pushToHistory(); const match = matches.find(m => m.id === id); if (match) { match.confirmed = !match.confirmed; save(); } }
+function toggleConfirmed(id) { 
+    pushToHistory(); 
+    const match = matches.find(m => m.id === id); 
+    if (match) { 
+        match.confirmed = !match.confirmed; 
+        save(); 
+    } 
+}
+
+function deleteMatch(id) {
+    if (confirm("Opravdu smazat tento zápas?")) {
+        pushToHistory();
+        matches = matches.filter(m => m.id !== id);
+        editingMatchIds.delete(id);
+        save();
+    }
+}
+
+function quickDeleteMatch(id) {
+    if (confirm("Zapsat jako odehrané a smazat ze seznamu?")) {
+        pushToHistory();
+        matches = matches.filter(m => m.id !== id);
+        editingMatchIds.delete(id);
+        save();
+    }
+}
 
 function toggleEditMatch(id) {
     if (editingMatchIds.has(id)) { editingMatchIds.delete(id); } else { editingMatchIds.add(id); }
@@ -351,6 +383,11 @@ function render() {
             if (m.date && m.date.includes("-")) { const parts = m.date.split("-"); formattedDate = `${parseInt(parts[2])}.${parseInt(parts[1])}.`; }
             let nameColorClass = m.date ? (isCurrentCalendarWeek(m.date) ? "text-yellow-400" : (m.confirmed ? "text-emerald-400" : "text-red-400")) : "text-white";
             
+            // Pokud je zápas označený jako mustPlay (odložený/dohrávka), termín se zvýrazní červeně, ale zůstane viditelný
+            let dateBoxStyle = m.mustPlay 
+                ? "bg-red-950/80 border-red-600 text-red-400" 
+                : "bg-gray-800 border-gray-700 text-white";
+
             if (isEditing) {
                 card.className = "bg-gray-900 p-4 rounded-xl border border-orange-500/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg";
                 card.innerHTML = `
@@ -375,15 +412,16 @@ function render() {
                         <button type="button" onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="Vymazat termín">❌</button>
                         <button type="button" onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-800 text-gray-500 border-gray-700 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>
                         <button type="button" onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 px-3 rounded-lg text-sm font-bold transition" title="${translations[currentLang].tooltipSave}">✔️</button>
+                        <button type="button" onclick="deleteMatch(${m.id})" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-900/40 p-2 px-2.5 rounded-lg text-sm font-semibold transition" title="${translations[currentLang].tooltipDelete}">🗑️</button>
                     </div>
                 `;
             } else {
                 card.innerHTML = `
                     <div class="flex items-center gap-4 flex-1">
-                        <div onclick="toggleEditMatch(${m.id})" class="bg-gray-800 hover:bg-gray-750 cursor-pointer px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px] transition group" title="Kliknutím upravit">
-                            <p class="text-[10px] text-gray-400 uppercase font-bold group-hover:text-orange-400 transition">${translations[currentLang].termLabel}</p>
-                            <p class="text-sm font-black ${m.date ? 'text-white' : 'text-gray-400'}">${formattedDate || translations[currentLang].noTermLabel}</p>
-                            <p class="text-xs text-orange-400 font-semibold">${m.time || '--:--'}</p>
+                        <div onclick="toggleEditMatch(${m.id})" class="${dateBoxStyle} cursor-pointer px-3 py-2 rounded-lg border text-center shrink-0 min-w-[85px] transition group" title="Kliknutím upravit">
+                            <p class="text-[10px] uppercase font-bold opacity-80">${translations[currentLang].termLabel}</p>
+                            <p class="text-sm font-black">${formattedDate || translations[currentLang].noTermLabel}</p>
+                            <p class="text-xs font-semibold">${m.time || '--:--'}</p>
                         </div>
                         <div class="truncate flex-1">
                             <div class="flex items-center gap-2 flex-wrap">
@@ -401,6 +439,7 @@ function render() {
                         <button type="button" onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Nachholspiel">🔥</button>
                         ${m.date ? `<button type="button" onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="${translations[currentLang].tooltipGCal}">📅</button>` : ''}
                         ${m.date ? `<button type="button" onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>` : ''}
+                        <button type="button" onclick="quickDeleteMatch(${m.id})" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 p-2 rounded-lg text-xs font-semibold transition" title="Rychle uzavřít / smazat odehraný zápas">✅</button>
                         <button type="button" onclick="toggleEditMatch(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipEdit}">✏️</button>
                     </div>
                 `;
