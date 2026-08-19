@@ -259,7 +259,6 @@ function updateServerSelect() {
     } 
 }
 
-// CHYBĚJÍCÍ FUNKCE, KTERÁ ZPŮSOBOVALA ČERNOU OBRAZOVKU:
 function getFullGroupedData() {
     const grouped = {};
     const allServers = getAllServersOrdered();
@@ -391,6 +390,7 @@ function render() {
                                 <span class="text-lg font-bold ${nameColorClass}">${m.opponent}</span>
                                 <span class="text-xs font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">${m.format}</span>
                                 ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1">${translations[currentLang].mustPlayLabel}</span>` : ''}
+                                ${!m.date && m.week && isWeekInPastOrCurrent(m.week) ? `<span class="text-xs font-bold text-yellow-500 bg-yellow-950/40 px-2 py-0.5 rounded border border-yellow-800 flex items-center gap-1">⚠️</span>` : ''}
                                 ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold">${m.week}</span>` : ''}
                             </div>
                             <p class="text-xs text-gray-500 mt-1 truncate">🖥️ ${m.server} • 🏆 ${m.comp}</p>
@@ -435,7 +435,6 @@ function render() {
                     </div>
                 `;
 
-                // PŘIDÁNO: Barevné tečky u lig
                 let dotsHtml = `<div class="flex flex-wrap gap-1 px-1 py-1">`;
                 compMatches.forEach(m => {
                     let dotColor = m.date ? "bg-yellow-500" : "bg-red-500";
@@ -452,8 +451,16 @@ function render() {
                         mDiv.className = "bg-gray-900 p-3 rounded border border-gray-800 flex justify-between items-center";
                         let formattedMatchDate = m.date ? `${parseInt(m.date.split('-')[2])}.${parseInt(m.date.split('-')[1])}.` : translations[currentLang].noTermLabel;
 
+                        let statusIconHTML = "";
+                        if (m.mustPlay) {
+                            statusIconHTML = `<span class="text-xs text-red-400 font-bold mr-2" title="Dohrávka">🔥</span>`;
+                        } else if (!m.date && m.week && isWeekInPastOrCurrent(m.week)) {
+                            statusIconHTML = `<span class="text-xs text-yellow-500 font-bold mr-2" title="Nutno naplánovat">⚠️</span>`;
+                        }
+
                         mDiv.innerHTML = `
                             <div class="flex items-center">
+                                ${statusIconHTML}
                                 <span class="font-bold text-white">${m.opponent}</span>
                                 <span class="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-0.5 rounded">${m.format}</span>
                                 ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold ml-2">${m.week}</span>` : ''}
