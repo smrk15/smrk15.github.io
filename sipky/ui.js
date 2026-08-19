@@ -192,7 +192,6 @@ function openGoogleCalendar(id) {
     window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}`, '_blank');
 }
 
-// Funkce pro Import a Export TXT souborů
 function importTxt(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -248,7 +247,7 @@ function parseTxtData(textText) {
             newMatches.push({ id: Date.now() + (bIdx * 100) + mIdx, server, comp: compFull, opponent, format, duration, type: week ? "fixed" : "flexi", week, date, time, confirmed, mustPlay, status: date ? "scheduled" : "unscheduled", notes, maxWeekly: "", finalDeadline: "", discordUrl, webUrl });
         });
     });
-    if (newMatches.length > 0) { matches = newMatches; save(); alert("TXT načten!"); closeServerManagerModal(); }
+    if (newMatches.length > 0) { matches = newMatches; save(); alert("TXT načten!"); }
 }
 
 function exportTxt() {
@@ -401,7 +400,7 @@ function confirmLeagueDeletes() {
     render(); 
 }
 
-// Správa serverů přes horní ikonku ozubeného kola (⚙️)
+// Správa serverů pod ozubeným kolem (⚙️) bez zbytečného importu/exportu
 function openServerManager() {
     let modal = document.getElementById("serverManagerModal");
     if (!modal) {
@@ -432,7 +431,7 @@ function openServerManager() {
     modal.innerHTML = `
         <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                <h3 class="text-lg font-bold text-orange-500">⚙️ Správa serverů & Data</h3>
+                <h3 class="text-lg font-bold text-orange-500">⚙️ Správa serverů</h3>
                 <button type="button" onclick="closeServerManagerModal()" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
             </div>
             
@@ -441,14 +440,8 @@ function openServerManager() {
                 ${serversHtml || '<p class="text-xs text-gray-500">Žádné servery.</p>'}
             </div>
 
-            <div class="border-t border-gray-800 pt-4 flex flex-col sm:flex-row gap-2 justify-between items-center">
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button type="button" onclick="exportTxt()" class="flex-1 sm:flex-none px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold transition">📤 Export TXT</button>
-                    <label class="flex-1 sm:flex-none px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold transition cursor-pointer text-center">
-                        📥 Import TXT <input type="file" accept=".txt" onchange="importTxt(event)" class="hidden">
-                    </label>
-                </div>
-                <button type="button" onclick="closeServerManagerModal()" class="w-full sm:w-auto px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold">Zavřít</button>
+            <div class="border-t border-gray-800 pt-4 flex justify-end">
+                <button type="button" onclick="closeServerManagerModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold">Zavřít</button>
             </div>
         </div>
     `;
