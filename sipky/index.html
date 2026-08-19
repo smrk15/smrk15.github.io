@@ -407,6 +407,15 @@
             }
         }
 
+        function toggleConfirmed(id) {
+            pushToHistory()
+            const match = matches.find(m => m.id === id)
+            if (match) {
+                match.confirmed = !match.confirmed
+                save()
+            }
+        }
+
         function toggleEditMatch(id) {
             if (editingMatchIds.has(id)) {
                 editingMatchIds.delete(id)
@@ -743,6 +752,17 @@
                 const isHidden = hiddenServers.includes(server)
                 list.innerHTML += `<div class="bg-gray-855 p-3 rounded-lg border border-gray-800 flex items-center justify-between gap-3"><div class="flex items-center gap-2"><div class="flex flex-col"><button onclick="moveServerOrder('${server}', -1)">▲</button><button onclick="moveServerOrder('${server}', 1)">▼</button></div><span class="font-bold">${server}</span></div><div class="flex items-center gap-2"><button onclick="editServerName('${server}')" class="text-xs text-orange-400">✏️</button><label class="text-xs"><input type="checkbox" onchange="toggleServerHide('${server}')" ${isHidden ? 'checked' : ''}> Skrýt</label><button onclick="confirmDeleteServer('${server}')" class="text-xs text-red-400">Smazat</button></div></div>`
             })
+            document.getElementById("serverManagerManagerModal").classList.remove("hidden") // Opraveno volání modal ID níže
+        }
+
+        // Oprava překlepu v modalu
+        function openServerManager() {
+            const list = document.getElementById("serverManagerList")
+            list.innerHTML = ""
+            getAllServersOrdered().forEach((server, idx) => {
+                const isHidden = hiddenServers.includes(server)
+                list.innerHTML += `<div class="bg-gray-855 p-3 rounded-lg border border-gray-800 flex items-center justify-between gap-3"><div class="flex items-center gap-2"><div class="flex flex-col"><button onclick="moveServerOrder('${server}', -1)">▲</button><button onclick="moveServerOrder('${server}', 1)">▼</button></div><span class="font-bold">${server}</span></div><div class="flex items-center gap-2"><button onclick="editServerName('${server}')" class="text-xs text-orange-400">✏️</button><label class="text-xs"><input type="checkbox" onchange="toggleServerHide('${server}')" ${isHidden ? 'checked' : ''}> Skrýt</label><button onclick="confirmDeleteServer('${server}')" class="text-xs text-red-400">Smazat</button></div></div>`
+            })
             document.getElementById("serverManagerModal").classList.remove("hidden")
         }
 
@@ -780,11 +800,19 @@
             return startOfWeek(now) === startOfWeek(d)
         }
 
+        // SPRÁVNÉ POROVNÁVÁNÍ VČETNĚ ROKU (vyřeší bug s lednem příštího roku)
         function isWeekInPastOrCurrent(wStr) {
             if (!wStr) return false
             const match = wStr.match(/(\d{1,2})\.(\d{1,2})\./)
             if (!match) return false
-            const ws = new Date(new Date().getFullYear(), parseInt(match[2])-1, parseInt(match[1]))
+            let year = new Date().getFullYear()
+            const targetMonth = parseInt(match[2]) - 1
+            const currentMonth = new Date().getMonth()
+            // Pokud jsme v prosinci a týden je v lednu, patří do příštího roku
+            if (currentMonth === 11 && targetMonth === 0) {
+                year += 1
+            }
+            const ws = new Date(year, targetMonth, parseInt(match[1]))
             return new Date() >= ws
         }
 
@@ -849,6 +877,7 @@
             return grouped
         }
 
+        // RENDER SIDEBAR S IKONKOU STAVU LIGY
         function renderSidebar(grouped) {
             const nav = document.getElementById("sidebarNav"); nav.innerHTML = ""
             Object.keys(grouped).forEach(serverName => {
@@ -856,8 +885,15 @@
                 sDiv.innerHTML = `<div onclick="scrollToElement('${serverName.replace(/\s+/g, '-')}')" class="text-sm font-bold text-orange-400 cursor-pointer truncate">🖥️ ${serverName}</div>`
                 const ul = document.createElement("ul"); ul.className = "pl-3 border-l border-gray-800 space-y-1 mt-0.5"
                 Object.keys(grouped[serverName]).forEach(compName => {
-                    const li = document.createElement("li"); li.className = "text-xs text-gray-400 hover:text-white cursor-pointer truncate"
-                    li.innerText = `🏆 ${compName}`
+                    const compMatches = grouped[serverName][compName]
+                    let hasMustPlay = compMatches.some(m => m.mustPlay)
+                    let hasWarning = compMatches.some(m => !m.date && m.week && isWeekInPastOrCurrent(m.week))
+                    let icon = "🏆"
+                    if (hasMustPlay) icon = "🔥"
+                    else if (hasWarning) icon = "⚠️"
+
+                    const li = document.createElement("li"); li.className = "text-xs text-gray-400 hover:text-white cursor-pointer truncate flex items-center gap-1.5"
+                    li.innerHTML = `<span>${icon}</span> <span class="truncate">${compName}</span>`
                     li.onclick = (e) => { e.stopPropagation(); scrollToElement(`${serverName.replace(/\s+/g, '-')}-${compName.replace(/\s+/g, '-')}`); }
                     ul.appendChild(li)
                 })
@@ -871,7 +907,6 @@
             renderSidebar(grouped)
             updateServerSelect()
 
-            // Update filtrů
             const fS = document.getElementById("filterServer"), fC = document.getElementById("filterComp")
             const curS = fS.value, curC = fC.value
             fS.innerHTML = `<option value="all">Všechny servery</option>`
@@ -982,49 +1017,61 @@
                 return
             }
 
+            // HLAVNÍ ZOBRAZENÍ DOMŮ S MOŽNOSTÍ SBALOVÁNÍ
             Object.keys(grouped).forEach(serverName => {
                 const sEl = document.createElement("div"); sEl.id = serverName.replace(/\s+/g, '-'); sEl.className = "bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 shadow-lg"
                 sEl.innerHTML = `<h2 class="text-xl font-bold text-orange-500 flex justify-between items-center"><span>🖥️ ${serverName}</span><div class="flex gap-2"><button onclick="editServerName('${serverName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button><button onclick="openLeagueDeleteModal('${serverName}')" class="text-xs text-red-400">🗑️</button></div></h2>`
 
                 Object.keys(grouped[serverName]).forEach(compName => {
                     const compMatches = grouped[serverName][compName]
+                    const collapseKey = `${serverName}__${compName}`
+                    const isClosed = closedStates[collapseKey] || false
+
                     const lEl = document.createElement("div"); lEl.id = `${sEl.id}-${compName.replace(/\s+/g, '-')}`; lEl.className = "bg-gray-850 p-3 rounded-lg border border-gray-800 space-y-2"
                     lEl.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-gray-200">🏆 ${compName} <span class="text-xs bg-gray-900 px-2 py-0.5 rounded text-gray-400">${compMatches.length}</span></h3>
-                            <div class="flex gap-2">
+                        <div class="flex justify-between items-center cursor-pointer select-none" onclick="toggleCollapse('${collapseKey}')">
+                            <h3 class="font-semibold text-gray-200 flex items-center gap-2">
+                                <span class="text-xs text-orange-400">${isClosed ? '▶' : '▼'}</span>
+                                🏆 ${compName} <span class="text-xs bg-gray-900 px-2 py-0.5 rounded text-gray-400">${compMatches.length}</span>
+                            </h3>
+                            <div class="flex gap-2" onclick="event.stopPropagation()">
                                 <button onclick="editCompName('${serverName}', '${compName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button>
                                 <button onclick="toggleForm('${serverName}', '${compName}')" class="text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 px-2.5 py-1 rounded border border-orange-500/30">${translations[currentLang].btnAddMatchToLeague}</button>
                             </div>
                         </div>
                     `
-                    compMatches.forEach(m => {
-                        const mDiv = document.createElement("div")
-                        mDiv.className = "bg-gray-900 p-3 rounded border border-gray-800 flex justify-between items-center"
-                        let formattedMatchDate = m.date ? `${parseInt(m.date.split('-')[2])}.${parseInt(m.date.split('-')[1])}.` : translations[currentLang].noTermLabel
-                        
-                        // Logika pro zobrazení ikonky plamínku nebo varování v seznamu lig
-                        let statusIconHTML = ""
-                        if (m.mustPlay) {
-                            statusIconHTML = `<span class="text-xs text-red-400 font-bold mr-2" title="Dohrávka">🔥</span>`
-                        } else if (!m.date && m.week && isWeekInPastOrCurrent(m.week)) {
-                            statusIconHTML = `<span class="text-xs text-yellow-500 font-bold mr-2" title="Nutno naplánovat">⚠️</span>`
-                        }
 
-                        mDiv.innerHTML = `
-                            <div class="flex items-center">
-                                ${statusIconHTML}
-                                <span class="font-bold text-white">${m.opponent}</span>
-                                <span class="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-0.5 rounded">${m.format}</span>
-                                ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold ml-2">${m.week}</span>` : ''}
-                            </div>
-                            <div class="flex gap-3 items-center">
-                                <span class="text-xs font-semibold ${m.date ? 'text-white' : 'text-gray-500'}">${formattedMatchDate} ${m.time || ''}</span>
-                                <button onclick="toggleEditMatch(${m.id})" class="text-xs bg-orange-600/10 text-orange-400 px-2 py-1 rounded border border-orange-500/30">✏️</button>
-                            </div>
-                        `
-                        lEl.appendChild(mDiv)
-                    })
+                    if (!isClosed) {
+                        const matchesContainer = document.createElement("div")
+                        matchesContainer.className = "space-y-2 mt-2"
+                        compMatches.forEach(m => {
+                            const mDiv = document.createElement("div")
+                            mDiv.className = "bg-gray-900 p-3 rounded border border-gray-800 flex justify-between items-center"
+                            let formattedMatchDate = m.date ? `${parseInt(m.date.split('-')[2])}.${parseInt(m.date.split('-')[1])}.` : translations[currentLang].noTermLabel
+                            
+                            let statusIconHTML = ""
+                            if (m.mustPlay) {
+                                statusIconHTML = `<span class="text-xs text-red-400 font-bold mr-2" title="Dohrávka">🔥</span>`
+                            } else if (!m.date && m.week && isWeekInPastOrCurrent(m.week)) {
+                                statusIconHTML = `<span class="text-xs text-yellow-500 font-bold mr-2" title="Nutno naplánovat">⚠️</span>`
+                            }
+
+                            mDiv.innerHTML = `
+                                <div class="flex items-center">
+                                    ${statusIconHTML}
+                                    <span class="font-bold text-white">${m.opponent}</span>
+                                    <span class="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-0.5 rounded">${m.format}</span>
+                                    ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold ml-2">${m.week}</span>` : ''}
+                                </div>
+                                <div class="flex gap-3 items-center">
+                                    <span class="text-xs font-semibold ${m.date ? 'text-white' : 'text-gray-500'}">${formattedMatchDate} ${m.time || ''}</span>
+                                    <button onclick="toggleEditMatch(${m.id})" class="text-xs bg-orange-600/10 text-orange-400 px-2 py-1 rounded border border-orange-500/30">✏️</button>
+                                </div>
+                            `
+                            matchesContainer.appendChild(mDiv)
+                        })
+                        lEl.appendChild(matchesContainer)
+                    }
                     sEl.appendChild(lEl)
                 })
                 container.appendChild(sEl)
