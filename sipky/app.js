@@ -567,7 +567,6 @@ function isCurrentCalendarWeek(dStr) {
     return startOfWeek(now) === startOfWeek(d);
 }
 
-// SPRÁVNÉ POROVNÁVÁNÍ TÝDNŮ VČETNĚ ROZHODOVÁNÍ PRO PŘÍŠTÍ ROK
 function isWeekInPastOrCurrent(wStr) {
     if (!wStr) return false;
     const match = wStr.match(/(\d{1,2})\.(\d{1,2})\./);
@@ -575,7 +574,6 @@ function isWeekInPastOrCurrent(wStr) {
     let year = new Date().getFullYear();
     const targetMonth = parseInt(match[2]) - 1;
     const currentMonth = new Date().getMonth();
-    // Pokud jsme v prosinci a týden je v lednu, patří do příštího roku
     if (currentMonth === 11 && targetMonth === 0) {
         year += 1;
     }
@@ -626,6 +624,13 @@ function deleteMatch(id) {
     }
 }
 
+// RYCHLÉ SMAZÁNÍ ODEHRANÉHO ZÁPASU JEDNÍM KLIKNUTÍM (v Aktuálních zápasech)
+function quickDeleteMatch(id) {
+    pushToHistory();
+    matches = matches.filter(m => m.id !== id);
+    save();
+}
+
 function getFullGroupedData() {
     const grouped = {};
     getAllServersOrdered().forEach(s => { if (!hiddenServers.includes(s)) grouped[s] = {}; });
@@ -644,7 +649,6 @@ function getFullGroupedData() {
     return grouped;
 }
 
-// IKONKA STAVU V LEVÉM MENU ZA NÁZVEM LIGY
 function renderSidebar(grouped) {
     const nav = document.getElementById("sidebarNav"); nav.innerHTML = "";
     Object.keys(grouped).forEach(serverName => {
@@ -767,6 +771,7 @@ function render() {
                         <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Nachholspiel">🔥</button>
                         ${m.date ? `<button onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="${translations[currentLang].tooltipGCal}">📅</button>` : ''}
                         ${m.date ? `<button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>` : ''}
+                        <button onclick="quickDeleteMatch(${m.id})" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 p-2 rounded-lg text-xs font-semibold transition" title="Rychle uzavřít / smazat odehraný zápas">✅</button>
                         <button onclick="toggleEditMatch(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipEdit}">✏️</button>
                     </div>
                 `;
@@ -784,7 +789,7 @@ function render() {
         return;
     }
 
-    // HLAVNÍ ZOBRAZENÍ DOMŮ S FUNKČNÍM SBALOVÁNÍM A IKONKAMI
+    // HLAVNÍ ZOBRAZENÍ DOMŮ S BAREVNÝMI TEČKAMI U LIG (Červená = bez termínu, Žlutá = domluvené/s termínem)
     Object.keys(grouped).forEach(serverName => {
         const sEl = document.createElement("div"); sEl.id = serverName.replace(/\s+/g, '-'); sEl.className = "bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 shadow-lg";
         sEl.innerHTML = `<h2 class="text-xl font-bold text-orange-500 flex justify-between items-center"><span>🖥️ ${serverName}</span><div class="flex gap-2"><button onclick="editServerName('${serverName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button><button onclick="openLeagueDeleteModal('${serverName}')" class="text-xs text-red-400">🗑️</button></div></h2>`;
@@ -794,16 +799,32 @@ function render() {
             const collapseKey = `${serverName}__${compName}`;
             const isClosed = closedStates[collapseKey] || false;
 
+            // Spočítáme zbývající (bez termínu) a domluvené (s termínem)
+            let unscheduledCount = compMatches.filter(m => !m.date).length;
+            let scheduledCount = compMatches.filter(m => m.date).length;
+
+            let badgesHTML = `<div class="flex items-center gap-1.5 text-xs">`;
+            if (unscheduledCount > 0) {
+                badgesHTML += `<span class="bg-red-950/80 text-red-400 border border-red-900/60 px-2 py-0.5 rounded-full font-bold" title="Zbývá zápasů bez termínu">${unscheduledCount}</span>`;
+            }
+            if (scheduledCount > 0) {
+                badgesHTML += `<span class="bg-yellow-950/80 text-yellow-400 border border-yellow-900/60 px-2 py-0.5 rounded-full font-bold" title="Domluvené zápasy">${scheduledCount}</span>`;
+            }
+            badgesHTML += `<span class="bg-gray-900 px-2 py-0.5 rounded text-gray-400 ml-1">${compMatches.length}</span></div>`;
+
             const lEl = document.createElement("div"); lEl.id = `${sEl.id}-${compName.replace(/\s+/g, '-')}`; lEl.className = "bg-gray-850 p-3 rounded-lg border border-gray-800 space-y-2";
             lEl.innerHTML = `
                 <div class="flex justify-between items-center cursor-pointer select-none" onclick="toggleCollapse('${collapseKey}')">
                     <h3 class="font-semibold text-gray-200 flex items-center gap-2">
                         <span class="text-xs text-orange-400">${isClosed ? '▶' : '▼'}</span>
-                        🏆 ${compName} <span class="text-xs bg-gray-900 px-2 py-0.5 rounded text-gray-400">${compMatches.length}</span>
+                        🏆 ${compName} 
                     </h3>
-                    <div class="flex gap-2" onclick="event.stopPropagation()">
-                        <button onclick="editCompName('${serverName}', '${compName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button>
-                        <button onclick="toggleForm('${serverName}', '${compName}')" class="text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 px-2.5 py-1 rounded border border-orange-500/30">${translations[currentLang].btnAddMatchToLeague}</button>
+                    <div class="flex items-center gap-3">
+                        ${badgesHTML}
+                        <div class="flex gap-2" onclick="event.stopPropagation()">
+                            <button onclick="editCompName('${serverName}', '${compName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button>
+                            <button onclick="toggleForm('${serverName}', '${compName}')" class="text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 px-2.5 py-1 rounded border border-orange-500/30">${translations[currentLang].btnAddMatchToLeague}</button>
+                        </div>
                     </div>
                 </div>
             `;
