@@ -104,6 +104,18 @@ function toggleEditMatch(id) {
     render();
 }
 
+// Při kliknutí na tužku v hlavním zobrazení přepne do Aktuálních zápasů a otevře úpravu
+function editMatchFromHome(id) {
+    if (!editingMatchIds.has(id)) {
+        editingMatchIds.add(id);
+    }
+    setView("timeline");
+    setTimeout(() => {
+        const el = document.getElementById(`match-card-${id}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+}
+
 function clearMatchDateInEdit(id) {
     const dateEl = document.getElementById(`edit-date-${id}`);
     const timeEl = document.getElementById(`edit-time-${id}`);
@@ -287,12 +299,18 @@ function exportTxt() {
 
 function toggleForm(presetServer = null, presetComp = null) {
     const form = document.getElementById("matchForm");
-    form.classList.toggle("hidden");
-    if (!form.classList.contains("hidden")) {
-        if (presetServer) { document.getElementById("formServer").value = presetServer; checkNewServer(presetServer); }
-        if (presetComp) document.getElementById("formComp").value = presetComp;
-        autoCalcDuration();
-        // Automaticky scrollne nahoru k formuláři
+    if (form.classList.contains("hidden")) {
+        form.classList.remove("hidden");
+    }
+    if (presetServer) { document.getElementById("formServer").value = presetServer; checkNewServer(presetServer); }
+    if (presetComp) document.getElementById("formComp").value = presetComp;
+    autoCalcDuration();
+
+    // Plynulý scroll přímo k formuláři
+    const mainArea = document.querySelector("main");
+    if (mainArea) {
+        mainArea.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
@@ -562,7 +580,8 @@ function render() {
     fC.value = curC;
 
     if (currentView === "timeline") {
-        let timelineMatches = matches.filter(m => (m.date || m.mustPlay) && !hiddenServers.includes(m.server));
+        // Zobrazí všechny zápasy, které mají termín NEBO příznak "mustPlay", NEBO jsou právě v režimu editace
+        let timelineMatches = matches.filter(m => (m.date || m.mustPlay || editingMatchIds.has(m.id)) && !hiddenServers.includes(m.server));
         if (fS.value !== "all") timelineMatches = timelineMatches.filter(m => m.server === fS.value);
         if (fC.value !== "all") timelineMatches = timelineMatches.filter(m => m.comp === fC.value);
 
@@ -575,6 +594,7 @@ function render() {
 
         timelineMatches.forEach(m => {
             const card = document.createElement("div"), isEditing = editingMatchIds.has(m.id);
+            card.id = `match-card-${m.id}`;
             card.className = "bg-gray-900 p-4 rounded-xl border border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4";
             
             let formattedDate = m.date;
@@ -714,7 +734,7 @@ function render() {
                         </div>
                         <div class="flex gap-3 items-center">
                             <span class="text-xs font-semibold ${m.date ? 'text-white' : 'text-gray-500'}">${formattedMatchDate} ${m.time || ''}</span>
-                            <button onclick="toggleEditMatch(${m.id})" class="text-xs bg-orange-600/10 text-orange-400 px-2 py-1 rounded border border-orange-500/30">✏️</button>
+                            <button onclick="editMatchFromHome(${m.id})" class="text-xs bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 px-2 py-1 rounded border border-orange-500/30" title="Upravit zápas">✏️</button>
                         </div>
                     `;
                     matchesContainer.appendChild(mDiv);
