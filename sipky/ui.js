@@ -517,6 +517,7 @@ function renderSidebar(grouped) {
         const sDiv = document.createElement("div"); sDiv.className = "space-y-1";
         sDiv.innerHTML = `<div onclick="scrollToElement('${serverName.replace(/\s+/g, '-')}')" class="text-sm font-bold text-orange-400 cursor-pointer truncate">🖥️ ${serverName}</div>`;
         const ul = document.createElement("ul"); ul.className = "pl-3 border-l border-gray-800 space-y-1 mt-0.5";
+        
         Object.keys(grouped[serverName]).forEach(compName => {
             const compMatches = grouped[serverName][compName];
             let hasMustPlay = compMatches.some(m => m.mustPlay);
@@ -525,8 +526,13 @@ function renderSidebar(grouped) {
             if (hasMustPlay) statusIcon = " <span class='text-xs'>🔥</span>";
             else if (hasWarning) statusIcon = " <span class='text-xs'>⚠️</span>";
 
+            // Výpočet hotovo/celkem (např. 1/7) - zápasy s termínem vs celkem
+            const scheduledCount = compMatches.filter(m => m.date).length;
+            const totalCount = compMatches.length;
+            const countText = `${scheduledCount}/${totalCount}`;
+
             const li = document.createElement("li"); li.className = "text-xs text-gray-400 hover:text-white cursor-pointer truncate flex items-center justify-between";
-            li.innerHTML = `<span class="truncate">🏆 ${compName}</span><span>${statusIcon}</span>`;
+            li.innerHTML = `<span class="truncate flex items-center gap-1">🏆 ${compName} ${statusIcon}</span><span class="text-[10px] text-gray-500 bg-gray-900 px-1.5 py-0.5 rounded shrink-0">${countText}</span>`;
             li.onclick = (e) => { e.stopPropagation(); scrollToElement(`${serverName.replace(/\s+/g, '-')}-${compName.replace(/\s+/g, '-')}`); };
             ul.appendChild(li);
         });
@@ -651,7 +657,7 @@ function render() {
         return;
     }
 
-    // HLAVNÍ ZOBRAZENÍ DOMŮ S POČITADLY (Červená = bez termínu, Žlutá = domluvené)
+    // HLAVNÍ ZOBRAZENÍ DOMŮ S PŮVODNÍMI TEČKAMI (Žlutá = domluvené, Červená = bez termínu)
     Object.keys(grouped).forEach(serverName => {
         const sEl = document.createElement("div"); sEl.id = serverName.replace(/\s+/g, '-'); sEl.className = "bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 shadow-lg";
         sEl.innerHTML = `<h2 class="text-xl font-bold text-orange-500 flex justify-between items-center"><span>🖥️ ${serverName}</span><div class="flex gap-2"><button onclick="editServerName('${serverName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button><button onclick="openLeagueDeleteModal('${serverName}')" class="text-xs text-red-400">🗑️</button></div></h2>`;
@@ -661,34 +667,28 @@ function render() {
             const collapseKey = `${serverName}__${compName}`;
             const isClosed = closedStates[collapseKey] || false;
 
-            let unscheduledCount = compMatches.filter(m => !m.date).length;
-            let scheduledCount = compMatches.filter(m => m.date).length;
-
-            let badgesHTML = `<div class="flex items-center gap-1.5 text-xs">`;
-            if (unscheduledCount > 0) {
-                badgesHTML += `<span class="bg-red-950/80 text-red-400 border border-red-900/60 px-2 py-0.5 rounded-full font-bold" title="Zbývá zápasů bez termínu">${unscheduledCount}</span>`;
-            }
-            if (scheduledCount > 0) {
-                badgesHTML += `<span class="bg-yellow-950/80 text-yellow-400 border border-yellow-900/60 px-2 py-0.5 rounded-full font-bold" title="Domluvené zápasy">${scheduledCount}</span>`;
-            }
-            badgesHTML += `<span class="bg-gray-900 px-2 py-0.5 rounded text-gray-400 ml-1">${compMatches.length}</span></div>`;
-
             const lEl = document.createElement("div"); lEl.id = `${sEl.id}-${compName.replace(/\s+/g, '-')}`; lEl.className = "bg-gray-850 p-3 rounded-lg border border-gray-800 space-y-2";
             lEl.innerHTML = `
                 <div class="flex justify-between items-center cursor-pointer select-none" onclick="toggleCollapse('${collapseKey}')">
                     <h3 class="font-semibold text-gray-200 flex items-center gap-2">
                         <span class="text-xs text-orange-400">${isClosed ? '▶' : '▼'}</span>
-                        🏆 ${compName} 
+                        🏆 ${compName} <span class="text-xs bg-gray-900 px-2 py-0.5 rounded text-gray-400">${compMatches.length}</span>
                     </h3>
-                    <div class="flex items-center gap-3">
-                        ${badgesHTML}
-                        <div class="flex gap-2" onclick="event.stopPropagation()">
-                            <button onclick="editCompName('${serverName}', '${compName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button>
-                            <button onclick="toggleForm('${serverName}', '${compName}')" class="text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 px-2.5 py-1 rounded border border-orange-500/30">${translations[currentLang].btnAddMatchToLeague}</button>
-                        </div>
+                    <div class="flex gap-2" onclick="event.stopPropagation()">
+                        <button onclick="editCompName('${serverName}', '${compName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button>
+                        <button onclick="toggleForm('${serverName}', '${compName}')" class="text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 px-2.5 py-1 rounded border border-orange-500/30">${translations[currentLang].btnAddMatchToLeague}</button>
                     </div>
                 </div>
             `;
+
+            // Původní řada teček pod hlavičkou ligy (když je sbalená, nebo jako přehled)
+            let dotsHtml = `<div class="flex flex-wrap gap-1 px-1 py-1">`;
+            compMatches.forEach(m => {
+                let dotColor = m.date ? "bg-yellow-500" : "bg-red-500";
+                dotsHtml += `<span class="inline-block w-2 h-2 rounded-full ${dotColor}" title="${m.opponent} (${m.date || 'bez termínu'})"></span>`;
+            });
+            dotsHtml += `</div>`;
+            lEl.innerHTML += dotsHtml;
 
             if (!isClosed) {
                 const matchesContainer = document.createElement("div");
