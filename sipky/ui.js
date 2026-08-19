@@ -383,8 +383,8 @@ function render() {
             if (m.date && m.date.includes("-")) { const parts = m.date.split("-"); formattedDate = `${parseInt(parts[2])}.${parseInt(parts[1])}.`; }
             let nameColorClass = m.date ? (isCurrentCalendarWeek(m.date) ? "text-yellow-400" : (m.confirmed ? "text-emerald-400" : "text-red-400")) : "text-white";
             
-            // Pokud je zápas označený jako mustPlay (odložený/dohrávka), termín se zvýrazní červeně, ale zůstane viditelný
-            let dateBoxStyle = m.mustPlay 
+            // Červeně se podbarví jen tehdy, pokud je to dohrávka A ZÁROVEŇ už má vyplněný termín
+            let dateBoxStyle = (m.mustPlay && m.date) 
                 ? "bg-red-950/80 border-red-600 text-red-400" 
                 : "bg-gray-800 border-gray-700 text-white";
 
