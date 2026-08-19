@@ -94,7 +94,6 @@ function toggleConfirmed(id) {
     } 
 }
 
-// Nová funkce pro nezávislý ruční přepínač neodehraného termínu
 function toggleMissedTerm(id) {
     pushToHistory();
     const match = matches.find(m => m.id === id);
@@ -393,7 +392,6 @@ function render() {
             if (m.date && m.date.includes("-")) { const parts = m.date.split("-"); formattedDate = `${parseInt(parts[2])}.${parseInt(parts[1])}.`; }
             let nameColorClass = m.date ? (isCurrentCalendarWeek(m.date) ? "text-yellow-400" : (m.confirmed ? "text-emerald-400" : "text-red-400")) : "text-white";
             
-            // Podbarvení termínu se řídí čistě naším novým ručním přepínačem missedTerm
             let dateBoxStyle = m.missedTerm 
                 ? "bg-red-950/80 border-red-600 text-red-400" 
                 : "bg-gray-800 border-gray-700 text-white";
@@ -417,11 +415,10 @@ function render() {
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800 flex-wrap">
                         <button type="button" onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Nachholspiel">🔥</button>
-                        <!-- Nové tlačítko pro označení neodehraného termínu -->
-                        <button type="button" onclick="toggleMissedTerm(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.missedTerm ? 'bg-red-600 text-white border-red-500' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-red-400'}" title="Označit jako neodehraný / propadlý termín">⚠️</button>
+                        <button type="button" onclick="toggleMissedTerm(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.missedTerm ? 'bg-red-600 text-white border-red-500' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-red-400'}" title="Označit jako neodehraný / propadlý termín">❌</button>
                         <input type="date" id="edit-date-${m.id}" value="${m.date}" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500 w-36 text-center">
                         <input type="time" id="edit-time-${m.id}" value="${m.time}" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500">
-                        <button type="button" onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="Vymazat termín">❌</button>
+                        <button type="button" onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="Vymazat termín">🧹</button>
                         <button type="button" onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-800 text-gray-500 border-gray-700 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>
                         <button type="button" onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 px-3 rounded-lg text-sm font-bold transition" title="${translations[currentLang].tooltipSave}">✔️</button>
                         <button type="button" onclick="deleteMatch(${m.id})" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-900/40 p-2 px-2.5 rounded-lg text-sm font-semibold transition" title="${translations[currentLang].tooltipDelete}">🗑️</button>
