@@ -292,6 +292,8 @@ function toggleForm(presetServer = null, presetComp = null) {
         if (presetServer) { document.getElementById("formServer").value = presetServer; checkNewServer(presetServer); }
         if (presetComp) document.getElementById("formComp").value = presetComp;
         autoCalcDuration();
+        // Automaticky scrollne nahoru k formuláři
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -526,7 +528,6 @@ function renderSidebar(grouped) {
             if (hasMustPlay) statusIcon = " <span class='text-xs'>🔥</span>";
             else if (hasWarning) statusIcon = " <span class='text-xs'>⚠️</span>";
 
-            // Výpočet hotovo/celkem (např. 1/7) - zápasy s termínem vs celkem
             const scheduledCount = compMatches.filter(m => m.date).length;
             const totalCount = compMatches.length;
             const countText = `${scheduledCount}/${totalCount}`;
@@ -657,7 +658,7 @@ function render() {
         return;
     }
 
-    // HLAVNÍ ZOBRAZENÍ DOMŮ S PŮVODNÍMI TEČKAMI (Žlutá = domluvené, Červená = bez termínu)
+    // HLAVNÍ ZOBRAZENÍ DOMŮ
     Object.keys(grouped).forEach(serverName => {
         const sEl = document.createElement("div"); sEl.id = serverName.replace(/\s+/g, '-'); sEl.className = "bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 shadow-lg";
         sEl.innerHTML = `<h2 class="text-xl font-bold text-orange-500 flex justify-between items-center"><span>🖥️ ${serverName}</span><div class="flex gap-2"><button onclick="editServerName('${serverName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button><button onclick="openLeagueDeleteModal('${serverName}')" class="text-xs text-red-400">🗑️</button></div></h2>`;
@@ -681,7 +682,6 @@ function render() {
                 </div>
             `;
 
-            // Původní řada teček pod hlavičkou ligy (když je sbalená, nebo jako přehled)
             let dotsHtml = `<div class="flex flex-wrap gap-1 px-1 py-1">`;
             compMatches.forEach(m => {
                 let dotColor = m.date ? "bg-yellow-500" : "bg-red-500";
