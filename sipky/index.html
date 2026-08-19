@@ -1002,8 +1002,18 @@
                         const mDiv = document.createElement("div")
                         mDiv.className = "bg-gray-900 p-3 rounded border border-gray-800 flex justify-between items-center"
                         let formattedMatchDate = m.date ? `${parseInt(m.date.split('-')[2])}.${parseInt(m.date.split('-')[1])}.` : translations[currentLang].noTermLabel
+                        
+                        // Logika pro zobrazení ikonky plamínku nebo varování v seznamu lig
+                        let statusIconHTML = ""
+                        if (m.mustPlay) {
+                            statusIconHTML = `<span class="text-xs text-red-400 font-bold mr-2" title="Dohrávka">🔥</span>`
+                        } else if (!m.date && m.week && isWeekInPastOrCurrent(m.week)) {
+                            statusIconHTML = `<span class="text-xs text-yellow-500 font-bold mr-2" title="Nutno naplánovat">⚠️</span>`
+                        }
+
                         mDiv.innerHTML = `
-                            <div>
+                            <div class="flex items-center">
+                                ${statusIconHTML}
                                 <span class="font-bold text-white">${m.opponent}</span>
                                 <span class="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-0.5 rounded">${m.format}</span>
                                 ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold ml-2">${m.week}</span>` : ''}
