@@ -352,25 +352,64 @@ function render() {
             if (m.date && m.date.includes("-")) { const parts = m.date.split("-"); formattedDate = `${parseInt(parts[2])}.${parseInt(parts[1])}.`; }
             let nameColorClass = m.date ? (isCurrentCalendarWeek(m.date) ? "text-yellow-400" : (m.confirmed ? "text-emerald-400" : "text-red-400")) : "text-white";
             
-            card.innerHTML = `
-                <div class="flex items-center gap-4 flex-1">
-                    <div onclick="toggleEditMatch(${m.id})" class="bg-gray-800 hover:bg-gray-750 cursor-pointer px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px] transition group">
-                        <p class="text-[10px] text-gray-400 uppercase font-bold">${translations[currentLang].termLabel}</p>
-                        <p class="text-sm font-black ${m.date ? 'text-white' : 'text-gray-400'}">${formattedDate || translations[currentLang].noTermLabel}</p>
-                        <p class="text-xs text-orange-400 font-semibold">${m.time || '--:--'}</p>
-                    </div>
-                    <div class="truncate flex-1">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-lg font-bold ${nameColorClass}">${m.opponent}</span>
-                            <span class="text-xs font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">${m.format}</span>
-                            ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1">${translations[currentLang].mustPlayLabel}</span>` : ''}
-                            ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold">${m.week}</span>` : ''}
+            if (isEditing) {
+                card.className = "bg-gray-900 p-4 rounded-xl border border-orange-500/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg";
+                card.innerHTML = `
+                    <div class="flex items-center gap-4 flex-1 w-full">
+                        <div class="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px]">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">${translations[currentLang].badgeEditTitle}</p>
+                            <button type="button" onclick="toggleEditMatch(${m.id})" class="text-xs text-orange-400 hover:underline font-semibold mt-1">${translations[currentLang].tooltipClose}</button>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1 truncate">🖥️ ${m.server} • 🏆 ${m.comp}</p>
+                        <div class="flex-1 space-y-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-lg font-bold text-orange-400">${m.opponent}</span>
+                                <span class="text-xs font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">${m.format}</span>
+                                <input type="text" id="edit-week-${m.id}" value="${m.week || ''}" placeholder="${translations[currentLang].placeholderWeek}" class="bg-blue-950/60 text-blue-400 text-xs px-2 py-1 rounded border border-blue-900/50 font-semibold focus:outline-none focus:border-orange-500 w-28 text-center">
+                            </div>
+                            <input type="text" id="edit-notes-${m.id}" value="${m.notes || ''}" placeholder="Poznámka..." class="w-full max-w-md bg-gray-950 border border-gray-700 text-xs px-2.5 py-1.5 rounded text-gray-200 focus:outline-none focus:border-orange-500">
+                        </div>
                     </div>
-                </div>
-            `;
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800 flex-wrap">
+                        <button type="button" onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Nachholspiel">🔥</button>
+                        <input type="date" id="edit-date-${m.id}" value="${m.date}" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500 w-36 text-center">
+                        <input type="time" id="edit-time-${m.id}" value="${m.time}" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                        <button type="button" onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="Vymazat termín">❌</button>
+                        <button type="button" onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-800 text-gray-500 border-gray-700 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>
+                        <button type="button" onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 px-3 rounded-lg text-sm font-bold transition" title="${translations[currentLang].tooltipSave}">✔️</button>
+                    </div>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="flex items-center gap-4 flex-1">
+                        <div onclick="toggleEditMatch(${m.id})" class="bg-gray-800 hover:bg-gray-750 cursor-pointer px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px] transition group" title="Kliknutím upravit">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold group-hover:text-orange-400 transition">${translations[currentLang].termLabel}</p>
+                            <p class="text-sm font-black ${m.date ? 'text-white' : 'text-gray-400'}">${formattedDate || translations[currentLang].noTermLabel}</p>
+                            <p class="text-xs text-orange-400 font-semibold">${m.time || '--:--'}</p>
+                        </div>
+                        <div class="truncate flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-lg font-bold ${nameColorClass}">${m.opponent}</span>
+                                <span class="text-xs font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">${m.format}</span>
+                                ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1">${translations[currentLang].mustPlayLabel}</span>` : ''}
+                                ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold">${m.week}</span>` : ''}
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1 truncate">🖥️ ${m.server} • 🏆 ${m.comp}</p>
+                            ${m.notes ? `<p class="text-xs text-gray-400 mt-1 italic">📝 ${m.notes}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800">
+                        <button type="button" onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Nachholspiel">🔥</button>
+                        ${m.date ? `<button type="button" onclick="openGoogleCalendar(${m.id})" class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-2 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="${translations[currentLang].tooltipGCal}">📅</button>` : ''}
+                        ${m.date ? `<button type="button" onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="${translations[currentLang].lblConfirmedCheck}">👍</button>` : ''}
+                        <button type="button" onclick="toggleEditMatch(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 p-2 rounded-lg text-xs font-semibold transition" title="${translations[currentLang].tooltipEdit}">✏️</button>
+                    </div>
+                `;
+            }
             container.appendChild(card);
+            if (isEditing) {
+                const editDateEl = document.getElementById(`edit-date-${m.id}`);
+                if (editDateEl) { setupDateInput(editDateEl); editDateEl.addEventListener('input', () => handleDatePlaceholder(editDateEl)); }
+            }
         });
     } else {
         Object.keys(grouped).forEach(serverName => {
@@ -396,6 +435,15 @@ function render() {
                     </div>
                 `;
 
+                // PŘIDÁNO: Barevné tečky u lig
+                let dotsHtml = `<div class="flex flex-wrap gap-1 px-1 py-1">`;
+                compMatches.forEach(m => {
+                    let dotColor = m.date ? "bg-yellow-500" : "bg-red-500";
+                    dotsHtml += `<span class="inline-block w-2 h-2 rounded-full ${dotColor}" title="${m.opponent} (${m.date || 'bez termínu'})"></span>`;
+                });
+                dotsHtml += `</div>`;
+                lEl.innerHTML += dotsHtml;
+
                 if (!isClosed) {
                     const matchesContainer = document.createElement("div");
                     matchesContainer.className = "space-y-2 mt-2";
@@ -408,10 +456,11 @@ function render() {
                             <div class="flex items-center">
                                 <span class="font-bold text-white">${m.opponent}</span>
                                 <span class="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-0.5 rounded">${m.format}</span>
+                                ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold ml-2">${m.week}</span>` : ''}
                             </div>
                             <div class="flex gap-3 items-center">
                                 <span class="text-xs font-semibold ${m.date ? 'text-white' : 'text-gray-500'}">${formattedMatchDate} ${m.time || ''}</span>
-                                <button type="button" onclick="editMatchFromHome(${m.id})" class="text-xs bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 px-2 py-1 rounded border border-orange-500/30">✏️</button>
+                                <button type="button" onclick="editMatchFromHome(${m.id})" class="text-xs bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 px-2 py-1 rounded border border-orange-500/30" title="Upravit zápas">✏️</button>
                             </div>
                         `;
                         matchesContainer.appendChild(mDiv);
