@@ -192,6 +192,89 @@ function openGoogleCalendar(id) {
     window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}`, '_blank');
 }
 
+// Funkce pro Import a Export TXT souborů
+function importTxt(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) { parseTxtData(e.target.result); };
+    reader.readAsText(file);
+}
+
+function parseTxtData(textText) {
+    pushToHistory();
+    const newMatches = [];
+    const blocks = textText.split(/----+/).map(b => b.trim()).filter(b => b.length > 0);
+    blocks.forEach((block, bIdx) => {
+        const lines = block.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        if (lines.length === 0) return;
+        const headerLine = lines[0];
+        const headerParts = headerLine.split("->").map(p => p.trim());
+        let server = "", compFull = "", format = "BO 8 501 DO", weekInfo = "", webUrl = "", discordUrl = "";
+        headerParts.forEach(part => {
+            if (part.startsWith("http")) { if (part.includes("discord")) discordUrl = part; else webUrl = part; }
+        });
+        const nonUrlParts = headerParts.filter(p => !p.startsWith("http"));
+        if (nonUrlParts.length >= 3) { server = nonUrlParts[0]; compFull = nonUrlParts[1]; format = nonUrlParts[2] || format; if (nonUrlParts[3]) weekInfo = nonUrlParts[3]; } else {
+            compFull = nonUrlParts[0] || "Liga"; format = nonUrlParts[1] || format;
+            if (nonUrlParts[2]) weekInfo = nonUrlParts[2];
+            const combined = `${compFull} ${webUrl} ${discordUrl}`.toLowerCase();
+            if (combined.includes("edc")) server = "EDC";
+            else if (combined.includes("scolia")) server = "Scolia Checkout Community";
+            else if (combined.includes("dartfan")) server = "Dartfan online";
+            else if (combined.includes("hood")) server = "HOOD";
+            else if (combined.includes("dbf")) server = "DBF";
+            else server = "Ostatní";
+        }
+        const duration = calculateDurationMinutes(format);
+        lines.slice(1).forEach((mLine, mIdx) => {
+            if (!mLine.startsWith("-")) return;
+            const matchParts = mLine.replace(/^-/, "").trim().split("->").map(p => p.trim());
+            const opponent = matchParts[0];
+            let date = "", time = "", confirmed = false, mustPlay = false, week = weekInfo, notes = "";
+            matchParts.slice(1).forEach(part => {
+                if (part.includes("🔥")) mustPlay = true;
+                else if (part.startsWith("W:")) week = part.replace("W:", "").trim();
+                else if (part.startsWith("NOTE:")) notes = part.replace("NOTE:", "").trim();
+                else {
+                    const dtMatch = part.match(/(\d{1,2})\.(\d{1,2})\.?(?:\s+(\d{1,2}:\d{2}))?/);
+                    if (dtMatch) {
+                        date = `${new Date().getFullYear()}-${dtMatch[2].padStart(2, '0')}-${dtMatch[1].padStart(2, '0')}`;
+                        if (dtMatch[3]) time = dtMatch[3];
+                        confirmed = true;
+                    }
+                }
+            });
+            newMatches.push({ id: Date.now() + (bIdx * 100) + mIdx, server, comp: compFull, opponent, format, duration, type: week ? "fixed" : "flexi", week, date, time, confirmed, mustPlay, status: date ? "scheduled" : "unscheduled", notes, maxWeekly: "", finalDeadline: "", discordUrl, webUrl });
+        });
+    });
+    if (newMatches.length > 0) { matches = newMatches; save(); alert("TXT načten!"); closeServerManagerModal(); }
+}
+
+function exportTxt() {
+    const grouped = {};
+    matches.forEach(m => { const key = `${m.server}::${m.comp}`; if (!grouped[key]) grouped[key] = []; grouped[key].push(m); });
+    let txtContent = "";
+    Object.keys(grouped).forEach((key, idx) => {
+        const compMatches = grouped[key], first = compMatches[0];
+        let header = `${first.server} -> ${first.comp}`;
+        if (first.format) header += ` -> ${first.format}`;
+        if (first.week) header += ` -> ${first.week}`;
+        if (first.webUrl) header += ` -> ${first.webUrl}`;
+        if (first.discordUrl) header += ` -> ${first.discordUrl}`;
+        txtContent += `${header}\n`;
+        compMatches.forEach(m => {
+            let line = `- ${m.opponent}`;
+            if (m.date) { const parts = m.date.split("-"); line += ` -> ${parts[2]}.${parts[1]}.`; if (m.time) line += ` ${m.time}`; } else { line += ` -> `; }
+            if (m.mustPlay) line += ` -> 🔥`; if (m.week) line += ` -> W: ${m.week}`; if (m.notes) line += ` -> NOTE: ${m.notes}`;
+            txtContent += `${line}\n`;
+        });
+        if (idx < Object.keys(grouped).length - 1) txtContent += `\n---------------------------------------------------------------------------\n\n`;
+    });
+    const blob = new Blob([txtContent], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Šipky zápasy.txt"; link.click();
+}
+
 function toggleForm(presetServer = null, presetComp = null) {
     const form = document.getElementById("matchForm");
     if (!form) return;
@@ -250,7 +333,7 @@ function scrollToElement(id) { setView("home"); setTimeout(() => { document.getE
 
 function editServerName(oldName) {
     const newName = prompt("Nový název:", oldName);
-    if (newName && newName.trim() !== oldName) { pushToHistory(); matches.forEach(m => { if (m.server === oldName) m.server = newName.trim(); }); save(); updateServerSelect(); render(); }
+    if (newName && newName.trim() !== oldName) { pushToHistory(); matches.forEach(m => { if (m.server === oldName) m.server = newName.trim(); }); save(); updateServerSelect(); render(); openServerManager(); }
 }
 
 function editCompName(serverName, oldCompName) {
@@ -264,6 +347,34 @@ function getAllServersOrdered() {
     serverOrder.forEach(s => { if (existing.includes(s)) ordered.push(s); }); 
     existing.forEach(s => { if (!ordered.includes(s)) ordered.push(s); }); 
     return ordered; 
+}
+
+function moveServerOrder(serverName, dir) { 
+    pushToHistory(); 
+    const all = getAllServersOrdered(); 
+    const idx = all.indexOf(serverName); 
+    const target = idx + dir; 
+    if (target >= 0 && target < all.length) { 
+        const temp = all[idx]; 
+        all[idx] = all[target]; 
+        all[target] = temp; 
+        serverOrder = all; 
+        save(true); 
+        openServerManager(); 
+        render();
+    } 
+}
+
+function toggleServerHide(serverName) {
+    pushToHistory();
+    if (hiddenServers.includes(serverName)) {
+        hiddenServers = hiddenServers.filter(s => s !== serverName);
+    } else {
+        hiddenServers.push(serverName);
+    }
+    save(true);
+    openServerManager();
+    render();
 }
 
 function openLeagueDeleteModal(serverName) { 
@@ -282,12 +393,72 @@ function closeLeagueDeleteModal() {
 function confirmLeagueDeletes() { 
     pushToHistory(); 
     matches = matches.filter(m => m.server !== activeDeleteServerName); 
+    emptyServers = emptyServers.filter(s => s !== activeDeleteServerName);
+    emptyLeagues = emptyLeagues.filter(l => l.server !== activeDeleteServerName);
     save(); 
     closeLeagueDeleteModal(); 
+    openServerManager();
     render(); 
 }
 
-function openServerManager() { if(typeof openServerManagerModal === 'function') openServerManagerModal(); }
+// Správa serverů přes horní ikonku ozubeného kola (⚙️)
+function openServerManager() {
+    let modal = document.getElementById("serverManagerModal");
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "serverManagerModal";
+        modal.className = "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4";
+        document.body.appendChild(modal);
+    }
+    
+    const activeServers = getAllServersOrdered();
+    let serversHtml = "";
+    activeServers.forEach((sName, idx) => {
+        const isHidden = hiddenServers.includes(sName);
+        serversHtml += `
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 flex items-center justify-between gap-2">
+                <span class="font-bold text-white truncate">🖥️ ${sName} ${isHidden ? '(Skryto)' : ''}</span>
+                <div class="flex items-center gap-1 shrink-0">
+                    <button type="button" onclick="moveServerOrder('${sName}', -1)" ${idx === 0 ? 'disabled class="opacity-30 p-1 text-xs bg-gray-700 rounded"' : 'class="p-1 text-xs bg-gray-700 hover:bg-gray-600 rounded text-white"'}>⬆️</button>
+                    <button type="button" onclick="moveServerOrder('${sName}', 1)" ${idx === activeServers.length - 1 ? 'disabled class="opacity-30 p-1 text-xs bg-gray-700 rounded"' : 'class="p-1 text-xs bg-gray-700 hover:bg-gray-600 rounded text-white"'}>⬇️</button>
+                    <button type="button" onclick="editServerName('${sName}')" class="p-1 text-xs bg-orange-600/20 text-orange-400 hover:bg-orange-600/30 rounded" title="Přejmenovat">✏️</button>
+                    <button type="button" onclick="toggleServerHide('${sName}')" class="p-1 text-xs bg-gray-700 hover:bg-gray-600 rounded text-white" title="Skrýt/Zobrazit">${isHidden ? '👁️‍🗨️' : '👁️'}</button>
+                    <button type="button" onclick="openLeagueDeleteModal('${sName}')" class="p-1 text-xs bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded" title="Smazat server">🗑️</button>
+                </div>
+            </div>
+        `;
+    });
+
+    modal.innerHTML = `
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-lg font-bold text-orange-500">⚙️ Správa serverů & Data</h3>
+                <button type="button" onclick="closeServerManagerModal()" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+            </div>
+            
+            <div class="space-y-2 overflow-y-auto flex-1 pr-1">
+                <p class="text-xs text-gray-400 mb-2">Pořadí a správa aktivních serverů:</p>
+                ${serversHtml || '<p class="text-xs text-gray-500">Žádné servery.</p>'}
+            </div>
+
+            <div class="border-t border-gray-800 pt-4 flex flex-col sm:flex-row gap-2 justify-between items-center">
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button type="button" onclick="exportTxt()" class="flex-1 sm:flex-none px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold transition">📤 Export TXT</button>
+                    <label class="flex-1 sm:flex-none px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold transition cursor-pointer text-center">
+                        📥 Import TXT <input type="file" accept=".txt" onchange="importTxt(event)" class="hidden">
+                    </label>
+                </div>
+                <button type="button" onclick="closeServerManagerModal()" class="w-full sm:w-auto px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold">Zavřít</button>
+            </div>
+        </div>
+    `;
+    modal.classList.remove("hidden");
+}
+
+function closeServerManagerModal() {
+    const modal = document.getElementById("serverManagerModal");
+    if (modal) modal.classList.add("hidden");
+}
 
 function updateServerSelect() { 
     const select = document.getElementById("formServer"); 
