@@ -232,14 +232,16 @@ function exportTxt() {
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Šipky zápasy.txt"; link.click();
 }
 
-function toggleForm(presetServer = null, presetComp = null) {
+ffunction toggleForm(presetServer = null, presetComp = null) {
     const form = document.getElementById("matchForm");
     if (!form) return;
+    
     if (presetServer) {
         form.classList.remove("hidden");
-        document.getElementById("formServer").value = presetServer; 
-        checkNewServer(presetServer);
-        if (presetComp) document.getElementById("formComp").value = presetComp;
+        const s = document.getElementById("formServer");
+        if(s) { s.value = presetServer; checkNewServer(presetServer); }
+        const c = document.getElementById("formComp");
+        if(c && presetComp) c.value = presetComp;
         autoCalcDuration();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -297,7 +299,9 @@ function isWeekInPastOrCurrent(wStr) {
     const day = parseInt(match[1]);
     const month = parseInt(match[2]);
     const now = new Date();
-    let matchDate = new Date(now.getFullYear(), month - 1, day);
+    let year = now.getFullYear();
+    if (now.getMonth() >= 6 && month <= 2) { year += 1; }
+    let matchDate = new Date(year, month - 1, day);
     return now > matchDate;
 }
 
