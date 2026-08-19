@@ -234,14 +234,34 @@ function exportTxt() {
 
 function toggleForm(presetServer = null, presetComp = null) {
     const form = document.getElementById("matchForm");
+    
+    // Pokud předáme server, tak formulář otevíráme a vyplníme
     if (presetServer) {
         form.classList.remove("hidden");
-        document.getElementById("formServer").value = presetServer; checkNewServer(presetServer);
+        document.getElementById("formServer").value = presetServer; 
+        checkNewServer(presetServer);
         if (presetComp) document.getElementById("formComp").value = presetComp;
         autoCalcDuration();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-        form.classList.add("hidden");
+        
+        const mainArea = document.querySelector("main");
+        if (mainArea) {
+            mainArea.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    } 
+    // Pokud nepředáme nic (kliknutí na "Zrušit" nebo ikonu plus), formulář přepneme/zavřeme
+    else {
+        form.classList.toggle("hidden");
+        if (!form.classList.contains("hidden")) {
+            autoCalcDuration();
+            const mainArea = document.querySelector("main");
+            if (mainArea) {
+                mainArea.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
     }
 }
 
