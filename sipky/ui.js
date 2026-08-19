@@ -235,22 +235,15 @@ function exportTxt() {
 function toggleForm(presetServer = null, presetComp = null) {
     const form = document.getElementById("matchForm");
     if (!form) return;
-    
     if (presetServer) {
         form.classList.remove("hidden");
-        const serverInput = document.getElementById("formServer");
-        if (serverInput) { serverInput.value = presetServer; checkNewServer(presetServer); }
-        const compInput = document.getElementById("formComp");
-        if (compInput && presetComp) compInput.value = presetComp;
+        document.getElementById("formServer").value = presetServer; 
+        checkNewServer(presetServer);
+        if (presetComp) document.getElementById("formComp").value = presetComp;
         autoCalcDuration();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-        // Tlačítko Zrušit nebo ikona plus – spolehlivě přepne stav
         form.classList.toggle("hidden");
-        if (!form.classList.contains("hidden")) {
-            autoCalcDuration();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
     }
 }
 
@@ -304,14 +297,7 @@ function isWeekInPastOrCurrent(wStr) {
     const day = parseInt(match[1]);
     const month = parseInt(match[2]);
     const now = new Date();
-    let year = now.getFullYear();
-    
-    // Pokud jsme v druhé polovině roku (srpen apod.) a zápas je v lednu/únoru, patří už do dalšího roku
-    if (now.getMonth() >= 6 && month <= 2) {
-        year += 1;
-    }
-    
-    let matchDate = new Date(year, month - 1, day);
+    let matchDate = new Date(now.getFullYear(), month - 1, day);
     return now > matchDate;
 }
 
