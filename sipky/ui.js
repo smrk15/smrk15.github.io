@@ -400,7 +400,6 @@ function confirmLeagueDeletes() {
     render(); 
 }
 
-// Správa serverů pod ozubeným kolem (⚙️) bez zbytečného importu/exportu
 function openServerManager() {
     let modal = document.getElementById("serverManagerModal");
     if (!modal) {
@@ -658,6 +657,7 @@ function render() {
                 if (!isClosed) {
                     const matchesContainer = document.createElement("div");
                     matchesContainer.className = "space-y-2 mt-2";
+                    compMatches.reset = compMatches.forEach || (() => {});
                     compMatches.forEach(m => {
                         const mDiv = document.createElement("div");
                         mDiv.className = "bg-gray-900 p-3 rounded border border-gray-800 flex justify-between items-center";
@@ -670,10 +670,13 @@ function render() {
                             statusIconHTML = `<span class="text-xs text-yellow-500 font-bold mr-2" title="Nutno naplánovat">⚠️</span>`;
                         }
 
+                        // Barva jména soupeře v seznamu lig se nyní řídí podle termínu stejně jako v timeline
+                        let leagueOpponentColor = m.date ? (isCurrentCalendarWeek(m.date) ? "text-yellow-400" : (m.confirmed ? "text-emerald-400" : "text-red-400")) : "text-white";
+
                         mDiv.innerHTML = `
                             <div class="flex items-center">
                                 ${statusIconHTML}
-                                <span class="font-bold text-white">${m.opponent}</span>
+                                <span class="font-bold ${leagueOpponentColor}">${m.opponent}</span>
                                 <span class="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-0.5 rounded">${m.format}</span>
                                 ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold ml-2">${m.week}</span>` : ''}
                             </div>
