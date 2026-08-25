@@ -188,6 +188,11 @@
     if (codes.length === 0) {
       delete assignedEvents[dateStr];
     } else {
+      // Pokud seznam obsahuje 'S', dáme ho na 1. místo
+      if (codes.includes('S')) {
+        codes = ['S', ...codes.filter(c => c !== 'S')];
+      }
+
       let newVal = codes.join(' + ');
       if (hasAb20) {
         newVal += ' ab 20';
