@@ -17,19 +17,16 @@
             <h1 id="pageTitle" class="text-xl font-bold text-orange-500 tracking-wide ml-2">🎯 Moje Šipkařské Ligy</h1>
         </div>
         
-        <!-- Sjednocená skupina tlačítek vpravo -->
         <div class="flex items-center space-x-2">
-            <!-- Undo (Zpět) -->
             <button onclick="undo()" id="undoBtn" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 flex items-center justify-center transition cursor-pointer opacity-30 cursor-not-allowed" title="Zpět">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 015 5v2M3 10l6 6m-6-6l6-6"/></svg>
             </button>
 
-            <!-- Přidat (Oranžové zvýraznění) -->
             <button onclick="toggleForm()" id="btnAddIcon" class="w-10 h-10 bg-orange-600 hover:bg-orange-500 rounded-lg text-white flex items-center justify-center transition cursor-pointer shadow-lg shadow-orange-600/20" title="Přidat zápas / ligu">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             </button>
             
-      <!-- Import TXT (Upload -> Šipka NAHORU) -->
+            <!-- Import TXT (Upload -> Šipka NAHORU) -->
             <label class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-emerald-400 flex items-center justify-center transition cursor-pointer" title="Import TXT">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 <input type="file" accept=".txt" onchange="importTxt(event)" class="hidden">
@@ -40,12 +37,10 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             </button>
 
-            <!-- Nastavení / Servery -->
             <button onclick="openServerManager()" id="btnManageIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 flex items-center justify-center transition cursor-pointer" title="Spravovat servery">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </button>
 
-            <!-- Jazyk -->
             <button onclick="toggleLanguage()" id="langSwitcher" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs font-bold text-gray-200 flex items-center justify-center transition cursor-pointer">🇩🇪</button>
         </div>
     </header>
@@ -58,7 +53,7 @@
 
         <!-- Hlavní obsah -->
         <main class="flex-1 p-6 overflow-y-auto space-y-6">
-            <!-- Skrytý formulář pro přidání zápasu -->
+            <!-- Formulář pro přidání zápasu / ligy -->
             <div id="matchForm" class="hidden bg-gray-900 p-5 rounded-xl border border-orange-500/40 shadow-xl space-y-4">
                 <h3 id="formTitle" class="text-lg font-bold text-orange-400">Přidat zápas</h3>
                 <div class="flex gap-2 border-b border-gray-800 pb-3">
@@ -76,6 +71,8 @@
                         <input type="text" id="formComp" placeholder="Liga / Cup..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
                     </div>
                 </div>
+
+                <!-- Režim pro jeden zápas -->
                 <div id="singleOpponentContainer" class="space-y-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Soupeř</label>
@@ -86,9 +83,22 @@
                         <input type="text" id="formWeek" placeholder="Kolo / Týden..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
                     </div>
                 </div>
+
+                <!-- Režim pro hromadné přidání celé ligy -->
+                <div id="bulkContainer" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Formát zápasů (např. BO 8 501 DO)</label>
+                        <input type="text" id="formBulkFormat" value="BO 8 501 DO" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Seznam soupeřů (každý na nový řádek)</label>
+                        <textarea id="formBulkOpponents" rows="5" placeholder="Hráč 1&#10;Hráč 2&#10;Hráč 3" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500"></textarea>
+                    </div>
+                </div>
+
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="toggleForm()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 font-semibold">Zrušit</button>
-                    <button type="button" onclick="toggleForm()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm text-white font-bold">Uložit</button>
+                    <button type="button" onclick="saveFormMatch()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm text-white font-bold">Uložit</button>
                 </div>
             </div>
 
