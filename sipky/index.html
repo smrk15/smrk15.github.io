@@ -74,21 +74,63 @@
 
                 <!-- Režim pro jeden zápas -->
                 <div id="singleOpponentContainer" class="space-y-4">
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Soupeř</label>
-                        <input type="text" id="formOpponent" placeholder="Soupeř..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Soupeř</label>
+                            <input type="text" id="formOpponent" placeholder="Soupeř..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Formát</label>
+                            <input type="text" id="formFormat" value="BO 8 501 DO" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Typ</label>
+                            <select id="formType" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                                <option value="flexi">Flexi</option>
+                                <option value="fixed">Fixed (Pevný termín)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Kolo / Týden</label>
+                            <input type="text" id="formWeek" placeholder="např. 1. kolo" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Termín</label>
+                            <input type="date" id="formDate" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">Kolo / Týden</label>
-                        <input type="text" id="formWeek" placeholder="Kolo / Týden..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        <label class="block text-xs text-gray-400 mb-1">Poznámka</label>
+                        <input type="text" id="formNotes" placeholder="Volitelná poznámka..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
                     </div>
                 </div>
 
                 <!-- Režim pro hromadné přidání celé ligy -->
                 <div id="bulkContainer" class="hidden space-y-4">
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Formát zápasů (např. BO 8 501 DO)</label>
-                        <input type="text" id="formBulkFormat" value="BO 8 501 DO" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Formát zápasů</label>
+                            <input type="text" id="formBulkFormat" value="BO 8 501 DO" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Typ ligy</label>
+                            <select id="formBulkType" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                                <option value="flexi">Flexi</option>
+                                <option value="fixed">Fixed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Počáteční datum (pro generování termínů)</label>
+                            <input type="date" id="formBulkStartDate" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Deadline / Poznámka k celé lize</label>
+                            <input type="text" id="formBulkDeadline" placeholder="např. do neděle" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Seznam soupeřů (každý na nový řádek)</label>
