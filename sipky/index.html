@@ -66,7 +66,7 @@
         </aside>
 
         <main class="flex-1 p-6 overflow-y-auto space-y-6">
-            <!-- Kompletní formulář se všemi sekcemi -->
+            <!-- Formulář pro přidání -->
             <div id="matchForm" class="hidden bg-gray-900 p-5 rounded-xl border border-orange-500/40 shadow-xl space-y-4 max-w-4xl">
                 <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                     <h3 id="formTitle" class="text-lg font-bold text-orange-400">Přidat zápas</h3>
@@ -96,14 +96,14 @@
                             <option value="BO">Best of (BO)</option>
                             <option value="FT">First to (FT)</option>
                         </select>
-                        <input type="text" id="formFormatNum" value="8" placeholder="Číslo (např. 8)" class="bg-gray-800 border border-gray-700 p-2 rounded-lg text-xs text-gray-200 text-center">
+                        <input type="text" id="formFormatNum" value="8" oninput="updateDefaultDuration()" placeholder="Číslo (např. 8)" class="bg-gray-800 border border-gray-700 p-2 rounded-lg text-xs text-gray-200 text-center">
                         <input type="text" id="formGameVariant" value="501" placeholder="501 / Cricket..." class="bg-gray-800 border border-gray-700 p-2 rounded-lg text-xs text-gray-200 text-center">
                         <select id="formOutVariant" class="bg-gray-800 border border-gray-700 p-2 rounded-lg text-xs text-gray-200">
                             <option value="DO">DO (Double Out)</option>
                             <option value="SO">SO (Single Out)</option>
                             <option value="MO">MO (Master Out)</option>
                         </select>
-                        <input type="text" id="formDuration" value="60" placeholder="Minuty" class="bg-gray-800 border border-gray-700 p-2 rounded-lg text-xs text-orange-400 font-bold text-center">
+                        <input type="text" id="formDuration" value="30" placeholder="Minuty" class="bg-gray-800 border border-gray-700 p-2 rounded-lg text-xs text-orange-400 font-bold text-center" title="Automaticky vypočteno podle formátu">
                     </div>
                 </div>
 
@@ -131,27 +131,46 @@
                     </div>
                 </div>
 
-                <!-- Režim pro jeden zápas -->
-                <div id="singleOpponentContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Typ / Kolo zápasu</label>
-                        <select id="formMatchType" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
-                            <option value="flexi">Flexibilní zápas (odehraji kdykoliv)</option>
-                            <option value="fixed">Pevné kolo / termín</option>
-                        </select>
+                <!-- Režim pro jeden zápas (+ Odveta) -->
+                <div id="singleOpponentContainer" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Typ / Kolo zápasu</label>
+                            <select id="formMatchType" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                                <option value="flexi">Flexibilní zápas (odehraji kdykoliv)</option>
+                                <option value="fixed">Pevné kolo / termín</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Kolo / Týden</label>
+                            <input type="text" id="formWeek" placeholder="Kolo / Týden..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">Kolo / Týden</label>
-                        <input type="text" id="formWeek" placeholder="Kolo / Týden..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
-                    </div>
-                    <div class="sm:col-span-2">
                         <label class="block text-xs text-gray-400 mb-1">Soupeř</label>
                         <input type="text" id="formOpponent" placeholder="Soupeř..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
                     </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none bg-gray-950/50 p-3 rounded-lg border border-gray-800 w-max">
+                        <input type="checkbox" id="formSingleRematch" class="accent-orange-600 h-4 w-4">
+                        <span>Včetně odvety (vytvořit rovnou 2 vzájemné zápasy)</span>
+                    </label>
                 </div>
 
-                <!-- Režim pro hromadné přidání celé ligy -->
+                <!-- Režim pro hromadné přidání celé ligy (s koly a typem) -->
                 <div id="bulkContainer" class="hidden space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Typ zápasů v lize</label>
+                            <select id="formBulkMatchType" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                                <option value="fixed">Pevné termíny / kola</option>
+                                <option value="flexi">Flexibilní zápasy</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Výchozí Kolo / Týden (např. Kolo 1)</label>
+                            <input type="text" id="formBulkWeek" placeholder="Kolo 1 / 1. týden..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
+                    </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Datum prvního týdne (pro rozpočítání):</label>
                         <input type="date" id="formBulkStartDate" class="w-full sm:w-1/2 bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
@@ -323,6 +342,17 @@
             if (legs <= 8) return 30;
             if (legs <= 11) return 45;
             return 60;
+        }
+
+        function updateDefaultDuration() {
+            const type = document.getElementById("formFormatType").value;
+            const num = document.getElementById("formFormatNum").value.trim();
+            const variant = document.getElementById("formGameVariant").value.trim();
+            const out = document.getElementById("formOutVariant").value;
+            const dummyFormat = `${type} ${num} ${variant} ${out}`;
+            const dur = calculateDurationMinutes(dummyFormat);
+            const durEl = document.getElementById("formDuration");
+            if (durEl) durEl.value = dur;
         }
 
         function toggleMustPlay(id) { pushToHistory(); const match = matches.find(m => m.id === id); if (match) { match.mustPlay = !match.mustPlay; save(); } }
@@ -849,8 +879,15 @@
             if (formMode === "single") {
                 const opponent = document.getElementById("formOpponent").value.trim();
                 const week = document.getElementById("formWeek").value.trim();
+                const mType = document.getElementById("formMatchType").value;
+                const incRematch = document.getElementById("formSingleRematch").checked;
                 if (!opponent) return alert("Zadej soupeře");
-                matches.push({ id: Date.now(), server, comp, opponent, format, duration, type: week ? "fixed" : "flexi", week, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "", maxWeekly, finalDeadline, discordUrl, webUrl });
+
+                matches.push({ id: Date.now(), server, comp, opponent, format, duration, type: mType, week, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "", maxWeekly, finalDeadline, discordUrl, webUrl });
+                
+                if (incRematch) {
+                    matches.push({ id: Date.now() + 1, server, comp, opponent, format, duration, type: mType, week: week ? `${week} (Odveta)` : "Odveta", date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "Odveta", maxWeekly, finalDeadline, discordUrl, webUrl });
+                }
             } else {
                 const listEl = document.getElementById("formOpponentsList");
                 if(!listEl) return;
@@ -858,17 +895,19 @@
                 if (names.length === 0) return alert("Zadej aspoň jednoho soupeře");
                 const rematchesEl = document.getElementById("formRematches");
                 const bulkDateEl = document.getElementById("formBulkStartDate");
+                const bulkWeek = document.getElementById("formBulkWeek").value.trim();
+                const bulkMatchType = document.getElementById("formBulkMatchType").value;
                 const incRematches = rematchesEl ? rematchesEl.checked : false;
                 const bDate = (bulkDateEl && bulkDateEl.value) ? new Date(bulkDateEl.value) : null;
                 
                 names.forEach((name, idx) => {
-                    let w = bDate ? `(${new Date(bDate.getTime() + idx*7*86400000).getDate()}.${new Date(bDate.getTime() + idx*7*86400000).getMonth()+1}.)` : "";
-                    matches.push({ id: Date.now() + idx, server, comp, opponent: name, format, duration, type: "fixed", week: w, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "", maxWeekly, finalDeadline, discordUrl, webUrl });
+                    let w = bulkWeek ? `${bulkWeek} ${idx + 1}` : (bDate ? `(${new Date(bDate.getTime() + idx*7*86400000).getDate()}.${new Date(bDate.getTime() + idx*7*86400000).getMonth()+1}.)` : "");
+                    matches.push({ id: Date.now() + idx, server, comp, opponent: name, format, duration, type: bulkMatchType, week: w, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "", maxWeekly, finalDeadline, discordUrl, webUrl });
                 });
                 if (incRematches) {
                     names.forEach((name, idx) => {
-                        let w = bDate ? `(${new Date(bDate.getTime() + (names.length+idx)*7*86400000).getDate()}.${new Date(bDate.getTime() + (names.length+idx)*7*86400000).getMonth()+1}.)` : "";
-                        matches.push({ id: Date.now() + names.length + idx, server, comp, opponent: name, format, duration, type: "fixed", week: w, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "", maxWeekly, finalDeadline, discordUrl, webUrl });
+                        let w = bulkWeek ? `Odveta ${idx + 1}` : (bDate ? `(${new Date(bDate.getTime() + (names.length+idx)*7*86400000).getDate()}.${new Date(bDate.getTime() + (names.length+idx)*7*86400000).getMonth()+1}.)` : "Odveta");
+                        matches.push({ id: Date.now() + names.length + idx, server, comp, opponent: name, format, duration, type: bulkMatchType, week: w, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "Odveta", maxWeekly, finalDeadline, discordUrl, webUrl });
                     });
                 }
             }
@@ -879,6 +918,7 @@
             setLanguage(currentLang);
             updateUndoButton();
             render();
+            updateDefaultDuration();
         });
     </script>
 </body>
