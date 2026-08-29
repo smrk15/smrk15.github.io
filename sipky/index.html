@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moje Šipkařské Ligy</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -18,45 +17,57 @@
             <h1 id="pageTitle" class="text-xl font-bold text-orange-500 tracking-wide ml-2">🎯 Moje Šipkařské Ligy</h1>
         </div>
         
+        <!-- Sjednocená skupina tlačítek vpravo -->
         <div class="flex items-center space-x-2">
-            <button onclick="undo()" id="undoBtn" disabled class="w-10 h-10 bg-gray-800 text-gray-800 rounded-lg border border-gray-955 flex items-center justify-center transition-all opacity-30 cursor-not-allowed" title="Zpět">
+            <!-- Undo (Zpět) -->
+            <button onclick="undo()" id="undoBtn" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 flex items-center justify-center transition cursor-pointer opacity-30 cursor-not-allowed" title="Zpět">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 015 5v2M3 10l6 6m-6-6l6-6"/></svg>
             </button>
 
+            <!-- Přidat (Oranžové zvýraznění) -->
             <button onclick="toggleForm()" id="btnAddIcon" class="w-10 h-10 bg-orange-600 hover:bg-orange-500 rounded-lg text-white flex items-center justify-center transition cursor-pointer shadow-lg shadow-orange-600/20" title="Přidat zápas / ligu">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             </button>
             
+            <!-- Import TXT (Upload -> Šipka NAHORU) -->
             <label class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-emerald-400 flex items-center justify-center transition cursor-pointer" title="Import TXT">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 <input type="file" accept=".txt" onchange="importTxt(event)" class="hidden">
             </label>
 
+            <!-- Export TXT (Download -> Šipka DOLŮ) -->
             <button onclick="exportTxt()" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-blue-400 flex items-center justify-center transition cursor-pointer" title="Export TXT">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             </button>
 
+            <!-- Nastavení / Servery -->
             <button onclick="openServerManager()" id="btnManageIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 flex items-center justify-center transition cursor-pointer" title="Spravovat servery">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </button>
 
+            <!-- Jazyk -->
             <button onclick="toggleLanguage()" id="langSwitcher" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs font-bold text-gray-200 flex items-center justify-center transition cursor-pointer">🇩🇪</button>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar -->
         <aside class="w-64 bg-gray-950 border-r border-gray-800 p-4 hidden md:block overflow-y-auto sidebar-scroll">
             <div id="sidebarNav" class="space-y-4"></div>
         </aside>
 
+        <!-- Hlavní obsah -->
         <main class="flex-1 p-6 overflow-y-auto space-y-6">
-            <!-- Formulář pro přidání zápasu -->
+            <!-- Opravený formulář pro přidání zápasu / ligy se správnou tabulkou -->
             <div id="matchForm" class="hidden bg-gray-900 p-5 rounded-xl border border-orange-500/40 shadow-xl space-y-4">
-                <h3 id="formTitle" class="text-lg font-bold text-orange-400">Přidat zápas</h3>
-                <div class="flex gap-2 border-b border-gray-800 pb-3">
-                    <button type="button" id="mode-single" onclick="setFormMode('single')" class="px-3 py-1 rounded bg-orange-600 font-semibold text-white text-sm">Jeden zápas</button>
-                    <button type="button" id="mode-bulk" onclick="setFormMode('bulk')" class="px-3 py-1 rounded text-gray-400 font-semibold text-sm">Hromadně (celá liga)</button>
+                <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                    <h3 id="formTitle" class="text-lg font-bold text-orange-400">Přidat zápas</h3>
+                    <div class="flex gap-2 bg-gray-950 p-1 rounded border border-gray-800 text-xs">
+                        <button type="button" id="mode-single" onclick="setFormMode('single')" class="px-3 py-1 rounded bg-orange-600 font-semibold text-white">Jeden zápas</button>
+                        <button type="button" id="mode-bulk" onclick="setFormMode('bulk')" class="px-3 py-1 rounded text-gray-400 font-semibold">Hromadně (celá liga)</button>
+                    </div>
                 </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Server</label>
@@ -68,31 +79,42 @@
                         <input type="text" id="formComp" placeholder="Liga / Cup..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
                     </div>
                 </div>
+
+                <!-- Režim pro jeden zápas -->
                 <div id="singleOpponentContainer" class="space-y-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Soupeř</label>
                         <input type="text" id="formOpponent" placeholder="Soupeř..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
                     </div>
-                    <div>
+                    <div id="singleWeekContainer">
                         <label class="block text-xs text-gray-400 mb-1">Kolo / Týden</label>
                         <input type="text" id="formWeek" placeholder="Kolo / Týden..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 pt-2">
+
+                <!-- Režim pro hromadné přidání celé ligy -->
+                <div id="bulkContainer" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Datum prvního týdne (pro rozpočítání):</label>
+                        <input type="date" id="formBulkStartDate" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Seznam soupeřů (každé jméno na nový řádek):</label>
+                        <textarea id="formOpponentsList" rows="5" placeholder="Hráč 1&#10;Hráč 2&#10;Hráč 3" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500 font-mono"></textarea>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none bg-gray-950/50 p-2.5 rounded-lg border border-gray-800 w-max">
+                        <input type="checkbox" id="formRematches" class="accent-orange-600 h-4 w-4">
+                        <span>Včetně odvet (zduplikovat celý seznam jako druhé kolo)</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-800">
                     <button type="button" onclick="toggleForm()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 font-semibold">Zrušit</button>
                     <button type="button" onclick="saveFromForm()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm text-white font-bold">Uložit</button>
                 </div>
             </div>
 
-            <div id="filterContainer" class="hidden mb-6 flex flex-wrap gap-3 p-3 bg-gray-900 rounded-lg border border-gray-800">
-                <select id="filterServer" onchange="render()" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-300 focus:outline-none focus:border-orange-500">
-                    <option value="all">Všechny servery</option>
-                </select>
-                <select id="filterComp" onchange="render()" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-300 focus:outline-none focus:border-orange-500">
-                    <option value="all">Všechny ligy</option>
-                </select>
-            </div>
-
+            <div id="filterContainer" class="hidden"></div>
             <div id="mainContentContainer" class="space-y-6"></div>
         </main>
     </div>
@@ -109,615 +131,49 @@
         </div>
     </div>
 
-    <!-- Modální okno pro správu serverů -->
-    <div id="serverManagerModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <h3 class="text-lg font-bold text-orange-500">Spravovat servery a pořadí</h3>
-            <p class="text-xs text-gray-400">Použij šipky pro změnu pořadí serverů. Můžeš je také skrýt nebo trvale smazat.</p>
-            <div class="space-y-2 max-h-80 overflow-y-auto" id="serverManagerList"></div>
-            <div class="flex justify-end pt-2 border-t border-gray-800">
-                <button onclick="closeServerManager()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-semibold">Uložit a zavřít</button>
-            </div>
-        </div>
-    </div>
-
+    <script src="translations.js"></script>
+    <script src="storage.js"></script>
+    <script src="ui.js"></script>
     <script>
-        let currentLang = localStorage.getItem("dartLang") || "cs"
-
-        const translations = {
-            cs: {
-                mainTitle: "🎯 Moje Šipkařské Ligy",
-                timelineTitle: "🗓️ Aktuální zápasy",
-                homeBtn: "Domů / Rozcestník",
-                timelineBtn: "Aktuální zápasy",
-                undoBtn: "Zpět",
-                addMatchBtn: "Přidat zápas / ligu",
-                manageServersBtn: "Spravovat servery",
-                formTitleAdd: "Přidat zápas",
-                formModeSingle: "Jeden zápas",
-                formModeBulk: "Hromadně (celá liga)",
-                btnCancel: "Zrušit",
-                btnSave: "Uložit",
-                optNewServer: "+ Vytvořit nový server...",
-                emptyMatchesLabel: "Žádné naplánované zápasy",
-                termLabel: "Termín",
-                noTermLabel: "Nenaplánováno",
-                mustPlayLabel: "Dohrávka"
-            },
-            de: {
-                mainTitle: "🎯 Meine Darts Ligen",
-                timelineTitle: "🗓️ Aktuelle Spiele",
-                homeBtn: "Startseite",
-                timelineTitle: "Aktuelle Spiele",
-                undoBtn: "Rückgängig",
-                addMatchBtn: "Spiel / Liga hinzufügen",
-                manageServersBtn: "Server verwalten",
-                formTitleAdd: "Spiel hinzufügen",
-                formModeSingle: "Einzelnes Spiel",
-                formModeBulk: "Massenhaft (ganze Liga)",
-                btnCancel: "Abbrechen",
-                btnSave: "Speichern",
-                optNewServer: "+ Neuen Server erstellen...",
-                emptyMatchesLabel: "Keine geplanten Spiele",
-                termLabel: "Termin",
-                noTermLabel: "Nicht geplant",
-                mustPlayLabel: "Nachholspiel"
-            }
-        }
-
-        function toggleLanguage() {
-            setLanguage(currentLang === "cs" ? "de" : "cs")
-        }
-
-        function setLanguage(lang) {
-            currentLang = lang
-            localStorage.setItem("dartLang", lang)
-            render()
-        }
-
-        let matches = JSON.parse(localStorage.getItem("dartMatchesV23")) || []
-        let emptyServers = JSON.parse(localStorage.getItem("dartEmptyServersV23")) || []
-        let emptyLeagues = JSON.parse(localStorage.getItem("dartEmptyLeaguesV23")) || []
-        let hiddenServers = JSON.parse(localStorage.getItem("dartHiddenServersV23")) || []
-        let serverOrder = JSON.parse(localStorage.getItem("dartServerOrderV23")) || []
-        let closedStates = JSON.parse(localStorage.getItem("dartClosedStatesV23")) || {}
-        let editingMatchIds = new Set()
-        let historyStack = []
-        let currentView = "home"
-        let formMode = "single"
-        let activeDeleteServerName = ""
-
-        function isCurrentCalendarWeek(dStr) {
-            if (!dStr) return false
-            const d = new Date(dStr), now = new Date()
-            const startOfWeek = (dt) => { const day = dt.getDay(), diff = dt.getDate() - day + (day === 0 ? -6 : 1); return new Date(dt.setDate(diff)).setHours(0,0,0,0); }
-            return startOfWeek(now) === startOfWeek(d)
-        }
-
-        function isWeekInPastOrCurrent(wStr) {
-            if (!wStr) return false
-            const match = wStr.match(/(\d{1,2})\.(\d{1,2})\./)
-            if (!match) return false
-            const ws = new Date(new Date().getFullYear(), parseInt(match[2])-1, parseInt(match[1]))
-            return new Date() >= ws
-        }
-
-        function toggleMustPlay(id) {
-            pushToHistory()
-            const match = matches.find(m => m.id === id)
-            if (match) { match.mustPlay = !match.mustPlay; save(); }
-        }
-
-        function toggleConfirmed(id) {
-            pushToHistory()
-            const match = matches.find(m => m.id === id)
-            if (match) { match.confirmed = !match.confirmed; save(); }
-        }
-
-        function toggleEditMatch(id) {
-            if (editingMatchIds.has(id)) editingMatchIds.delete(id)
-            else editingMatchIds.add(id)
-            render()
-        }
-
-        function editMatchFromHome(id) {
-            if (!editingMatchIds.has(id)) editingMatchIds.add(id)
-            setView("timeline")
-            setTimeout(() => {
-                const el = document.getElementById(`match-card-${id}`)
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            }, 150)
-        }
-
-        function clearMatchDateInEdit(id) {
-            const dateEl = document.getElementById(`edit-date-${id}`)
-            const timeEl = document.getElementById(`edit-time-${id}`)
-            if (dateEl) dateEl.value = ""
-            if (timeEl) timeEl.value = ""
-        }
-
-        function saveMatchEdit(id) {
-            pushToHistory()
-            const match = matches.find(m => m.id === id)
-            if (match) {
-                const dateEl = document.getElementById(`edit-date-${id}`)
-                const timeEl = document.getElementById(`edit-time-${id}`)
-                const weekEl = document.getElementById(`edit-week-${id}`)
-                const notesEl = document.getElementById(`edit-notes-${id}`)
-
-                if (dateEl) match.date = dateEl.value
-                if (timeEl) match.time = timeEl.value
-                if (weekEl) match.week = weekEl.value.trim()
-                if (notesEl) match.notes = notesEl.value.trim()
-
-                match.status = match.date ? "scheduled" : "unscheduled"
-                if (!match.date) match.confirmed = false
-
-                editingMatchIds.delete(id)
-                save()
-            }
-        }
-
-        function importTxt(event) {
-            const file = event.target.files[0]
-            if (!file) return
-            const reader = new FileReader()
-            reader.onload = function(e) { parseTxtData(e.target.result); }
-            reader.readAsText(file)
-        }
-
-        function parseTxtData(textText) {
-            pushToHistory()
-            const newMatches = []
-            const blocks = textText.split(/----+/).map(b => b.trim()).filter(b => b.length > 0)
-            blocks.forEach((block, bIdx) => {
-                const lines = block.split("\n").map(l => l.trim()).filter(l => l.length > 0)
-                if (lines.length === 0) return
-                const headerLine = lines[0]
-                const headerParts = headerLine.split("->").map(p => p.trim())
-                let server = headerParts[0] || "Ostatní"
-                let compFull = headerParts[1] || "Liga"
-                let format = headerParts[2] || "BO 8 501 DO"
-                let weekInfo = headerParts[3] || ""
-
-                lines.slice(1).forEach((mLine, mIdx) => {
-                    if (!mLine.startsWith("-")) return
-                    const matchParts = mLine.replace(/^-/, "").trim().split("->").map(p => p.trim())
-                    const opponent = matchParts[0]
-                    let date = "", time = "", confirmed = false, mustPlay = false, week = weekInfo, notes = ""
-
-                    matchParts.slice(1).forEach(part => {
-                        if (part.includes("🔥")) mustPlay = true
-                        else if (part.startsWith("W:")) week = part.replace("W:", "").trim()
-                        else if (part.startsWith("NOTE:")) notes = part.replace("NOTE:", "").trim()
-                        else {
-                            const dtMatch = part.match(/(\d{1,2})\.(\d{1,2})\.?(?:\s+(\d{1,2}:\d{2}))?/)
-                            if (dtMatch) {
-                                date = `${new Date().getFullYear()}-${dtMatch[2].padStart(2, '0')}-${dtMatch[1].padStart(2, '0')}`
-                                if (dtMatch[3]) time = dtMatch[3]
-                                confirmed = true
-                            }
-                        }
-                    })
-
-                    newMatches.push({
-                        id: Date.now() + (bIdx * 100) + mIdx,
-                        server, comp: compFull, opponent, format,
-                        type: week ? "fixed" : "flexi", week, date, time, confirmed, mustPlay,
-                        status: date ? "scheduled" : "unscheduled", notes
-                    })
-                })
-            })
-
-            if (newMatches.length > 0) {
-                matches = newMatches; save(); alert("TXT soubor byl úspěšně načten!");
-            }
-        }
-
-        function exportTxt() {
-            const grouped = {}
-            matches.forEach(m => {
-                const key = `${m.server}::${m.comp}`
-                if (!grouped[key]) grouped[key] = []
-                grouped[key].push(m)
-            })
-
-            let txtContent = ""
-            Object.keys(grouped).forEach((key, idx) => {
-                const compMatches = grouped[key], first = compMatches[0]
-                let header = `${first.server} -> ${first.comp}`
-                if (first.format) header += ` -> ${first.format}`
-                if (first.week) header += ` -> ${first.week}`
-                txtContent += `${header}\n`
-
-                compMatches.forEach(m => {
-                    let line = `- ${m.opponent}`
-                    if (m.date) {
-                        const parts = m.date.split("-")
-                        line += ` -> ${parts[2]}.${parts[1]}.`
-                        if (m.time) line += ` ${m.time}`
-                    } else { line += ` -> ` }
-                    if (m.mustPlay) line += ` -> 🔥`
-                    if (m.week) line += ` -> W: ${m.week}`
-                    if (m.notes) line += ` -> NOTE: ${m.notes}`
-                    txtContent += `${line}\n`
-                })
-                if (idx < Object.keys(grouped).length - 1) txtContent += `\n---------------------------------------------------------------------------\n\n`
-            })
-
-            const blob = new Blob([txtContent], { type: "text/plain;charset=utf-8" })
-            const link = document.createElement("a")
-            link.href = URL.createObjectURL(blob)
-            link.download = "Šipky zápasy.txt"
-            link.click()
-        }
-
-        function pushToHistory() {
-            const state = { matches: JSON.parse(JSON.stringify(matches)), emptyServers, emptyLeagues, hiddenServers, serverOrder }
-            historyStack.push(JSON.stringify(state))
-            if (historyStack.length > 20) historyStack.shift()
-            updateUndoButton()
-        }
-
-        function undo() {
-            if (historyStack.length === 0) return
-            const prev = JSON.parse(historyStack.pop())
-            matches = prev.matches; emptyServers = prev.emptyServers; emptyLeagues = prev.emptyLeagues || []; hiddenServers = prev.hiddenServers; serverOrder = prev.serverOrder || []
-            save(true); updateUndoButton(); render()
-        }
-
-        function updateUndoButton() {
-            const btn = document.getElementById("undoBtn")
-            if (!btn) return
-            if (historyStack.length > 0) {
-                btn.disabled = false
-                btn.className = "w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer"
-            } else {
-                btn.disabled = true
-                btn.className = "w-10 h-10 bg-gray-800 text-gray-800 rounded-lg border border-gray-955 flex items-center justify-center transition-all opacity-30 cursor-not-allowed"
-            }
-        }
-
-        function save(skipRender = false) {
-            localStorage.setItem("dartMatchesV23", JSON.stringify(matches))
-            localStorage.setItem("dartEmptyServersV23", JSON.stringify(emptyServers))
-            localStorage.setItem("dartEmptyLeaguesV23", JSON.stringify(emptyLeagues))
-            localStorage.setItem("dartHiddenServersV23", JSON.stringify(hiddenServers))
-            localStorage.setItem("dartServerOrderV23", JSON.stringify(serverOrder))
-            localStorage.setItem("dartClosedStatesV23", JSON.stringify(closedStates))
-            if (!skipRender) render()
-        }
-
-        function toggleForm(presetServer = null, presetComp = null) {
-            const form = document.getElementById("matchForm")
-            if (!form) return
-            form.classList.toggle("hidden")
-            if (!form.classList.contains("hidden")) {
-                if (presetServer) { document.getElementById("formServer").value = presetServer; checkNewServer(presetServer); }
-                if (presetComp) document.getElementById("formComp").value = presetComp
-            }
-        }
-
-        function setFormMode(mode) {
-            formMode = mode
-            const ms = document.getElementById("mode-single")
-            const mb = document.getElementById("mode-bulk")
-            if(ms) ms.className = mode === "single" ? "px-3 py-1 rounded bg-orange-600 font-semibold text-white text-sm" : "px-3 py-1 rounded text-gray-400 font-semibold text-sm"
-            if(mb) mb.className = mode === "bulk" ? "px-3 py-1 rounded bg-orange-600 font-semibold text-white text-sm" : "px-3 py-1 rounded text-gray-400 font-semibold text-sm"
-        }
-
-        function checkNewServer(val) {
-            const el = document.getElementById("formNewServerInput")
-            if(el) el.classList.toggle("hidden", val !== "__NEW__")
-        }
-
-        function setView(view) {
-            currentView = view
-            const fc = document.getElementById("filterContainer")
-            if(fc) fc.classList.toggle("hidden", view !== "timeline")
-            const pt = document.getElementById("pageTitle")
-            if(pt) pt.innerText = view === "home" ? translations[currentLang].mainTitle : translations[currentLang].timelineTitle
-            render()
-        }
-
-        function goHome() { setView("home"); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function scrollToElement(id) { setView("home"); setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100); }
-
-        function editServerName(oldName) {
-            const newName = prompt(`Zadej nový název pro server "${oldName}":`, oldName)
-            if (newName && newName.trim() !== oldName) {
-                pushToHistory()
-                matches.forEach(m => { if (m.server === oldName) m.server = newName.trim() })
-                emptyLeagues.forEach(l => { if (l.server === oldName) l.server = newName.trim() })
-                if (emptyServers.includes(oldName)) emptyServers[emptyServers.indexOf(oldName)] = newName.trim()
-                if (hiddenServers.includes(oldName)) hiddenServers[hiddenServers.indexOf(oldName)] = newName.trim()
-                if (serverOrder.includes(oldName)) serverOrder[serverOrder.indexOf(oldName)] = newName.trim()
-                updateServerSelect(); save()
-            }
-        }
-
-        function editCompName(serverName, oldCompName) {
-            const newName = prompt(`Zadej nový název pro ligu "${oldCompName}":`, oldCompName)
-            if (newName && newName.trim() !== oldCompName) {
-                pushToHistory()
-                matches.forEach(m => { if (m.server === serverName && m.comp === oldCompName) m.comp = newName.trim() })
-                emptyLeagues.forEach(l => { if (l.server === serverName && l.comp === oldCompName) l.comp = newName.trim() })
-                save()
-            }
-        }
-
-        function getAllServersOrdered() {
-            const existing = [...new Set([...matches.map(m => m.server), ...emptyServers, ...emptyLeagues.map(l => l.server)])]
-            let ordered = []
-            serverOrder.forEach(s => { if (existing.includes(s)) ordered.push(s) })
-            existing.forEach(s => { if (!ordered.includes(s)) ordered.push(s) })
-            return ordered
-        }
-
-        function openLeagueDeleteModal(serverName) {
-            activeDeleteServerName = serverName
-            const desc = document.getElementById("leagueDeleteServerDesc")
-            if(desc) desc.innerText = serverName
-            document.getElementById("leagueDeleteModal").classList.remove("hidden")
-        }
-
-        function closeLeagueDeleteModal() { document.getElementById("leagueDeleteModal").classList.add("hidden") }
-
-        function confirmLeagueDeletes() {
-            if (confirm("Opravdu chceš smazat tento server a jeho ligy?")) {
-                pushToHistory()
-                matches = matches.filter(m => m.server !== activeDeleteServerName)
-                emptyServers = emptyServers.filter(s => s !== activeDeleteServerName)
-                emptyLeagues = emptyLeagues.filter(l => l.server !== activeDeleteServerName)
-                save(); closeLeagueDeleteModal()
-            }
-        }
-
-        function openServerManager() {
-            const list = document.getElementById("serverManagerList")
-            if(!list) return
-            list.innerHTML = ""
-            getAllServersOrdered().forEach((server) => {
-                const isHidden = hiddenServers.includes(server)
-                list.innerHTML += `<div class="bg-gray-800 p-3 rounded-lg border border-gray-700 flex items-center justify-between gap-3"><span class="font-bold">${server}</span><div class="flex items-center gap-2"><button onclick="editServerName('${server}')" class="text-xs text-orange-400">✏️</button><label class="text-xs"><input type="checkbox" onchange="toggleServerHide('${server}')" ${isHidden ? 'checked' : ''}> Skrýt</label><button onclick="confirmDeleteServer('${server}')" class="text-xs text-red-400">Smazat</button></div></div>`
-            })
-            document.getElementById("serverManagerModal").classList.remove("hidden")
-        }
-
-        function closeServerManager() { document.getElementById("serverManagerModal").classList.add("hidden") }
-        function toggleServerHide(serverName) { pushToHistory(); hiddenServers = hiddenServers.includes(serverName) ? hiddenServers.filter(s => s !== serverName) : [...hiddenServers, serverName]; save(); openServerManager(); }
-
-        function confirmDeleteServer(serverName) {
-            if (confirm("Opravdu chceš smazat tento server?")) {
-                pushToHistory()
-                matches = matches.filter(m => m.server !== serverName)
-                emptyServers = emptyServers.filter(s => s !== serverName)
-                emptyLeagues = emptyLeagues.filter(l => l.server !== serverName)
-                updateServerSelect(); save(); openServerManager()
-            }
-        }
-
-        function updateServerSelect() {
-            const select = document.getElementById("formServer")
-            if(!select) return
-            const active = getAllServersOrdered()
-            select.innerHTML = ""
-            active.forEach(s => select.appendChild(new Option(s, s)))
-            select.appendChild(new Option("+ Vytvořit nový server...", "__NEW__"))
-            checkNewServer(select.value)
-        }
-
+        // Funkce pro uložení z formuláře (zajišťuje správné zpracování jednoho nebo hromadného zápasu)
         function saveFromForm() {
-            let server = document.getElementById("formServer").value
+            let server = document.getElementById("formServer").value;
             if (server === "__NEW__") {
-                server = document.getElementById("formNewServerInput").value.trim()
-                if (!server) return alert("Zadej název serveru")
+                server = document.getElementById("formNewServerInput").value.trim();
+                if (!server) return alert("Zadej název serveru");
             }
-            const comp = document.getElementById("formComp").value.trim()
-            if (!comp) return alert("Zadej název ligy")
+            const comp = document.getElementById("formComp").value.trim();
+            if (!comp) return alert("Zadej název ligy");
 
-            pushToHistory()
+            pushToHistory();
+
             if (formMode === "single") {
-                const opponent = document.getElementById("formOpponent").value.trim()
-                const week = document.getElementById("formWeek").value.trim()
-                if (!opponent) return alert("Zadej soupeře")
-                matches.push({ id: Date.now(), server, comp, opponent, format: "BO 8 501 DO", type: week ? "fixed" : "flexi", week, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "" })
-            }
-            updateServerSelect(); save(); toggleForm()
-        }
-
-        function deleteMatch(id) {
-            if (confirm("Opravdu chceš smazat tento zápas?")) {
-                pushToHistory(); matches = matches.filter(m => m.id !== id); save();
-            }
-        }
-
-        function getFullGroupedData() {
-            const grouped = {}
-            getAllServersOrdered().forEach(s => { if (!hiddenServers.includes(s)) grouped[s] = {} })
-            matches.forEach(m => {
-                if (hiddenServers.includes(m.server)) return
-                if (!grouped[m.server]) grouped[m.server] = {}
-                if (!grouped[m.server][m.comp]) grouped[m.server][m.comp] = []
-                grouped[m.server][m.comp].push(m)
-            })
-            emptyLeagues.forEach(l => {
-                if (!hiddenServers.includes(l.server)) {
-                    if (!grouped[l.server]) grouped[l.server] = {}
-                    if (!grouped[l.server][l.comp]) grouped[l.server][l.comp] = []
+                const opponent = document.getElementById("formOpponent").value.trim();
+                const week = document.getElementById("formWeek").value.trim();
+                if (!opponent) return alert("Zadej soupeře");
+                matches.push({ id: Date.now(), server, comp, opponent, format: "BO 8 501 DO", type: week ? "fixed" : "flexi", week, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "" });
+            } else {
+                const listEl = document.getElementById("formOpponentsList");
+                if(!listEl) return;
+                const names = listEl.value.split("\n").map(n => n.trim()).filter(n => n);
+                if (names.length === 0) return alert("Zadej aspoň jednoho soupeře");
+                const rematchesEl = document.getElementById("formRematches");
+                const bulkDateEl = document.getElementById("formBulkStartDate");
+                const incRematches = rematchesEl ? rematchesEl.checked : false;
+                const bDate = (bulkDateEl && bulkDateEl.value) ? new Date(bulkDateEl.value) : null;
+                
+                names.forEach((name, idx) => {
+                    let w = bDate ? `(${new Date(bDate.getTime() + idx*7*86400000).getDate()}.${new Date(bDate.getTime() + idx*7*86400000).getMonth()+1}.)` : "";
+                    matches.push({ id: Date.now() + idx, server, comp, opponent: name, format: "BO 8 501 DO", type: "fixed", week: w, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "" });
+                });
+                if (incRematches) {
+                    names.forEach((name, idx) => {
+                        let w = bDate ? `(${new Date(bDate.getTime() + (names.length+idx)*7*86400000).getDate()}.${new Date(bDate.getTime() + (names.length+idx)*7*86400000).getMonth()+1}.)` : "";
+                        matches.push({ id: Date.now() + names.length + idx, server, comp, opponent: name, format: "BO 8 501 DO", type: "fixed", week: w, date: "", time: "", confirmed: false, mustPlay: false, status: "unscheduled", notes: "" });
+                    });
                 }
-            })
-            return grouped
-        }
-
-        function renderSidebar(grouped) {
-            const nav = document.getElementById("sidebarNav")
-            if(!nav) return
-            nav.innerHTML = ""
-            Object.keys(grouped).forEach(serverName => {
-                const sDiv = document.createElement("div"); sDiv.className = "space-y-1"
-                sDiv.innerHTML = `<div onclick="scrollToElement('${serverName.replace(/\s+/g, '-')}')" class="text-sm font-bold text-orange-400 cursor-pointer truncate">🖥️ ${serverName}</div>`
-                const ul = document.createElement("ul"); ul.className = "pl-3 border-l border-gray-800 space-y-1 mt-0.5"
-                Object.keys(grouped[serverName]).forEach(compName => {
-                    const li = document.createElement("li"); li.className = "text-xs text-gray-400 hover:text-white cursor-pointer truncate"
-                    li.innerText = `🏆 ${compName}`
-                    li.onclick = (e) => { e.stopPropagation(); scrollToElement(`${serverName.replace(/\s+/g, '-')}-${compName.replace(/\s+/g, '-')}`); }
-                    ul.appendChild(li)
-                })
-                sDiv.appendChild(ul); nav.appendChild(sDiv)
-            })
-        }
-
-        function render() {
-            const container = document.getElementById("mainContentContainer")
-            if(!container) return
-            container.innerHTML = ""
-            const grouped = getFullGroupedData()
-            renderSidebar(grouped)
-            updateServerSelect()
-
-            const fS = document.getElementById("filterServer")
-            const fC = document.getElementById("filterComp")
-            if (fS && fC) {
-                const curS = fS.value, curC = fC.value
-                fS.innerHTML = `<option value="all">Všechny servery</option>`
-                fC.innerHTML = `<option value="all">Všechny ligy</option>`
-                Object.keys(grouped).forEach(s => fS.innerHTML += `<option value="${s}">${s}</option>`)
-                fS.value = curS
-
-                if (fS.value !== "all" && grouped[fS.value]) {
-                    Object.keys(grouped[fS.value]).forEach(c => fC.innerHTML += `<option value="${c}">${c}</option>`)
-                } else {
-                    [...new Set(matches.map(m => m.comp))].forEach(c => fC.innerHTML += `<option value="${c}">${c}</option>`)
-                }
-                fC.value = curC
             }
-
-            if (currentView === "timeline") {
-                let timelineMatches = matches.filter(m => (m.date || m.mustPlay) && !hiddenServers.includes(m.server))
-                if (fS && fS.value !== "all") timelineMatches = timelineMatches.filter(m => m.server === fS.value)
-                if (fC && fC.value !== "all") timelineMatches = timelineMatches.filter(m => m.comp === fC.value)
-
-                timelineMatches.sort((a, b) => `${a.date}T${a.time || "00:00"}`.localeCompare(`${b.date}T${b.time || "00:00"}`))
-
-                if (timelineMatches.length === 0) {
-                    container.innerHTML = `<div class="text-center py-12 text-gray-500 bg-gray-900 rounded-xl border border-gray-800">Žádné naplánované zápasy</div>`
-                    return
-                }
-
-                timelineMatches.forEach(m => {
-                    const card = document.createElement("div"), isEditing = editingMatchIds.has(m.id)
-                    card.id = `match-card-${m.id}`
-                    card.className = "bg-gray-900 p-4 rounded-xl border border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-                    
-                    let formattedDate = m.date
-                    if (m.date && m.date.includes("-")) {
-                        const parts = m.date.split("-")
-                        formattedDate = `${parseInt(parts[2])}.${parseInt(parts[1])}.`
-                    }
-
-                    if (isEditing) {
-                        card.className = "bg-gray-900 p-4 rounded-xl border border-orange-500/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg"
-                        card.innerHTML = `
-                            <div class="flex items-center gap-4 flex-1 w-full">
-                                <div class="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px]">
-                                    <p class="text-[10px] text-gray-400 uppercase font-bold">Úprava</p>
-                                    <button onclick="toggleEditMatch(${m.id})" class="text-xs text-orange-400 hover:underline font-semibold mt-1">Zavřít</button>
-                                </div>
-                                <div class="flex-1 space-y-2">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-lg font-bold text-orange-400">${m.opponent}</span>
-                                        <input type="text" id="edit-week-${m.id}" value="${m.week || ''}" placeholder="Kolo / Týden" class="bg-blue-950/60 text-blue-400 text-xs px-2 py-1 rounded border border-blue-900/50 font-semibold focus:outline-none focus:border-orange-500 w-28 text-center">
-                                    </div>
-                                    <input type="text" id="edit-notes-${m.id}" value="${m.notes || ''}" placeholder="Poznámka..." class="w-full max-w-md bg-gray-950 border border-gray-700 text-xs px-2.5 py-1.5 rounded text-gray-200 focus:outline-none focus:border-orange-500">
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800 flex-wrap">
-                                <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400 border border-gray-700'}" title="Nachholspiel">🔥</button>
-                                <input type="date" id="edit-date-${m.id}" value="${m.date}" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500 w-36 text-center">
-                                <input type="time" id="edit-time-${m.id}" value="${m.time}" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm text-gray-200 focus:outline-none focus:border-orange-500">
-                                <button onclick="clearMatchDateInEdit(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-900/40 p-2 rounded-lg text-xs font-bold transition" title="Zrušit termín">❌</button>
-                                <button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-800 text-gray-500 border-gray-700 hover:text-gray-300'}" title="Potvrzeno">👍</button>
-                                <button onclick="saveMatchEdit(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 px-3 rounded-lg text-sm font-bold transition" title="Uložit">✔️</button>
-                                <button onclick="deleteMatch(${m.id})" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 p-2 px-2.5 rounded-lg text-sm font-semibold transition border border-red-900/40" title="Smazat">🗑️</button>
-                            </div>
-                        `
-                    } else {
-                        card.innerHTML = `
-                            <div class="flex items-center gap-4 flex-1">
-                                <div onclick="toggleEditMatch(${m.id})" class="bg-gray-800 hover:bg-gray-750 cursor-pointer px-3 py-2 rounded-lg border border-gray-700 text-center shrink-0 min-w-[85px]" title="Klikni pro úpravu termínu">
-                                    <p class="text-[10px] text-gray-400 uppercase font-bold">Termín</p>
-                                    <p class="text-sm font-black ${m.date ? 'text-white' : 'text-gray-400'}">${formattedDate || 'Nenaplánováno'}</p>
-                                    <p class="text-xs text-orange-400 font-semibold">${m.time || '--:--'}</p>
-                                </div>
-                                <div class="truncate flex-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-lg font-bold text-white">${m.opponent}</span>
-                                        ${m.mustPlay ? `<span class="text-xs font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 flex items-center gap-1">Dohrávka</span>` : ''}
-                                        ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold">${m.week}</span>` : ''}
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1 truncate">🖥️ ${m.server} • 🏆 ${m.comp}</p>
-                                    ${m.notes ? `<p class="text-xs text-gray-400 mt-1 italic">📝 ${m.notes}</p>` : ''}
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-none border-gray-800">
-                                <button onclick="toggleMustPlay(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition ${m.mustPlay ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-red-400'}" title="Nachholspiel">🔥</button>
-                                ${m.date ? `<button onclick="toggleConfirmed(${m.id})" class="p-2 rounded-lg text-xs font-semibold transition border ${m.confirmed ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300'}" title="Potvrzeno">👍</button>` : ''}
-                                <button onclick="toggleEditMatch(${m.id})" class="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 p-2 rounded-lg text-xs font-semibold transition" title="Upravit">✏️</button>
-                            </div>
-                        `
-                    }
-                    container.appendChild(card)
-                })
-                return
-            }
-
-            Object.keys(grouped).forEach(serverName => {
-                const sEl = document.createElement("div"); sEl.id = serverName.replace(/\s+/g, '-'); sEl.className = "bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 shadow-lg"
-                sEl.innerHTML = `<h2 class="text-xl font-bold text-orange-500 flex justify-between items-center"><span>🖥️ ${serverName}</span><div class="flex gap-2"><button onclick="editServerName('${serverName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button><button onclick="openLeagueDeleteModal('${serverName}')" class="text-xs text-red-400">🗑️</button></div></h2>`
-
-                Object.keys(grouped[serverName]).forEach(compName => {
-                    const compMatches = grouped[serverName][compName]
-                    const lEl = document.createElement("div"); lEl.id = `${sEl.id}-${compName.replace(/\s+/g, '-')}`; lEl.className = "bg-gray-850 p-3 rounded-lg border border-gray-800 space-y-2"
-                    lEl.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-gray-200">🏆 ${compName} <span class="text-xs bg-gray-900 px-2 py-0.5 rounded text-gray-400">${compMatches.length}</span></h3>
-                            <div class="flex gap-2">
-                                <button onclick="editCompName('${serverName}', '${compName}')" class="text-xs text-gray-400 hover:text-orange-400">✏️</button>
-                                <button onclick="toggleForm('${serverName}', '${compName}')" class="text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 px-2.5 py-1 rounded border border-orange-500/30">+ Přidat zápas</button>
-                            </div>
-                        </div>
-                    `
-                    compMatches.forEach(m => {
-                        const mDiv = document.createElement("div")
-                        mDiv.className = "bg-gray-900 p-3 rounded border border-gray-800 flex justify-between items-center"
-                        let formattedMatchDate = m.date ? `${parseInt(m.date.split('-')[2])}.${parseInt(m.date.split('-')[1])}.` : 'Nenaplánováno'
-                        
-                        let statusIconHTML = ""
-                        if (m.mustPlay) {
-                            statusIconHTML = `<span class="text-xs text-red-400 font-bold mr-2" title="Dohrávka">🔥</span>`
-                        } else if (!m.date && m.week && isWeekInPastOrCurrent(m.week)) {
-                            statusIconHTML = `<span class="text-xs text-yellow-500 font-bold mr-2" title="Nutno naplánovat">⚠️</span>`
-                        }
-
-                        mDiv.innerHTML = `
-                            <div class="flex items-center">
-                                ${statusIconHTML}
-                                <span class="font-bold text-white">${m.opponent}</span>
-                                ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold ml-2">${m.week}</span>` : ''}
-                            </div>
-                            <div class="flex gap-3 items-center">
-                                <span class="text-xs font-semibold ${m.date ? 'text-white' : 'text-gray-500'}">${formattedMatchDate} ${m.time || ''}</span>
-                                <button onclick="deleteMatch(${m.id})" class="text-xs bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-900/30 px-2 py-1 rounded" title="Smazat zápas">🗑️</button>
-                                <button onclick="editMatchFromHome(${m.id})" class="text-xs bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 px-2 py-1 rounded" title="Upravit">✏️</button>
-                            </div>
-                        `
-                        lEl.appendChild(mDiv)
-                    })
-                    sEl.appendChild(lEl)
-                })
-                container.appendChild(sEl)
-            })
+            updateServerSelect(); save(); toggleForm();
         }
 
         document.addEventListener("DOMContentLoaded", () => {
