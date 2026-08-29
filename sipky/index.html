@@ -87,10 +87,17 @@
                 <!-- Režim pro hromadné přidání celé ligy -->
                 <div id="bulkContainer" class="hidden space-y-4">
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">Formát zápasů (např. BO 8 501 DO)</label>
-                        <input type="text" id="formBulkFormat" value="BO 8 501 DO" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        <label class="block text-xs text-gray-400 mb-2">Formát zápasu</label>
+                        <div id="formatButtons" class="flex flex-wrap gap-2">
+                            <button type="button" onclick="setBulkFormat('BO 7 501 DO', this)" class="format-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 border border-gray-700 hover:border-orange-500 text-gray-300 transition">BO 7 501 DO</button>
+                            <button type="button" onclick="setBulkFormat('BO 8 501 DO', this)" class="format-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-orange-600 border border-orange-500 text-white transition">BO 8 501 DO</button>
+                            <button type="button" onclick="setBulkFormat('BO 9 501 DO', this)" class="format-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 border border-gray-700 hover:border-orange-500 text-gray-300 transition">BO 9 501 DO</button>
+                            <button type="button" onclick="setBulkFormat('First to 6 501 DO', this)" class="format-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 border border-gray-700 hover:border-orange-500 text-gray-300 transition">First to 6</button>
+                        </div>
+                        <input type="hidden" id="formBulkFormat" value="BO 8 501 DO">
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Typ</label>
                             <select id="formBulkType" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
@@ -99,14 +106,21 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1">Počáteční datum</label>
+                            <label class="block text-xs text-gray-400 mb-1">Začátek od</label>
                             <input type="date" id="formBulkStartDate" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
                         </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Final Deadline</label>
+                            <input type="date" id="formFinalDeadline" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Final Deadline (volitelně)</label>
-                        <input type="date" id="formFinalDeadline" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+
+                    <!-- Přepínač pro odvety -->
+                    <div class="flex items-center gap-3 bg-gray-800/50 p-3 rounded-lg border border-gray-800">
+                        <input type="checkbox" id="formBulkReturnMatches" class="w-4 h-4 accent-orange-600 cursor-pointer">
+                        <label for="formBulkReturnMatches" class="text-sm text-gray-300 cursor-pointer select-none">Včetně odvet (každý soupeř 2x)</label>
                     </div>
+
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Seznam soupeřů (každý na nový řádek)</label>
                         <textarea id="formBulkOpponents" rows="5" placeholder="Hráč 1&#10;Hráč 2&#10;Hráč 3" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500"></textarea>
