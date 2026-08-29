@@ -26,8 +26,8 @@
 </head>
 <body class="bg-[#121214] text-gray-100 min-h-screen flex flex-col">
 
-    <!-- Horní lišta / Navigace -->
-    <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md">
+    <!-- Horní lišta / Navigace (Upevněná na stálo) -->
+    <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md sticky top-0 z-40">
         <div class="flex items-center space-x-3">
             <button onclick="goHome()" id="btnHomeIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Domů / Rozcestník">🏠</button>
             <button onclick="setView('timeline')" id="btnTimelineIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Aktuální zápasy">🗓️</button>
@@ -61,7 +61,8 @@
     </header>
 
     <div class="flex flex-1 overflow-hidden">
-        <aside class="w-64 bg-gray-950 border-r border-gray-800 p-4 hidden md:block overflow-y-auto sidebar-scroll">
+        <!-- Levý sloupec pevně upevněný na stálo -->
+        <aside class="w-64 bg-gray-950 border-r border-gray-800 p-4 hidden md:block sidebar-scroll sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto shrink-0">
             <div id="sidebarNav" class="space-y-4"></div>
         </aside>
 
@@ -156,7 +157,7 @@
                     </label>
                 </div>
 
-                <!-- Režim pro hromadné přidání celé ligy (s koly a typem) -->
+                <!-- Režim pro hromadné přidání celé ligy -->
                 <div id="bulkContainer" class="hidden space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -690,6 +691,7 @@
 
         function renderSidebar(grouped) {
             const nav = document.getElementById("sidebarNav"); if(!nav) return; nav.innerHTML = "";
+            const topDiv = document.createElement("div"); topDiv.className = "space-y-4";
             Object.keys(grouped).forEach(serverName => {
                 const sDiv = document.createElement("div"); sDiv.className = "space-y-1";
                 sDiv.innerHTML = `<div onclick="scrollToElement('${serverName.replace(/\s+/g, '-')}')" class="text-sm font-bold text-orange-400 cursor-pointer truncate">🖥️ ${serverName}</div>`;
@@ -702,8 +704,9 @@
                     li.onclick = (e) => { e.stopPropagation(); scrollToElement(`${serverName.replace(/\s+/g, '-')}-${compName.replace(/\s+/g, '-')}`); };
                     ul.appendChild(li);
                 });
-                sDiv.appendChild(ul); nav.appendChild(sDiv);
+                sDiv.appendChild(ul); topDiv.appendChild(sDiv);
             });
+            nav.appendChild(topDiv);
         }
 
         function render() {
@@ -815,7 +818,12 @@
 
                         let dotsHtml = `<div class="flex flex-wrap gap-1 px-1 py-1">`;
                         compMatches.forEach(m => {
-                            let dotColor = m.date ? "bg-yellow-500" : "bg-red-500";
+                            let dotColor = "bg-red-500";
+                            if (m.date) {
+                                if (isCurrentCalendarWeek(m.date)) dotColor = "bg-yellow-500";
+                                else if (m.confirmed) dotColor = "bg-emerald-500";
+                                else dotColor = "bg-yellow-500";
+                            }
                             dotsHtml += `<span class="inline-block w-2 h-2 rounded-full ${dotColor}" title="${m.opponent} (${m.date || 'bez termínu'})"></span>`;
                         });
                         dotsHtml += `</div>`; lEl.innerHTML += dotsHtml;
@@ -831,10 +839,12 @@
                                 if (m.mustPlay) statusIconHTML = `<span class="text-xs text-red-400 font-bold mr-2" title="Dohrávka">🔥</span>`;
                                 else if (!m.date && m.week && isWeekInPastOrCurrent(m.week)) statusIconHTML = `<span class="text-xs text-yellow-500 font-bold mr-2" title="Nutno naplánovat">⚠️</span>`;
 
+                                let matchNameColor = m.date ? (isCurrentCalendarWeek(m.date) ? "text-yellow-400" : (m.confirmed ? "text-emerald-400" : "text-red-400")) : "text-white";
+
                                 mDiv.innerHTML = `
                                     <div class="flex items-center">
                                         ${statusIconHTML}
-                                        <span class="font-bold text-white">${m.opponent}</span>
+                                        <span class="font-bold ${matchNameColor}">${m.opponent}</span>
                                         <span class="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-0.5 rounded">${m.format}</span>
                                         ${m.week ? `<span class="text-xs text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/30 font-semibold ml-2">${m.week}</span>` : ''}
                                     </div>
