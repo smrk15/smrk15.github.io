@@ -14,7 +14,7 @@
         <div class="flex items-center space-x-3">
             <button onclick="goHome()" id="btnHomeIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Domů / Rozcestník">🏠</button>
             <button onclick="setView('timeline')" id="btnTimelineIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Aktuální zápasy">🗓️</button>
-            <h1 id="pageTitle" class="text-xl font-bold text-orange-500 tracking-wide ml-2">🎯 Moje Šipkařské Ligy</h1>
+            <h1 id="pageTitle" class="text-xl font-bold text-orange-500 tracking-wide ml-2" data-lang="mainTitle">🎯 Moje Šipkařské Ligy</h1>
         </div>
         
         <!-- Sjednocená skupina tlačítek vpravo -->
@@ -29,7 +29,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             </button>
             
-      <!-- Import TXT (Upload -> Šipka NAHORU) -->
+            <!-- Import TXT (Upload -> Šipka NAHORU) -->
             <label class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-emerald-400 flex items-center justify-center transition cursor-pointer" title="Import TXT">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 <input type="file" accept=".txt" onchange="importTxt(event)" class="hidden">
@@ -58,13 +58,16 @@
 
         <!-- Hlavní obsah -->
         <main class="flex-1 p-6 overflow-y-auto space-y-6">
-            <!-- Skrytý formulář pro přidání zápasu -->
+            <!-- Kompletní formulář pro přidání zápasu / ligy -->
             <div id="matchForm" class="hidden bg-gray-900 p-5 rounded-xl border border-orange-500/40 shadow-xl space-y-4">
-                <h3 id="formTitle" class="text-lg font-bold text-orange-400">Přidat zápas</h3>
-                <div class="flex gap-2 border-b border-gray-800 pb-3">
-                    <button type="button" id="mode-single" onclick="setFormMode('single')" class="px-3 py-1 rounded bg-orange-600 font-semibold text-white text-sm">Jeden zápas</button>
-                    <button type="button" id="mode-bulk" onclick="setFormMode('bulk')" class="px-3 py-1 rounded text-gray-400 font-semibold text-sm">Hromadně (celá liga)</button>
+                <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                    <h3 id="formTitle" class="text-lg font-bold text-orange-400" data-lang="formTitleAdd">Přidat zápas</h3>
+                    <div class="flex gap-2 bg-gray-950 p-1 rounded border border-gray-800 text-xs">
+                        <button type="button" id="mode-single" onclick="setFormMode('single')" class="px-3 py-1 rounded bg-orange-600 font-semibold text-white" data-lang="formModeSingle">Jeden zápas</button>
+                        <button type="button" id="mode-bulk" onclick="setFormMode('bulk')" class="px-3 py-1 rounded text-gray-400 hover:text-white font-semibold" data-lang="formModeBulk">Hromadně (celá liga)</button>
+                    </div>
                 </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Server</label>
@@ -76,19 +79,90 @@
                         <input type="text" id="formComp" placeholder="Liga / Cup..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
                     </div>
                 </div>
+
+                <!-- Formát zápasu & Délka -->
+                <div class="bg-gray-950/50 p-3 rounded-lg border border-gray-800 space-y-2">
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider" data-lang="formMatchFormat">Formát zápasu & Délka</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <select id="fmtType" onchange="autoCalcDuration()" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm focus:outline-none focus:border-orange-500 text-gray-200">
+                            <option value="BO">Best of (BO)</option>
+                            <option value="First to">First to</option>
+                        </select>
+                        <input type="number" id="fmtNumber" oninput="autoCalcDuration()" placeholder="Číslo (např. 8)" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm focus:outline-none focus:border-orange-500 text-gray-200">
+                        <input type="text" id="fmtGame" placeholder="Hra (501...)" value="501" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm focus:outline-none focus:border-orange-500 text-gray-200">
+                        <select id="fmtOut" class="bg-gray-800 border border-gray-700 p-2 rounded text-sm focus:outline-none focus:border-orange-500 text-gray-200">
+                            <option value="DO" selected>DO</option>
+                            <option value="SO">SO</option>
+                            <option value="MO">MO</option>
+                            <option value="DI DO">DI DO</option>
+                        </select>
+                        <input type="number" id="formDuration" placeholder="Délka (min)" class="bg-gray-800 border border-orange-500/50 p-2 rounded text-sm focus:outline-none focus:border-orange-500 text-orange-400 font-bold" title="Předpokládaná délka v minutách">
+                    </div>
+                </div>
+
+                <!-- Limity, deadline, discord a web -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1" data-lang="formMaxWeekly">Max zápasů týdně</label>
+                        <input type="number" id="formMaxWeekly" placeholder="Žádný limit" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1" data-lang="formFinalDeadline">Konečná deadline (datum)</label>
+                        <input type="date" id="formFinalDeadline" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Discord (URL)</label>
+                        <input type="url" id="formDiscordUrl" placeholder="https://discord.gg/..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Web / Tabulka (URL)</label>
+                        <input type="url" id="formWebUrl" placeholder="https://..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                </div>
+
+                <!-- Typ zápasu -->
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Typ</label>
+                    <select id="formType" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                        <option value="flexi" data-lang="optFlexi">Flexibilní zápas (odehraju kdykoliv)</option>
+                        <option value="fixed" data-lang="optFixed">Pevné kolo / Týden</option>
+                    </select>
+                </div>
+
+                <!-- Režim pro jeden zápas -->
                 <div id="singleOpponentContainer" class="space-y-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Soupeř</label>
                         <input type="text" id="formOpponent" placeholder="Soupeř..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
                     </div>
-                    <div>
+                    <div id="singleWeekContainer">
                         <label class="block text-xs text-gray-400 mb-1">Kolo / Týden</label>
                         <input type="text" id="formWeek" placeholder="Kolo / Týden..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="toggleForm()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 font-semibold">Zrušit</button>
-                    <button type="button" onclick="toggleForm()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm text-white font-bold">Uložit</button>
+
+                <!-- Režim pro hromadné přidání celé ligy -->
+                <div id="bulkContainer" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1" data-lang="formBulkDateLabel">Datum prvního týdne (pro rozpočítání):</label>
+                        <input type="date" id="formBulkStartDate" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1" data-lang="formOpponentsLabel">Seznam soupeřů (každé jméno na nový řádek):</label>
+                        <textarea id="formOpponentsList" rows="5" placeholder="Hráč 1&#10;Hráč 2&#10;Hráč 3" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500 font-mono"></textarea>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none bg-gray-950/50 p-2.5 rounded-lg border border-gray-800 w-max">
+                        <input type="checkbox" id="formRematches" class="accent-orange-600 h-4 w-4">
+                        <span data-lang="formRematchesLabel">Včetně odvet (zduplikovat celý seznam jako druhé kolo)</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-800">
+                    <button type="button" onclick="toggleForm()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 font-semibold" data-lang="btnCancel">Zrušit</button>
+                    <button type="button" onclick="saveFromForm()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm text-white font-bold" data-lang="btnSave">Uložit</button>
                 </div>
             </div>
 
@@ -100,11 +174,27 @@
     <!-- Modální okno pro smazání lig -->
     <div id="leagueDeleteModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <h3 class="text-lg font-bold text-red-400">Smazat server / ligy</h3>
-            <p class="text-sm text-gray-300">Opravdu chceš smazat celý server <span id="leagueDeleteServerDesc" class="font-bold text-orange-400"></span>?</p>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeLeagueDeleteModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-semibold">Zrušit</button>
-                <button onclick="confirmLeagueDeletes()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold">Smazat</button>
+            <h3 class="text-lg font-bold text-red-400" data-lang="modalClearLeagues">Smazat server / ligy</h3>
+            <p class="text-sm text-gray-300" id="leagueDeleteServerDesc"></p>
+            <div class="space-y-2 max-h-60 overflow-y-auto" id="leagueDeleteList"></div>
+            <div class="flex justify-between items-center pt-2">
+                <button onclick="selectAllLeaguesForDelete(true)" class="text-xs text-orange-400 hover:underline" data-lang="btnSelectAll">Vybrat vše</button>
+                <div class="flex gap-2">
+                    <button onclick="closeLeagueDeleteModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-semibold" data-lang="btnCancel">Zrušit</button>
+                    <button onclick="confirmLeagueDeletes()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold" data-lang="btnDeleteSelected">Smazat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modální okno pro správu serverů -->
+    <div id="serverManagerModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <h3 class="text-lg font-bold text-orange-500" data-lang="modalManageServers">Spravovat servery a pořadí</h3>
+            <p class="text-xs text-gray-400" data-lang="modalManageServersDesc">Použij šipky pro změnu pořadí serverů. Můžeš je také skrýt nebo trvale smazat.</p>
+            <div class="space-y-2 max-h-80 overflow-y-auto" id="serverManagerList"></div>
+            <div class="flex justify-end pt-2 border-t border-gray-800">
+                <button onclick="closeServerManager()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-semibold" data-lang="btnSaveClose">Uložit a zavřít</button>
             </div>
         </div>
     </div>
