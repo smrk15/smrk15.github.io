@@ -87,14 +87,8 @@
                 <!-- Režim pro hromadné přidání celé ligy -->
                 <div id="bulkContainer" class="hidden space-y-4">
                     <div>
-                        <label class="block text-xs text-gray-400 mb-2">Formát zápasu</label>
-                        <div id="formatButtons" class="flex flex-wrap gap-2">
-                            <button type="button" onclick="setBulkFormat('BO 7 501 DO', this)" class="format-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 border border-gray-700 hover:border-orange-500 text-gray-300 transition">BO 7 501 DO</button>
-                            <button type="button" onclick="setBulkFormat('BO 8 501 DO', this)" class="format-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-orange-600 border border-orange-500 text-white transition">BO 8 501 DO</button>
-                            <button type="button" onclick="setBulkFormat('BO 9 501 DO', this)" class="format-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 border border-gray-700 hover:border-orange-500 text-gray-300 transition">BO 9 501 DO</button>
-                            <button type="button" onclick="setBulkFormat('First to 6 501 DO', this)" class="format-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 border border-gray-700 hover:border-orange-500 text-gray-300 transition">First to 6</button>
-                        </div>
-                        <input type="hidden" id="formBulkFormat" value="BO 8 501 DO">
+                        <label class="block text-xs text-gray-400 mb-1">Formát zápasů (např. BO 13 501 DO)</label>
+                        <input type="text" id="formBulkFormat" value="BO 8 501 DO" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500">
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
