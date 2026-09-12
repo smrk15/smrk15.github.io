@@ -551,7 +551,18 @@
         }
 
         function goHome() { setView("home"); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function scrollToElement(id) { setView("home"); setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); }
+        
+        // Upravené scrollování s ohledem na výšku horní lišty (cca 73px + rezerva)
+        function scrollToElement(id) {
+            setView("home");
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const topPos = el.getBoundingClientRect().top + window.pageYOffset - 85;
+                    window.scrollTo({ top: topPos, behavior: 'smooth' });
+                }
+            }, 50);
+        }
 
         function editServerName(oldName) {
             const newName = prompt("Nový název:", oldName);
