@@ -27,7 +27,7 @@
 </head>
 <body class="bg-[#121214] text-gray-100 min-h-screen flex flex-col">
 
-    <!-- Horní lišta / Navigace (Upevněná na stálo) -->
+    <!-- Horní lišta / Navigace -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md sticky top-0 z-40">
         <div class="flex items-center space-x-3">
             <button type="button" onclick="goHome()" id="btnHomeIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Domů / Rozcestník">🏠</button>
@@ -62,13 +62,11 @@
     </header>
 
     <div class="flex flex-1 items-start">
-        <!-- Levý sloupec pevně upevněný na stálo pod horní lištou -->
         <aside class="w-64 bg-gray-950 border-r border-gray-800 p-4 hidden md:block sidebar-scroll sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto shrink-0">
             <div id="sidebarNav" class="space-y-4"></div>
         </aside>
 
         <main class="flex-1 p-6 space-y-6">
-            <!-- Formulář pro přidání -->
             <div id="matchForm" class="hidden bg-gray-900 p-5 rounded-xl border border-orange-500/40 shadow-xl space-y-4 max-w-4xl">
                 <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                     <h3 id="formTitle" class="text-lg font-bold text-orange-400">Přidat zápas</h3>
@@ -90,7 +88,6 @@
                     </div>
                 </div>
 
-                <!-- Formát zápasu & délka (včetně podpory Setů) -->
                 <div class="bg-gray-950/40 p-3.5 rounded-xl border border-gray-800 space-y-2.5">
                     <div class="flex justify-between items-center">
                         <label class="block text-[11px] text-orange-400 uppercase font-bold tracking-wider">Formát zápasu & Délka</label>
@@ -114,7 +111,7 @@
                             <option value="SO">SO (Single Out)</option>
                             <option value="MO">MO (Master Out)</option>
                         </select>
-                        <input type="text" id="formDuration" value="30" placeholder="Minuty" class="bg-gray-800 border border-gray-700 p-2 rounded-lg text-xs text-orange-400 font-bold text-center" title="Automaticky vypočteno podle formátu">
+                        <input type="text" id="formDuration" value="30" placeholder="Minuty" class="bg-gray-800 border border-gray-700 p-2 rounded-lg text-xs text-orange-400 font-bold text-center">
                     </div>
 
                     <div id="formatSetsRow" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-gray-800/80">
@@ -137,7 +134,6 @@
                     </div>
                 </div>
 
-                <!-- Max zápasů & Deadline -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Max zápasů týdně</label>
@@ -149,7 +145,6 @@
                     </div>
                 </div>
 
-                <!-- Odkazy Discord & Web -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Discord (URL odkaz)</label>
@@ -161,7 +156,6 @@
                     </div>
                 </div>
 
-                <!-- Režim pro jeden zápas (+ Odveta) -->
                 <div id="singleOpponentContainer" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -186,7 +180,6 @@
                     </label>
                 </div>
 
-                <!-- Režim pro hromadné přidání celé ligy -->
                 <div id="bulkContainer" class="hidden space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -226,7 +219,6 @@
         </main>
     </div>
 
-    <!-- Modální okno pro smazání serveru -->
     <div id="leagueDeleteModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full p-6 space-y-4">
             <h3 class="text-lg font-bold text-red-400">Smazat server / ligy</h3>
@@ -238,7 +230,6 @@
         </div>
     </div>
 
-    <!-- SKRIPT OBSAHUJÍCÍ VŠECHNU LOGIKU -->
     <script>
         const translations = {
             cs: {
@@ -272,7 +263,7 @@
                 const raw = localStorage.getItem(key);
                 if (!raw) return fallback;
                 const parsed = JSON.parse(raw);
-                return Array.isArray(fallback) ? (Array.isArray(parsed) ? parsed : fallback) : (parsed && typeof parsed === 'object' ? parsed : fallback);
+                return Array.isArray(fallback) ? (Array.isArray(parsed) ? parsed : fallback) : (parsed && typeof parsed === "object" ? parsed : fallback);
             } catch (e) {
                 return fallback;
             }
@@ -294,7 +285,6 @@
 
         function ensurePersistenceLists() {
             let changed = false;
-
             const normalizedLeagues = [];
             emptyLeagues.forEach(item => {
                 if (typeof item === "string") {
@@ -392,7 +382,7 @@
                 localStorage.setItem("dartClosedStatesV23", JSON.stringify(closedStates));
             } catch (e) {}
             updateUndoButton();
-            if (!skipRender && typeof render === 'function') render();
+            if (!skipRender && typeof render === "function") render();
         }
 
         function toggleLanguage() { setLanguage(currentLang === "cs" ? "de" : "cs"); }
@@ -401,7 +391,7 @@
             currentLang = lang;
             try { localStorage.setItem("dartLang", lang); } catch (e) {}
             const sw = document.getElementById("langSwitcher");
-            if(sw) sw.innerText = lang === "cs" ? "🇩🇪" : "🇨🇿";
+            if (sw) sw.innerText = lang === "cs" ? "🇩🇪" : "🇨🇿";
             translateUI();
             render();
         }
@@ -424,13 +414,13 @@
                 if (translations[currentLang][key]) el.innerText = translations[currentLang][key];
             });
             const fc = document.getElementById("formComp");
-            if(fc) fc.placeholder = currentLang === "cs" ? "Liga / Cup (např. Cup 6c, Liga Division E)" : "Liga / Cup (z.B. Cup 6c, Liga Division E)";
+            if (fc) fc.placeholder = currentLang === "cs" ? "Liga / Cup (např. Cup 6c, Liga Division E)" : "Liga / Cup (z.B. Cup 6c, Liga Division E)";
             const fw = document.getElementById("formWeek");
-            if(fw) fw.placeholder = translations[currentLang].placeholderWeek;
+            if (fw) fw.placeholder = translations[currentLang].placeholderWeek;
             const fo = document.getElementById("formOpponent");
-            if(fo) fo.placeholder = currentLang === "cs" ? "Soupeř (nebo nech prázdné pro prázdnou ligu)..." : "Gegner (oder leer lassen für leere Liga)...";
+            if (fo) fo.placeholder = currentLang === "cs" ? "Soupeř (nebo nech prázdné pro prázdnou ligu)..." : "Gegner (oder leer lassen für leere Liga)...";
 
-            const setElTitle = (id, val) => { const el = document.getElementById(id); if(el) el.title = val; };
+            const setElTitle = (id, val) => { const el = document.getElementById(id); if (el) el.title = val; };
             setElTitle("btnHomeIcon", translations[currentLang].homeBtn);
             setElTitle("btnTimelineIcon", translations[currentLang].timelineBtn);
             setElTitle("undoBtn", translations[currentLang].undoBtn);
@@ -476,7 +466,6 @@
         function getLegsFromFormat(formatStr) {
             if (!formatStr) return 7;
             const fmtLower = formatStr.toLowerCase();
-
             const setsMatch = fmtLower.match(/(bo|ft|best of|first to)\s*(\d+)\s*sets?\s*\/\s*(bo|ft|best of|first to)\s*(\d+)\s*legs?/);
             if (setsMatch) {
                 const sMode = setsMatch[1];
@@ -487,7 +476,6 @@
                 const maxLegsPerSet = (lMode === "ft" || lMode === "first to") ? (2 * lCount) - 1 : lCount;
                 return Math.round(maxSets * maxLegsPerSet * 0.75);
             }
-
             const matchNum = fmtLower.match(/\d+/);
             if (!matchNum) return 7;
             const num = parseInt(matchNum[0]);
@@ -516,19 +504,11 @@
 
         function preserveLeagueBeforeMatchRemoval(match) {
             if (!match) return;
-            if (match.server && !emptyServers.includes(match.server)) {
-                emptyServers.push(match.server);
-            }
+            if (match.server && !emptyServers.includes(match.server)) emptyServers.push(match.server);
             if (match.server && match.comp) {
                 const existing = emptyLeagues.find(l => l && l.server === match.server && l.comp === match.comp);
                 if (!existing) {
-                    emptyLeagues.push({
-                        server: match.server,
-                        comp: match.comp,
-                        format: match.format || "",
-                        discordUrl: match.discordUrl || "",
-                        webUrl: match.webUrl || ""
-                    });
+                    emptyLeagues.push({ server: match.server, comp: match.comp, format: match.format || "", discordUrl: match.discordUrl || "", webUrl: match.webUrl || "" });
                 } else {
                     if (match.discordUrl) existing.discordUrl = match.discordUrl;
                     if (match.webUrl) existing.webUrl = match.webUrl;
@@ -576,7 +556,7 @@
         function editMatchFromHome(id) {
             if (!editingMatchIds.has(id)) editingMatchIds.add(id);
             setView("timeline");
-            setTimeout(() => { const el = document.getElementById(`match-card-${id}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+            setTimeout(() => { const el = document.getElementById(`match-card-${id}`); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }, 100);
         }
 
         function clearMatchDateInEdit(id) {
@@ -594,12 +574,10 @@
                 const timeEl = document.getElementById(`edit-time-${id}`);
                 const weekEl = document.getElementById(`edit-week-${id}`);
                 const notesEl = document.getElementById(`edit-notes-${id}`);
-
                 if (dateEl) match.date = dateEl.value;
                 if (timeEl) match.time = timeEl.value;
                 if (weekEl) match.week = weekEl.value.trim();
                 if (notesEl) match.notes = notesEl.value.trim();
-
                 match.status = match.date ? "scheduled" : "unscheduled";
                 if (!match.date) match.confirmed = false;
                 editingMatchIds.delete(id);
@@ -626,7 +604,7 @@
             let detailsText = `Soupeř: ${match.opponent}\nFormát: ${match.format}\nServer: ${match.server}\nLiga: ${match.comp}\nDélka: ${duration} min`;
             if (match.week) detailsText += `\nKolo: ${match.week}`;
             if (match.notes) detailsText += `\nPoznámka: ${match.notes}`;
-            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${encodeURIComponent(detailsText)}`, '_blank');
+            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${encodeURIComponent(detailsText)}`, "_blank");
         }
 
         function handleFileUpload(inputEl) {
@@ -654,78 +632,4 @@
                 if (lines.length === 0) return;
                 const headerParts = lines[0].split("->").map(p => p.trim());
                 let server = "", compFull = "", format = "BO 8 501 DO", weekInfo = "", webUrl = "", discordUrl = "";
-                headerParts.forEach(part => { if (part.startsWith("http")) { if (part.includes("discord")) discordUrl = part; else webUrl = part; } });
-                const nonUrlParts = headerParts.filter(p => !p.startsWith("http"));
-                if (nonUrlParts.length >= 3) { server = nonUrlParts[0]; compFull = nonUrlParts[1]; format = nonUrlParts[2] || format; if (nonUrlParts[3]) weekInfo = nonUrlParts[3]; }
-                else {
-                    compFull = nonUrlParts[0] || "Liga"; format = nonUrlParts[1] || format; if (nonUrlParts[2]) weekInfo = nonUrlParts[2];
-                    const combined = `${compFull} ${webUrl} ${discordUrl}`.toLowerCase();
-                    if (combined.includes("edc")) server = "EDC";
-                    else if (combined.includes("scolia")) server = "Scolia Checkout Community";
-                    else if (combined.includes("dartfan")) server = "Dartfan online";
-                    else if (combined.includes("hood")) server = "HOOD";
-                    else if (combined.includes("dbf")) server = "DBF";
-                    else server = "Ostatní";
-                }
-                importedLeagues.push({ server, comp: compFull, format, discordUrl, webUrl });
-                const duration = calculateDurationMinutes(format);
-                lines.slice(1).forEach((mLine, mIdx) => {
-                    if (!mLine.startsWith("-")) return;
-                    const matchParts = mLine.replace(/^-/, "").trim().split("->").map(p => p.trim());
-                    const opponent = matchParts[0];
-                    let date = "", time = "", confirmed = false, mustPlay = false, week = weekInfo, notes = "";
-                    matchParts.slice(1).forEach(part => {
-                        if (part.includes("🔥")) mustPlay = true;
-                        else if (part.startsWith("W:")) week = part.replace("W:", "").trim();
-                        else if (part.startsWith("NOTE:")) notes = part.replace("NOTE:", "").trim();
-                        else {
-                            const dtMatch = part.match(/(\d{1,2})\.(\d{1,2})\.?(?:\s+(\d{1,2}:\d{2}))?/);
-                            if (dtMatch) {
-                                date = `${new Date().getFullYear()}-${dtMatch[2].padStart(2, '0')}-${dtMatch[1].padStart(2, '0')}`;
-                                if (dtMatch[3]) time = dtMatch[3]; confirmed = true;
-                            }
-                        }
-                    });
-                    newMatches.push({ id: Date.now() + (bIdx * 100) + mIdx, server, comp: compFull, opponent, format, duration, type: week ? "fixed" : "flexi", week, date, time, confirmed, mustPlay, status: date ? "scheduled" : "unscheduled", notes, maxWeekly: "", finalDeadline: "", discordUrl, webUrl });
-                });
-            });
-            if (newMatches.length > 0 || importedLeagues.length > 0) {
-                matches = newMatches;
-                importedLeagues.forEach(il => {
-                    if (!emptyServers.includes(il.server)) emptyServers.push(il.server);
-                    const idx = emptyLeagues.findIndex(l => l && l.server === il.server && l.comp === il.comp);
-                    if (idx >= 0) emptyLeagues[idx] = il;
-                    else emptyLeagues.push(il);
-                });
-                save();
-                alert("TXT načten!");
-            } else {
-                alert("V souboru nebyly nalezeny žádné platné záznamy.");
-            }
-        }
-
-        function exportTxt() {
-            const grouped = getFullGroupedData();
-            let txtContent = "";
-            const entries = [];
-            Object.keys(grouped).forEach(serverName => {
-                Object.keys(grouped[serverName]).forEach(compName => {
-                    entries.push({ server: serverName, comp: compName, matches: grouped[serverName][compName] });
-                });
-            });
-
-            entries.forEach((entry, idx) => {
-                const compMatches = entry.matches;
-                const leagueMeta = emptyLeagues.find(l => l && l.server === entry.server && l.comp === entry.comp) || {};
-                const first = compMatches[0] || leagueMeta;
-                let header = `${entry.server} -> ${entry.comp}`;
-                if (first.format) header += ` -> ${first.format}`;
-                if (first.week) header += ` -> ${first.week}`;
-                const webUrl = first.webUrl || leagueMeta.webUrl;
-                const discordUrl = first.discordUrl || leagueMeta.discordUrl;
-                if (webUrl) header += ` -> ${webUrl}`;
-                if (discordUrl) header += ` -> ${discordUrl}`;
-                txtContent += `${header}\n`;
-                compMatches.forEach(m => {
-                    let line = `- ${m.opponent}`;
-                    if (m.date) { const parts = m.date.split("-"); line +=
+                headerParts.forEach(part => { if (part.startsWith("http")) { if (part.includes("discord")) discordUrl = part; else webUrl = part; }
