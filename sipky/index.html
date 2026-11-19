@@ -30,34 +30,34 @@
     <!-- Horní lišta / Navigace (Upevněná na stálo) -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md sticky top-0 z-40">
         <div class="flex items-center space-x-3">
-            <button onclick="goHome()" id="btnHomeIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Domů / Rozcestník">🏠</button>
-            <button onclick="setView('timeline')" id="btnTimelineIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Aktuální zápasy">🗓️</button>
+            <button type="button" onclick="goHome()" id="btnHomeIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Domů / Rozcestník">🏠</button>
+            <button type="button" onclick="setView('timeline')" id="btnTimelineIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer text-lg" title="Aktuální zápasy">🗓️</button>
             <h1 id="pageTitle" class="text-xl font-bold text-orange-500 tracking-wide ml-2">🎯 Moje Šipkařské Ligy</h1>
         </div>
         
         <div class="flex items-center space-x-2">
-            <button onclick="undo()" id="undoBtn" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 flex items-center justify-center transition cursor-pointer opacity-30 cursor-not-allowed" title="Zpět">
+            <button type="button" onclick="undo()" id="undoBtn" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 flex items-center justify-center transition cursor-pointer opacity-30 cursor-not-allowed" title="Zpět">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 015 5v2M3 10l6 6m-6-6l6-6"/></svg>
             </button>
 
-            <button onclick="toggleForm()" id="btnAddIcon" class="w-10 h-10 bg-orange-600 hover:bg-orange-500 rounded-lg text-white flex items-center justify-center transition cursor-pointer shadow-lg shadow-orange-600/20" title="Přidat zápas / ligu">
+            <button type="button" onclick="toggleForm()" id="btnAddIcon" class="w-10 h-10 bg-orange-600 hover:bg-orange-500 rounded-lg text-white flex items-center justify-center transition cursor-pointer shadow-lg shadow-orange-600/20" title="Přidat zápas / ligu">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             </button>
             
-            <label class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-emerald-400 flex items-center justify-center transition cursor-pointer" title="Import TXT">
+            <label for="txtImportInput" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-emerald-400 flex items-center justify-center transition cursor-pointer" title="Import TXT">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                <input type="file" accept=".txt" onchange="importTxt(event)" class="hidden">
             </label>
+            <input id="txtImportInput" type="file" accept=".txt,text/plain" class="hidden">
 
-            <button onclick="exportTxt()" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-blue-400 flex items-center justify-center transition cursor-pointer" title="Export TXT">
+            <button type="button" onclick="exportTxt()" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-blue-400 flex items-center justify-center transition cursor-pointer" title="Export TXT">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             </button>
 
-            <button onclick="openServerManager()" id="btnManageIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 flex items-center justify-center transition cursor-pointer" title="Spravovat servery">
+            <button type="button" onclick="openServerManager()" id="btnManageIcon" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 flex items-center justify-center transition cursor-pointer" title="Spravovat servery">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756.2924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </button>
 
-            <button onclick="toggleLanguage()" id="langSwitcher" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs font-bold text-gray-200 flex items-center justify-center transition cursor-pointer">🇩🇪</button>
+            <button type="button" onclick="toggleLanguage()" id="langSwitcher" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs font-bold text-gray-200 flex items-center justify-center transition cursor-pointer">🇩🇪</button>
         </div>
     </header>
 
@@ -177,4 +177,555 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">Soupeř (nebo nech prázdné pro vytvoření samotné prázdné ligy/pohá
+                        <label class="block text-xs text-gray-400 mb-1">Soupeř (nebo nech prázdné pro vytvoření samotné prázdné ligy/poháru)</label>
+                        <input type="text" id="formOpponent" placeholder="Soupeř..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none bg-gray-950/50 p-3 rounded-lg border border-gray-800 w-max">
+                        <input type="checkbox" id="formSingleRematch" class="accent-orange-600 h-4 w-4">
+                        <span>Včetně odvety (vytvořit rovnou 2 vzájemné zápasy)</span>
+                    </label>
+                </div>
+
+                <!-- Režim pro hromadné přidání celé ligy -->
+                <div id="bulkContainer" class="hidden space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Typ zápasů v lize</label>
+                            <select id="formBulkMatchType" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                                <option value="fixed">Pevné termíny / kola</option>
+                                <option value="flexi">Flexibilní zápasy</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Výchozí Kolo / Týden (např. Kolo 1)</label>
+                            <input type="text" id="formBulkWeek" placeholder="Kolo 1 / 1. týden..." class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Datum prvního týdne (pro rozpočítání):</label>
+                        <input type="date" id="formBulkStartDate" class="w-full sm:w-1/2 bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Seznam soupeřů (každé jméno na nový řádek):</label>
+                        <textarea id="formOpponentsList" rows="5" placeholder="Hráč 1&#10;Hráč 2&#10;Hráč 3" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-orange-500 font-mono"></textarea>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none bg-gray-950/50 p-3 rounded-lg border border-gray-800 w-max">
+                        <input type="checkbox" id="formRematches" class="accent-orange-600 h-4 w-4">
+                        <span>Včetně odvet (zduplikovat celý seznam jako druhé kolo)</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-800">
+                    <button type="button" onclick="toggleForm()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 font-semibold transition">Zrušit</button>
+                    <button type="button" onclick="saveFromForm()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm text-white font-bold transition">Uložit</button>
+                </div>
+            </div>
+
+            <div id="filterContainer" class="hidden"></div>
+            <div id="mainContentContainer" class="space-y-6"></div>
+        </main>
+    </div>
+
+    <!-- Modální okno pro smazání serveru -->
+    <div id="leagueDeleteModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-lg font-bold text-red-400">Smazat server / ligy</h3>
+            <p class="text-sm text-gray-300">Opravdu chceš smazat celý server <span id="leagueDeleteServerDesc" class="font-bold text-orange-400"></span> včetně všech jeho lig a zápasů?</p>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeLeagueDeleteModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-semibold transition">Zrušit</button>
+                <button type="button" onclick="confirmLeagueDeletes()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold transition">Smazat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SKRIPT OBSAHUJÍCÍ VŠECHNU LOGIKU -->
+    <script>
+        const translations = {
+            cs: {
+                homeBtn: "Domů / Rozcestník", timelineBtn: "Aktuální zápasy", undoBtn: "Zpět", manageServersBtn: "Spravovat servery",
+                mainTitle: "🎯 Moje Šipkařské Ligy", timelineTitle: "🗓️ Aktuální zápasy", addMatchBtn: "Přidat zápas / ligu",
+                formTitleAdd: "Přidat zápas / ligu", formModeSingle: "Jeden zápas / prázdná liga", formModeBulk: "Hromadně (celá liga)",
+                optNewServer: "+ Nový server...", formMatchFormat: "Formát zápasu & Délka",
+                emptyMatchesLabel: "Žádné domluvené ani označené zápasy k dohrávce.", lblConfirmedCheck: "Potvrzeno?",
+                placeholderWeek: "Kolo / Týden", placeholderDateInput: "dd.mm.rrrr", termLabel: "TERMÍN",
+                noTermLabel: "Bez termínu", mustPlayLabel: "🔥 Dohrávka", tooltipClose: "Zavřít",
+                tooltipSave: "Uložit změny", tooltipDelete: "Smazat zápas", tooltipEdit: "Upravit zápas",
+                tooltipGCal: "Přidat do Google Kalendáře", badgeEditTitle: "Úprava", btnAddMatchToLeague: "+ Přidat zápas",
+                emptyLeagueHint: "Zatím žádné zápasy – připraveno pro další kolo nebo novou sezónu."
+            },
+            de: {
+                homeBtn: "Hauptmenü / Übersicht", timelineBtn: "Aktuelle Spiele", undoBtn: "Rückgängig", manageServersBtn: "Server verwalten",
+                mainTitle: "🎯 Meine Darts-Ligen", timelineTitle: "🗓️ Aktuelle Spiele", addMatchBtn: "Spiel / Liga hinzufügen",
+                formTitleAdd: "Spiel / Liga hinzufügen", formModeSingle: "Einzelnes Spiel / leere Liga", formModeBulk: "Massenhaft (ganze Liga)",
+                optNewServer: "+ Neuer Server...", formMatchFormat: "Spielformat & Dauer",
+                emptyMatchesLabel: "Keine vereinbarten oder zum Nachholen markierten Spiele.", lblConfirmedCheck: "Bestätigt?",
+                placeholderWeek: "Runde / Woche", placeholderDateInput: "tt.mm.jjjj", termLabel: "TERMIN",
+                noTermLabel: "Kein Termin", mustPlayLabel: "🔥 Nachholspiel", tooltipClose: "Schließen",
+                tooltipSave: "Änderungen speichern", tooltipDelete: "Spiel löschen", tooltipEdit: "Spiel bearbeiten",
+                tooltipGCal: "Zu Google Kalender hinzufügen", badgeEditTitle: "Bearbeiten", btnAddMatchToLeague: "+ Spiel hinzufügen",
+                emptyLeagueHint: "Noch keine Spiele – bereit für die nächste Runde oder neue Saison."
+            }
+        };
+
+        function safeParseStorage(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return fallback;
+                const parsed = JSON.parse(raw);
+                return Array.isArray(fallback) ? (Array.isArray(parsed) ? parsed : fallback) : (parsed && typeof parsed === 'object' ? parsed : fallback);
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        let matches = safeParseStorage("dartMatchesV23", []);
+        let emptyServers = safeParseStorage("dartEmptyServersV23", []);
+        let emptyLeagues = safeParseStorage("dartEmptyLeaguesV23", []);
+        let hiddenServers = safeParseStorage("dartHiddenServersV23", []);
+        let serverOrder = safeParseStorage("dartServerOrderV23", []);
+        let closedStates = safeParseStorage("dartClosedStatesV23", {});
+        let historyStack = [];
+
+        let currentLang = localStorage.getItem("dartLang") || "cs";
+        let editingMatchIds = new Set();
+        let currentView = "home";
+        let formMode = "single";
+        let activeDeleteServerName = "";
+
+        function ensurePersistenceLists() {
+            let changed = false;
+
+            const normalizedLeagues = [];
+            emptyLeagues.forEach(item => {
+                if (typeof item === "string") {
+                    const parts = item.split("::");
+                    if (parts.length >= 2 && parts[0] && parts[1]) {
+                        normalizedLeagues.push({ server: parts[0], comp: parts[1], format: "", discordUrl: "", webUrl: "" });
+                        changed = true;
+                    }
+                } else if (item && typeof item === "object" && item.server && item.comp) {
+                    normalizedLeagues.push(item);
+                } else {
+                    changed = true;
+                }
+            });
+            emptyLeagues = normalizedLeagues;
+            emptyServers = emptyServers.filter(s => typeof s === "string" && s.trim().length > 0);
+
+            matches.forEach(m => {
+                if (!m || typeof m !== "object") return;
+                if (m.server && !emptyServers.includes(m.server)) {
+                    emptyServers.push(m.server);
+                    changed = true;
+                }
+                if (m.server && m.comp) {
+                    const existing = emptyLeagues.find(l => l && l.server === m.server && l.comp === m.comp);
+                    if (!existing) {
+                        emptyLeagues.push({
+                            server: m.server,
+                            comp: m.comp,
+                            format: m.format || "",
+                            discordUrl: m.discordUrl || "",
+                            webUrl: m.webUrl || ""
+                        });
+                        changed = true;
+                    } else {
+                        if (!existing.discordUrl && m.discordUrl) { existing.discordUrl = m.discordUrl; changed = true; }
+                        if (!existing.webUrl && m.webUrl) { existing.webUrl = m.webUrl; changed = true; }
+                        if (!existing.format && m.format) { existing.format = m.format; changed = true; }
+                    }
+                }
+            });
+
+            if (changed) {
+                try {
+                    localStorage.setItem("dartEmptyServersV23", JSON.stringify(emptyServers));
+                    localStorage.setItem("dartEmptyLeaguesV23", JSON.stringify(emptyLeagues));
+                } catch (e) {}
+            }
+        }
+
+        function pushToHistory() {
+            const state = {
+                matches: JSON.parse(JSON.stringify(matches)),
+                emptyServers: [...emptyServers],
+                emptyLeagues: JSON.parse(JSON.stringify(emptyLeagues)),
+                hiddenServers: [...hiddenServers],
+                serverOrder: [...serverOrder]
+            };
+            historyStack.push(JSON.stringify(state));
+            if (historyStack.length > 20) historyStack.shift();
+            updateUndoButton();
+        }
+
+        function undo() {
+            if (historyStack.length === 0) return;
+            const prev = JSON.parse(historyStack.pop());
+            matches = prev.matches || [];
+            emptyServers = prev.emptyServers || [];
+            emptyLeagues = prev.emptyLeagues || [];
+            hiddenServers = prev.hiddenServers || [];
+            serverOrder = prev.serverOrder || [];
+            save(false);
+        }
+
+        function updateUndoButton() {
+            const btn = document.getElementById("undoBtn");
+            if (!btn) return;
+            if (historyStack.length > 0) {
+                btn.disabled = false;
+                btn.className = "w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg text-orange-400 flex items-center justify-center transition cursor-pointer";
+            } else {
+                btn.disabled = true;
+                btn.className = "w-10 h-10 bg-gray-800 text-gray-800 rounded-lg border border-gray-900 flex items-center justify-center transition-all opacity-30 cursor-not-allowed";
+            }
+        }
+
+        function save(skipRender = false) {
+            ensurePersistenceLists();
+            try {
+                localStorage.setItem("dartMatchesV23", JSON.stringify(matches));
+                localStorage.setItem("dartEmptyServersV23", JSON.stringify(emptyServers));
+                localStorage.setItem("dartEmptyLeaguesV23", JSON.stringify(emptyLeagues));
+                localStorage.setItem("dartHiddenServersV23", JSON.stringify(hiddenServers));
+                localStorage.setItem("dartServerOrderV23", JSON.stringify(serverOrder));
+                localStorage.setItem("dartClosedStatesV23", JSON.stringify(closedStates));
+            } catch (e) {}
+            updateUndoButton();
+            if (!skipRender && typeof render === 'function') render();
+        }
+
+        function toggleLanguage() { setLanguage(currentLang === "cs" ? "de" : "cs"); }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            try { localStorage.setItem("dartLang", lang); } catch (e) {}
+            const sw = document.getElementById("langSwitcher");
+            if(sw) sw.innerText = lang === "cs" ? "🇩🇪" : "🇨🇿";
+            translateUI();
+            render();
+        }
+
+        function handleDatePlaceholder(input) {
+            if (!input) return;
+            if (input.value) { input.classList.remove("empty-date"); input.style.setProperty("--date-opacity", "1"); }
+            else { input.classList.add("empty-date"); input.style.setProperty("--date-opacity", "0"); }
+        }
+
+        function setupDateInput(input) {
+            if (!input || !translations[currentLang]) return;
+            input.setAttribute("data-placeholder", translations[currentLang].placeholderDateInput);
+            handleDatePlaceholder(input);
+        }
+
+        function translateUI() {
+            document.querySelectorAll("[data-lang]").forEach(el => {
+                const key = el.getAttribute("data-lang");
+                if (translations[currentLang][key]) el.innerText = translations[currentLang][key];
+            });
+            const fc = document.getElementById("formComp");
+            if(fc) fc.placeholder = currentLang === "cs" ? "Liga / Cup (např. Cup 6c, Liga Division E)" : "Liga / Cup (z.B. Cup 6c, Liga Division E)";
+            const fw = document.getElementById("formWeek");
+            if(fw) fw.placeholder = translations[currentLang].placeholderWeek;
+            const fo = document.getElementById("formOpponent");
+            if(fo) fo.placeholder = currentLang === "cs" ? "Soupeř (nebo nech prázdné pro prázdnou ligu)..." : "Gegner (oder leer lassen für leere Liga)...";
+
+            const setElTitle = (id, val) => { const el = document.getElementById(id); if(el) el.title = val; };
+            setElTitle("btnHomeIcon", translations[currentLang].homeBtn);
+            setElTitle("btnTimelineIcon", translations[currentLang].timelineBtn);
+            setElTitle("undoBtn", translations[currentLang].undoBtn);
+            setElTitle("btnAddIcon", translations[currentLang].addMatchBtn);
+            setElTitle("btnManageIcon", translations[currentLang].manageServersBtn);
+        }
+
+        function toggleSetsFormat() {
+            const mode = document.getElementById("formFormatStructure").value;
+            const setsRow = document.getElementById("formatSetsRow");
+            const legsType = document.getElementById("formFormatType");
+            const legsNum = document.getElementById("formFormatNum");
+            if (mode === "sets") {
+                setsRow.classList.remove("hidden");
+                legsType.classList.add("opacity-40", "pointer-events-none");
+                legsNum.classList.add("opacity-40", "pointer-events-none");
+            } else {
+                setsRow.classList.add("hidden");
+                legsType.classList.remove("opacity-40", "pointer-events-none");
+                legsNum.classList.remove("opacity-40", "pointer-events-none");
+            }
+            updateDefaultDuration();
+        }
+
+        function buildFormatString() {
+            const structure = document.getElementById("formFormatStructure").value;
+            const gameVariant = document.getElementById("formGameVariant").value.trim();
+            const outVariant = document.getElementById("formOutVariant").value;
+
+            if (structure === "sets") {
+                const sType = document.getElementById("formSetsType").value;
+                const sNum = document.getElementById("formSetsNum").value.trim() || "3";
+                const lType = document.getElementById("formSetLegsType").value;
+                const lNum = document.getElementById("formSetLegsNum").value.trim() || "5";
+                return `${sType} ${sNum} Sets / ${lType} ${lNum} Legs ${gameVariant} ${outVariant}`.trim();
+            } else {
+                const fmtType = document.getElementById("formFormatType").value;
+                const fmtNum = document.getElementById("formFormatNum").value.trim() || "8";
+                return `${fmtType} ${fmtNum} ${gameVariant} ${outVariant}`.trim();
+            }
+        }
+
+        function getLegsFromFormat(formatStr) {
+            if (!formatStr) return 7;
+            const fmtLower = formatStr.toLowerCase();
+
+            const setsMatch = fmtLower.match(/(bo|ft|best of|first to)\s*(\d+)\s*sets?\s*\/\s*(bo|ft|best of|first to)\s*(\d+)\s*legs?/);
+            if (setsMatch) {
+                const sMode = setsMatch[1];
+                const sCount = parseInt(setsMatch[2]);
+                const lMode = setsMatch[3];
+                const lCount = parseInt(setsMatch[4]);
+                const maxSets = (sMode === "ft" || sMode === "first to") ? (2 * sCount) - 1 : sCount;
+                const maxLegsPerSet = (lMode === "ft" || lMode === "first to") ? (2 * lCount) - 1 : lCount;
+                return Math.round(maxSets * maxLegsPerSet * 0.75);
+            }
+
+            const matchNum = fmtLower.match(/\d+/);
+            if (!matchNum) return 7;
+            const num = parseInt(matchNum[0]);
+            if (fmtLower.includes("first to") || fmtLower.includes("race to") || fmtLower.startsWith("ft ")) return (2 * num) - 1;
+            return num;
+        }
+
+        function calculateDurationMinutes(formatStr) {
+            const legs = getLegsFromFormat(formatStr);
+            if (legs <= 8) return 30;
+            if (legs <= 11) return 45;
+            if (legs <= 16) return 60;
+            return 75;
+        }
+
+        function updateDefaultDuration() {
+            const dummyFormat = buildFormatString();
+            const dur = calculateDurationMinutes(dummyFormat);
+            const durEl = document.getElementById("formDuration");
+            if (durEl) durEl.value = dur;
+        }
+
+        function toggleMustPlay(id) { pushToHistory(); const match = matches.find(m => m.id === id); if (match) { match.mustPlay = !match.mustPlay; save(); } }
+        function toggleConfirmed(id) { pushToHistory(); const match = matches.find(m => m.id === id); if (match) { match.confirmed = !match.confirmed; save(); } }
+        function toggleMissedTerm(id) { pushToHistory(); const match = matches.find(m => m.id === id); if (match) { match.missedTerm = !match.missedTerm; save(); } }
+
+        function preserveLeagueBeforeMatchRemoval(match) {
+            if (!match) return;
+            if (match.server && !emptyServers.includes(match.server)) {
+                emptyServers.push(match.server);
+            }
+            if (match.server && match.comp) {
+                const existing = emptyLeagues.find(l => l && l.server === match.server && l.comp === match.comp);
+                if (!existing) {
+                    emptyLeagues.push({
+                        server: match.server,
+                        comp: match.comp,
+                        format: match.format || "",
+                        discordUrl: match.discordUrl || "",
+                        webUrl: match.webUrl || ""
+                    });
+                } else {
+                    if (match.discordUrl) existing.discordUrl = match.discordUrl;
+                    if (match.webUrl) existing.webUrl = match.webUrl;
+                    if (match.format) existing.format = match.format;
+                }
+            }
+        }
+
+        function deleteMatch(id) {
+            if (confirm("Opravdu smazat tento zápas?")) {
+                pushToHistory();
+                const m = matches.find(x => x.id === id);
+                preserveLeagueBeforeMatchRemoval(m);
+                matches = matches.filter(x => x.id !== id);
+                editingMatchIds.delete(id);
+                save();
+            }
+        }
+
+        function quickDeleteMatch(id) {
+            if (confirm("Zapsat jako odehrané a smazat ze seznamu?")) {
+                pushToHistory();
+                const m = matches.find(x => x.id === id);
+                preserveLeagueBeforeMatchRemoval(m);
+                matches = matches.filter(x => x.id !== id);
+                editingMatchIds.delete(id);
+                save();
+            }
+        }
+
+        function deleteSpecificLeague(serverName, compName) {
+            if (confirm(`Opravdu chceš trvale smazat ligu "${compName}" ze serveru "${serverName}" (včetně případných zápasů)?`)) {
+                pushToHistory();
+                matches = matches.filter(m => !(m.server === serverName && m.comp === compName));
+                emptyLeagues = emptyLeagues.filter(l => !(l && l.server === serverName && l.comp === compName));
+                save();
+            }
+        }
+
+        function toggleEditMatch(id) {
+            if (editingMatchIds.has(id)) editingMatchIds.delete(id); else editingMatchIds.add(id);
+            render();
+        }
+
+        function editMatchFromHome(id) {
+            if (!editingMatchIds.has(id)) editingMatchIds.add(id);
+            setView("timeline");
+            setTimeout(() => { const el = document.getElementById(`match-card-${id}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+        }
+
+        function clearMatchDateInEdit(id) {
+            const dateEl = document.getElementById(`edit-date-${id}`);
+            const timeEl = document.getElementById(`edit-time-${id}`);
+            if (dateEl) { dateEl.value = ""; handleDatePlaceholder(dateEl); }
+            if (timeEl) timeEl.value = "";
+        }
+
+        function saveMatchEdit(id) {
+            pushToHistory();
+            const match = matches.find(m => m.id === id);
+            if (match) {
+                const dateEl = document.getElementById(`edit-date-${id}`);
+                const timeEl = document.getElementById(`edit-time-${id}`);
+                const weekEl = document.getElementById(`edit-week-${id}`);
+                const notesEl = document.getElementById(`edit-notes-${id}`);
+
+                if (dateEl) match.date = dateEl.value;
+                if (timeEl) match.time = timeEl.value;
+                if (weekEl) match.week = weekEl.value.trim();
+                if (notesEl) match.notes = notesEl.value.trim();
+
+                match.status = match.date ? "scheduled" : "unscheduled";
+                if (!match.date) match.confirmed = false;
+                editingMatchIds.delete(id);
+                save();
+            }
+        }
+
+        function openGoogleCalendar(id) {
+            const match = matches.find(m => m.id === id);
+            if (!match || !match.date) return;
+            const cleanDate = match.date.replace(/-/g, "");
+            const duration = match.duration || calculateDurationMinutes(match.format);
+            let startIso = cleanDate, endIso = cleanDate;
+            if (match.time) {
+                const parts = match.time.split(":");
+                const startHour = parseInt(parts[0]), startMin = parseInt(parts[1]);
+                const startDateObj = new Date(match.date); startDateObj.setHours(startHour, startMin, 0);
+                const endDateObj = new Date(startDateObj.getTime() + duration * 60000);
+                const pad = (n) => n.toString().padStart(2, "0");
+                startIso = `${cleanDate}T${pad(startHour)}${pad(startMin)}00`;
+                endIso = `${endDateObj.getFullYear()}${pad(endDateObj.getMonth() + 1)}${pad(endDateObj.getDate())}T${pad(endDateObj.getHours())}${pad(endDateObj.getMinutes())}00`;
+            }
+            const title = encodeURIComponent(`🎯 [${match.server}] ${match.comp} - ${match.format} - ${match.opponent}`);
+            let detailsText = `Soupeř: ${match.opponent}\nFormát: ${match.format}\nServer: ${match.server}\nLiga: ${match.comp}\nDélka: ${duration} min`;
+            if (match.week) detailsText += `\nKolo: ${match.week}`;
+            if (match.notes) detailsText += `\nPoznámka: ${match.notes}`;
+            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${encodeURIComponent(detailsText)}`, '_blank');
+        }
+
+        function handleFileUpload(inputEl) {
+            const file = inputEl && inputEl.files && inputEl.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                parseTxtData(String(e.target.result || ""));
+                inputEl.value = "";
+            };
+            reader.onerror = function() {
+                alert("Nepodařilo se přečíst soubor.");
+                inputEl.value = "";
+            };
+            reader.readAsText(file, "UTF-8");
+        }
+
+        function parseTxtData(textText) {
+            pushToHistory();
+            const newMatches = [];
+            const importedLeagues = [];
+            const blocks = textText.split(/----+/).map(b => b.trim()).filter(b => b.length > 0);
+            blocks.forEach((block, bIdx) => {
+                const lines = block.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+                if (lines.length === 0) return;
+                const headerParts = lines[0].split("->").map(p => p.trim());
+                let server = "", compFull = "", format = "BO 8 501 DO", weekInfo = "", webUrl = "", discordUrl = "";
+                headerParts.forEach(part => { if (part.startsWith("http")) { if (part.includes("discord")) discordUrl = part; else webUrl = part; } });
+                const nonUrlParts = headerParts.filter(p => !p.startsWith("http"));
+                if (nonUrlParts.length >= 3) { server = nonUrlParts[0]; compFull = nonUrlParts[1]; format = nonUrlParts[2] || format; if (nonUrlParts[3]) weekInfo = nonUrlParts[3]; }
+                else {
+                    compFull = nonUrlParts[0] || "Liga"; format = nonUrlParts[1] || format; if (nonUrlParts[2]) weekInfo = nonUrlParts[2];
+                    const combined = `${compFull} ${webUrl} ${discordUrl}`.toLowerCase();
+                    if (combined.includes("edc")) server = "EDC";
+                    else if (combined.includes("scolia")) server = "Scolia Checkout Community";
+                    else if (combined.includes("dartfan")) server = "Dartfan online";
+                    else if (combined.includes("hood")) server = "HOOD";
+                    else if (combined.includes("dbf")) server = "DBF";
+                    else server = "Ostatní";
+                }
+                importedLeagues.push({ server, comp: compFull, format, discordUrl, webUrl });
+                const duration = calculateDurationMinutes(format);
+                lines.slice(1).forEach((mLine, mIdx) => {
+                    if (!mLine.startsWith("-")) return;
+                    const matchParts = mLine.replace(/^-/, "").trim().split("->").map(p => p.trim());
+                    const opponent = matchParts[0];
+                    let date = "", time = "", confirmed = false, mustPlay = false, week = weekInfo, notes = "";
+                    matchParts.slice(1).forEach(part => {
+                        if (part.includes("🔥")) mustPlay = true;
+                        else if (part.startsWith("W:")) week = part.replace("W:", "").trim();
+                        else if (part.startsWith("NOTE:")) notes = part.replace("NOTE:", "").trim();
+                        else {
+                            const dtMatch = part.match(/(\d{1,2})\.(\d{1,2})\.?(?:\s+(\d{1,2}:\d{2}))?/);
+                            if (dtMatch) {
+                                date = `${new Date().getFullYear()}-${dtMatch[2].padStart(2, '0')}-${dtMatch[1].padStart(2, '0')}`;
+                                if (dtMatch[3]) time = dtMatch[3]; confirmed = true;
+                            }
+                        }
+                    });
+                    newMatches.push({ id: Date.now() + (bIdx * 100) + mIdx, server, comp: compFull, opponent, format, duration, type: week ? "fixed" : "flexi", week, date, time, confirmed, mustPlay, status: date ? "scheduled" : "unscheduled", notes, maxWeekly: "", finalDeadline: "", discordUrl, webUrl });
+                });
+            });
+            if (newMatches.length > 0 || importedLeagues.length > 0) {
+                matches = newMatches;
+                importedLeagues.forEach(il => {
+                    if (!emptyServers.includes(il.server)) emptyServers.push(il.server);
+                    const idx = emptyLeagues.findIndex(l => l && l.server === il.server && l.comp === il.comp);
+                    if (idx >= 0) emptyLeagues[idx] = il;
+                    else emptyLeagues.push(il);
+                });
+                save();
+                alert("TXT načten!");
+            } else {
+                alert("V souboru nebyly nalezeny žádné platné záznamy.");
+            }
+        }
+
+        function exportTxt() {
+            const grouped = getFullGroupedData();
+            let txtContent = "";
+            const entries = [];
+            Object.keys(grouped).forEach(serverName => {
+                Object.keys(grouped[serverName]).forEach(compName => {
+                    entries.push({ server: serverName, comp: compName, matches: grouped[serverName][compName] });
+                });
+            });
+
+            entries.forEach((entry, idx) => {
+                const compMatches = entry.matches;
+                const leagueMeta = emptyLeagues.find(l => l && l.server === entry.server && l.comp === entry.comp) || {};
+                const first = compMatches[0] || leagueMeta;
+                let header = `${entry.server} -> ${entry.comp}`;
+                if (first.format) header += ` -> ${first.format}`;
+                if (first.week) header += ` -> ${first.week}`;
+                const webUrl = first.webUrl || leagueMeta.webUrl;
+                const discordUrl = first.discordUrl || leagueMeta.discordUrl;
+                if (webUrl) header += ` -> ${webUrl}`;
+                if (discordUrl) header += ` -> ${discordUrl}`;
+                txtContent += `${header}\n`;
+                compMatches.forEach(m => {
+                    let line = `- ${m.opponent}`;
+                    if (m.date) { const parts = m.date.split("-"); line +=
