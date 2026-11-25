@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotřeba & Energie - Přehled</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #121214; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen overflow-hidden">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- KOMPAKTNÍ IKONOVÝ PANEL NA 2 ŘÁDKY -->
+        <aside class="w-48 bg-gray-950 border-r border-gray-800 flex flex-col shrink-0 text-gray-300 p-3 justify-start gap-3">
+            <div class="grid grid-cols-4 gap-2">
+                <!-- Řádek 1: Sekce & Zpět -->
+                <button onclick="setView('spotreba')" id="btnNavSpotreba" class="bg-orange-950/20 text-orange-500 rounded-lg border border-orange-500/50 flex items-center justify-center py-2.5 transition-all duration-200" title="Odečty (Spotřeba)">
+                    <span class="text-lg leading-none">📊</span>
+                </button>
+                <button onclick="setView('strom')" id="btnNavStrom" class="bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Dirk">
+                    <span class="text-lg leading-none">⚡</span>
+                </button>
+                <button onclick="setView('gas')" id="btnNavGas" class="bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Gas">
+                    <span class="text-lg leading-none">🔥</span>
+                </button>
+                <button onclick="undo()" id="undoBtn" disabled class="bg-gray-900 text-gray-800 rounded-lg border border-gray-955 flex items-center justify-center py-2.5 transition-all duration-200 opacity-30 cursor-not-allowed" title="Zpět">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                </button>
+
+                <!-- Řádek 2: Akce & Záloha JSON -->
+                <button onclick="toggleForm()" id="btnAddIcon" class="bg-gray-900 hover:bg-gray-855 text-orange-500 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Nový odečet">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+                <button onclick="openResetModal()" class="bg-gray-900 hover:bg-gray-855 text-amber-400/80 hover:text-amber-300 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200" title="Výměna hodin (Reset)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
+                <label class="bg-gray-900 hover:bg-gray-850 text-emerald-400 hover:text-emerald-300 border border-gray-800 hover:border-emerald-900/60 rounded-lg py-2.5 flex items-center justify-center transition-all cursor-pointer" title="Importovat data (Upload JSON)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+                </label>
+                <button onclick="exportData()" class="bg-gray-900 hover:bg-gray-850 text-blue-400 hover:text-blue-300 border border-gray-800 hover:border-blue-900/60 rounded-lg py-2.5 flex items-center justify-center transition-all" title="Exportovat data (Download JSON)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- POSLEDNÍ ODEČET POD IKONAMI -->
+            <div class="bg-gray-900/90 border border-gray-800 rounded-lg px-3 py-2 text-center">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Poslední odečet</div>
+                <div class="text-xs font-mono font-bold text-gray-300 mt-0.5" id="sidebarLatestDate">-</div>
+            </div>
+        </aside>
+
+        <!-- HLAVNÍ OBSAH -->
+        <main class="flex-1 h-screen overflow-y-auto bg-[#121214] p-6 md:p-8 flex flex-col">
+            <!-- FIXNÍ HORNÍ ČÁST -->
+            <div class="sticky top-0 z-30 bg-[#121214] pb-4">
+                <header class="flex justify-between items-center mb-5 border-b border-gray-800 pb-4">
+                    <h1 class="text-2xl md:text-3xl font-bold text-orange-500 flex items-center gap-3" id="pageTitle">
+                        <span>⚡ Spotřeba & Energie</span>
+                    </h1>
+                </header>
+
+                <div id="statsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 shadow-xl"></div>
+            </div>
+
+            <!-- FORMULÁŘ PRO NOVÝ ODEČET -->
+            <div id="itemForm" class="hidden bg-gray-900 p-6 rounded-xl my-4 border border-orange-500/30 z-40 relative shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-orange-400" id="formTitle">Zapsat nový odečet</h2>
+                    <button onclick="toggleForm()" class="text-gray-500 hover:text-gray-300 text-sm">✕</button>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Datum *</label>
+                        <input type="date" id="formDate" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-orange-500 text-gray-200 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Čas</label>
+                        <input type="time" id="formTime" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-orange-500 text-gray-200 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">Nákup (kWh)</label>
+                        <input type="number" step="0.01" id="formNakup" placeholder="Celkový odběr ze sítě" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-blue-500 text-gray-200 text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Prodej (kWh)</label>
+                        <input type="number" step="0.01" id="formProdej" placeholder="Dodávka FVE" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-emerald-500 text-gray-200 text-sm font-mono">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">DIRK (kWh)</label>
+                        <input type="number" step="0.01" id="formDirk" placeholder="Podružný elektroměr" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-amber-500 text-gray-200 text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-rose-400 uppercase tracking-wider mb-1">Plyn (m³)</label>
+                        <input type="number" step="0.001" id="formPlyn" placeholder="Nepovinné" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-rose-500 text-gray-200 text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-purple-400 uppercase tracking-wider mb-1">MarTop (kWh)</label>
+                        <input type="number" step="1" id="formMarTop" placeholder="Měřič tepla Martin" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-purple-500 text-gray-200 text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-purple-400 uppercase tracking-wider mb-1">DirTop (kWh)</label>
+                        <input type="number" step="1" id="formDirTop" placeholder="Měřič tepla Dirk" class="w-full bg-gray-950 border border-gray-800 p-2.5 rounded-lg focus:outline-none focus:border-purple-500 text-gray-200 text-sm font-mono">
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-gray-800 flex flex-wrap items-center justify-between gap-4">
+                    <label class="flex items-center gap-2 text-xs text-orange-300 cursor-pointer select-none">
+                        <input type="checkbox" id="formIsReset" class="accent-orange-500 h-4 w-4">
+                        <span>🔄 Výměna hodin (Reset): Zadej konečné stavy vyměněných měřičů (automaticky se započítají do dalších odečtů)</span>
+                    </label>
+
+                    <div class="flex gap-3">
+                        <button onclick="toggleForm()" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">Zrušit</button>
+                        <button onclick="saveReading()" class="bg-orange-600 hover:bg-orange-500 px-5 py-2 rounded-lg text-sm font-bold text-white">Uložit</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mainContent" class="space-y-6 flex-1 mt-2 pb-12"></div>
+        </main>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. VÝCHOZÍ DATA
+        // ==========================================
+        const defaultReadings = [
+            { id: 2, date: "2024-04-30", time: "19:15", year: 2024, nakup: 1835, prodej: 868, dirk: 617.93, plyn: 23081.053, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 3, date: "2024-05-01", time: "17:42", year: 2024, nakup: 1843, prodej: 909, dirk: 622.8, plyn: 23082.242, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 4, date: "2024-05-03", time: "07:43", year: 2024, nakup: 1862, prodej: 924, dirk: 626.34, plyn: 23085.113, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 5, date: "2024-05-09", time: "19:06", year: 2024, nakup: 1896, prodej: 1003, dirk: 652.66, plyn: 23096.657, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 6, date: "2024-05-15", time: "12:18", year: 2024, nakup: 1923, prodej: 1149, dirk: 676.4, plyn: 23106.887, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 7, date: "2024-05-18", time: "18:53", year: 2024, nakup: 1931, prodej: 1234, dirk: 685.55, plyn: 23112.966, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 8, date: "2024-05-26", time: "14:47", year: 2024, nakup: 1952, prodej: 1382, dirk: 710.4, plyn: 23124.55, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 9, date: "2024-06-05", time: "12:04", year: 2024, nakup: 1987, prodej: 1488, dirk: 740.48, plyn: 23140.051, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 10, date: "2024-06-10", time: "11:27", year: 2024, nakup: 1996, prodej: 1629, dirk: 775.18, plyn: 23148.714, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 10.5, date: "2024-06-15", time: "", year: 2024, nakup: null, prodej: null, dirk: null, plyn: 23148.714, marTop: null, dirTop: null, isMeterReset: true },
+            { id: 11, date: "2024-07-14", time: "12:03", year: 2024, nakup: 2140, prodej: 2307, dirk: 851.85, plyn: 41.431, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 12, date: "2024-08-29", time: "09:41", year: 2024, nakup: 2341, prodej: 3410, dirk: 1078.37, plyn: 90.342, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 13, date: "2024-09-29", time: "11:53", year: 2024, nakup: 2543, prodej: 3894, dirk: 1235.39, plyn: 144.928, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 14, date: "2024-10-08", time: "11:53", year: 2024, nakup: 2669, prodej: 3924, dirk: 1282.47, plyn: 198.821, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 15, date: "2024-11-03", time: "12:06", year: 2024, nakup: 2811, prodej: 4135, dirk: 1432.7, plyn: 305.125, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 16, date: "2024-11-09", time: "13:35", year: 2024, nakup: 2943, prodej: 4147, dirk: 1467.35, plyn: 367.401, marTop: 66634, dirTop: 30404, isMeterReset: false },
+            { id: 17, date: "2024-11-23", time: "09:44", year: 2024, nakup: 3280, prodej: 4153, dirk: 1552.74, plyn: 527.52, marTop: 67549, dirTop: 30803, isMeterReset: false },
+            { id: 18, date: "2024-12-01", time: "11:38", year: 2024, nakup: 3425, prodej: 4163, dirk: 1608.41, plyn: 614.938, marTop: 67891, dirTop: 31051, isMeterReset: false },
+            { id: 19, date: "2024-12-20", time: "19:14", year: 2024, nakup: 3986, prodej: 4163, dirk: 1754.43, plyn: 828.77, marTop: 68042, dirTop: 31710, isMeterReset: false },
+            { id: 20, date: "2024-12-31", time: "23:58", year: 2024, nakup: 4217, prodej: 4170, dirk: 1833.66, plyn: 938.961, marTop: 68564, dirTop: 32182, isMeterReset: false },
+            { id: 21, date: "2025-01-14", time: "10:26", year: 2025, nakup: 4630, prodej: 4177, dirk: 1957.08, plyn: 1130.782, marTop: 69718, dirTop: 32692, isMeterReset: false },
+            { id: 22, date: "2025-01-31", time: "22:42", year: 2025, nakup: 4974, prodej: 4196, dirk: 2090.08, plyn: 1361.729, marTop: 71163, dirTop: 33245, isMeterReset: false },
+            { id: 23, date: "2025-03-03", time: "09:28", year: 2025, nakup: 5479, prodej: 4307, dirk: 2313.7, plyn: 1774.885, marTop: 72470, dirTop: 34275, isMeterReset: false },
+            { id: 24, date: "2025-04-30", time: "22:37", year: 2025, nakup: 5934, prodej: 5142, dirk: 2874.78, plyn: 2113.502, marTop: 73948, dirTop: 35164, isMeterReset: false },
+            { id: 25, date: "2025-07-01", time: "11:52", year: 2025, nakup: 6220, prodej: 5994, dirk: 3249.6, plyn: 2250.342, marTop: 73949, dirTop: 35577, isMeterReset: false },
+            { id: 26, date: "2025-09-01", time: "07:15", year: 2025, nakup: 6653, prodej: 6790, dirk: 3647.12, plyn: 2334.267, marTop: 73949, dirTop: 35611, isMeterReset: false },
+            { id: 27, date: "2025-10-01", time: "07:43", year: 2025, nakup: 6940, prodej: 6995, dirk: 3877.28, plyn: 2388.643, marTop: 73952, dirTop: 35706, isMeterReset: false },
+            { id: 28, date: "2025-11-07", time: "17:00", year: 2025, nakup: 7470, prodej: 7099, dirk: 4187.81, plyn: 2616.933, marTop: 75042, dirTop: 36444, isMeterReset: false },
+            { id: 29, date: "2025-11-30", displayDate: "31.11.2025", time: "23:08", year: 2025, nakup: 7963, prodej: 7111, dirk: 4359.92, plyn: 2871.589, marTop: 76440, dirTop: 37221, isMeterReset: false },
+            { id: 30, date: "2025-12-31", time: "19:00", year: 2025, nakup: 8615, prodej: 7130, dirk: 4588.13, plyn: 3193.271, marTop: null, dirTop: null, isMeterReset: false },
+            { id: 31.5, date: "2026-01-15", time: "", year: 2026, nakup: null, prodej: null, dirk: null, plyn: null, marTop: 0, dirTop: 0, isMeterReset: true, resetNote: "Výměna měřičů tepla MarTop / DirTop (odtud od 0 kWh)" },
+            { id: 32, date: "2026-02-01", time: "00:21", year: 2026, nakup: 9421, prodej: 7152, dirk: 4819.81, plyn: 3722.35, marTop: 1536, dirTop: 786, isMeterReset: false },
+            { id: 33, date: "2026-03-01", time: "00:32", year: 2026, nakup: 9990, prodej: 7207, dirk: 5012.5, plyn: 4105.08, marTop: 3640, dirTop: 1909, isMeterReset: false },
+            { id: 34, date: "2026-04-01", time: "11:05", year: 2026, nakup: 10296, prodej: 7514, dirk: 5220.69, plyn: 4326.843, marTop: 4568, dirTop: 2703, isMeterReset: false },
+            { id: 35, date: "2026-05-31", time: "23:33", year: 2026, nakup: 10609, prodej: 8511, dirk: 5570.5, plyn: 4521.14, marTop: 4683, dirTop: 3417, isMeterReset: false },
+            { id: 36, date: "2026-10-01", time: "", year: 2026, nakup: 11640, prodej: 9959, dirk: null, plyn: null, marTop: null, dirTop: null, isMeterReset: true },
+            { id: 37, date: "2026-11-25", time: "12:06", year: 2026, nakup: 1566, prodej: 56, dirk: 6977.45, plyn: 5049.962, marTop: 6217, dirTop: 4496, isMeterReset: false }
+        ];
+
+        const defaultStromBilling = [
+            { year: 2023, fullPrice: 44.03, dirkPrice: 39.60, grundpreis: 0, messstellenbetrieb: 0, endStav: 116 },
+            { year: 2024, fullPrice: 37.25, dirkPrice: 33.50, grundpreis: 0, messstellenbetrieb: 0, endStav: 1833.66 },
+            { year: 2025, fullPrice: 30.03, dirkPrice: 27.00, grundpreis: 66.07, messstellenbetrieb: 11.03, endStav: 4593.66 },
+            { year: 2026, fullPrice: 32.67, dirkPrice: 29.40, grundpreis: 65.88, messstellenbetrieb: 0, endStav: null },
+            { year: 2027, fullPrice: 33.97, dirkPrice: 30.57, grundpreis: 62.40, messstellenbetrieb: 25.00, endStav: null }
+        ];
+
+        // ==========================================
+        // 2. STAV APLIKACE & STORAGE
+        // ==========================================
+        let readings = JSON.parse(localStorage.getItem("energyReadingsV4")) || JSON.parse(JSON.stringify(defaultReadings));
+        let stromBilling = JSON.parse(localStorage.getItem("energyStromV4")) || JSON.parse(JSON.stringify(defaultStromBilling));
+
+        let currentView = localStorage.getItem("energyViewV4") || "spotreba";
+        let selectedYearFilter = localStorage.getItem("energyYearFilterV4") || "all";
+        let historyStack = [];
+
+        function pushToHistory() {
+            historyStack.push(JSON.stringify({
+                readings: JSON.parse(JSON.stringify(readings)),
+                stromBilling: JSON.parse(JSON.stringify(stromBilling))
+            }));
+            if (historyStack.length > 20) historyStack.shift();
+            updateUndoButton();
+        }
+
+        function undo() {
+            if (historyStack.length === 0) return;
+            const prev = JSON.parse(historyStack.pop());
+            readings = prev.readings;
+            stromBilling = prev.stromBilling;
+            save(false);
+            updateUndoButton();
+        }
+
+        function updateUndoButton() {
+            const btn = document.getElementById("undoBtn");
+            if (!btn) return;
+            if (historyStack.length > 0) {
+                btn.disabled = false;
+                btn.className = "bg-gray-900 hover:bg-gray-855 text-orange-500 rounded-lg border border-orange-900/40 flex items-center justify-center py-2.5 transition-all duration-200 cursor-pointer";
+            } else {
+                btn.disabled = true;
+                btn.className = "bg-gray-900 text-gray-800 rounded-lg border border-gray-955 flex items-center justify-center py-2.5 transition-all duration-200 opacity-30 cursor-not-allowed";
+            }
+        }
+
+        function save(writeHistory = true) {
+            if (writeHistory) pushToHistory();
+            localStorage.setItem("energyReadingsV4", JSON.stringify(readings));
+            localStorage.setItem("energyStromV4", JSON.stringify(stromBilling));
+            localStorage.setItem("energyViewV4", currentView);
+            localStorage.setItem("energyYearFilterV4", selectedYearFilter);
+            render();
+        }
+
+        function setView(v) {
+            currentView = v;
+            localStorage.setItem("energyViewV4", currentView);
+            render();
+        }
+
+        function setYearFilter(yr) {
+            selectedYearFilter = String(yr);
+            localStorage.setItem("energyYearFilterV4", selectedYearFilter);
+            render();
+        }
+
+        // ==========================================
+        // 3. FORMÁTOVÁNÍ & VÝPOČTY S RESETEM HODIN
+        // ==========================================
+        function fmtNum(val, dec = 2) {
+            if (val === null || val === undefined || isNaN(val)) return "-";
+            const num = Number(val);
+            if (Number.isInteger(num) && dec === 0) return num.toLocaleString('cs-CZ');
+            return num.toLocaleString('cs-CZ', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+        }
+
+        function fmtDelta(val, dec = 2) {
+            if (val === null || val === undefined || isNaN(val)) return "";
+            const sign = val >= 0 ? "+" : "";
+            return `${sign}${fmtNum(val, dec)}`;
+        }
+
+        function fmtKwh(val) {
+            if (val === null || val === undefined || isNaN(val)) return "-";
+            const num = Number(val);
+            const dec = Number.isInteger(num) ? 0 : 2;
+            return num.toLocaleString('cs-CZ', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + " kWh";
+        }
+
+        function fmtEur(val) {
+            if (val === null || val === undefined || isNaN(val)) return "-";
+            return Number(val).toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+        }
+
+        function formatCzDate(rec) {
+            if (rec.displayDate) return rec.displayDate;
+            if (!rec.date) return "";
+            const [y, m, d] = rec.date.split("-");
+            return `${parseInt(d)}.${parseInt(m)}.${y}`;
+        }
+
+        function dayOfYearFromStr(dateStr) {
+            const [y, m, d] = dateStr.split("-").map(Number);
+            const ref = new Date(2025, m - 1, d);
+            const start = new Date(2025, 0, 1);
+            return Math.floor((ref - start) / 86400000) + 1;
+        }
+
+        function computeEnrichedReadings() {
+            const sorted = [...readings].sort((a, b) => a.date.localeCompare(b.date) || (a.id - b.id));
+
+            let cumReset = {
+                nakup: 0,
+                prodej: 0,
+                dirk: 0,
+                plyn: 0,
+                marTop: 0,
+                dirTop: 0
+            };
+
+            const yearStartCum = {
+                2024: {
+                    dirk: 116,
+                    marNakup: 0,
+                    plyn: 23081.053,
+                    marTop: 66634,
+                    dirTop: 30404
+                },
+                2026: {
+                    dirk: 4593.66,
+                    marNakup: 2383.34 + 1643.53,
+                    plyn: 3193.271 + 23148.714,
+                    marTop: 76440,
+                    dirTop: 37221
+                }
+            };
+
+            let prevNormal = null;
+            let prevMarTopRow = null;
+            let prevDirTopRow = null;
+            let prevProdejRow = null;
+            let prevPlynRow = null;
+            let heatZeroResetAfterPrevMar = false;
+            let heatZeroResetAfterPrevDir = false;
+            const enrichedList = [];
+
+            for (let i = 0; i < sorted.length; i++) {
+                const rec = sorted[i];
+                const yr = rec.year || parseInt(rec.date.split("-")[0]);
+
+                if (rec.isMeterReset) {
+                    if (rec.nakup !== null && !isNaN(rec.nakup)) cumReset.nakup += Number(rec.nakup);
+                    if (rec.prodej !== null && !isNaN(rec.prodej)) cumReset.prodej += Number(rec.prodej);
+                    if (rec.dirk !== null && !isNaN(rec.dirk)) cumReset.dirk += Number(rec.dirk);
+                    if (rec.plyn !== null && !isNaN(rec.plyn)) cumReset.plyn += Number(rec.plyn);
+                    if (rec.marTop !== null && !isNaN(rec.marTop)) cumReset.marTop += Number(rec.marTop);
+                    if (rec.dirTop !== null && !isNaN(rec.dirTop)) cumReset.dirTop += Number(rec.dirTop);
+
+                    if (rec.marTop === 0) {
+                        if (yearStartCum[yr]) yearStartCum[yr].marTop = cumReset.marTop;
+                        heatZeroResetAfterPrevMar = true;
+                    }
+                    if (rec.dirTop === 0) {
+                        if (yearStartCum[yr]) yearStartCum[yr].dirTop = cumReset.dirTop;
+                        heatZeroResetAfterPrevDir = true;
+                    }
+
+                    enrichedList.push({
+                        ...rec,
+                        cumResetSnapshot: { ...cumReset },
+                        cumNakup: null,
+                        cumProdej: null,
+                        cumDirk: null,
+                        cumPlyn: null,
+                        cumMarTop: null,
+                        cumDirTop: null,
+                        dirkYear: null,
+                        marNakupYear: null,
+                        plynYear: null,
+                        marTopYear: null,
+                        dirTopYear: null,
+                        deltaNakup: null,
+                        deltaProdej: null,
+                        deltaDirk: null,
+                        deltaMar: null,
+                        deltaDirkYear: null,
+                        deltaPlyn: null,
+                        deltaMarTop: null,
+                        deltaDirTop: null
+                    });
+                    continue;
+                }
+
+                const cumNakup = rec.nakup !== null ? +(Number(rec.nakup) + cumReset.nakup).toFixed(2) : null;
+                const cumProdej = rec.prodej !== null ? +(Number(rec.prodej) + cumReset.prodej).toFixed(2) : null;
+                const cumDirk = rec.dirk !== null ? +(Number(rec.dirk) + cumReset.dirk).toFixed(2) : null;
+                const cumPlyn = rec.plyn !== null ? +(Number(rec.plyn) + cumReset.plyn).toFixed(3) : null;
+                const cumMarTop = rec.marTop !== null ? +(Number(rec.marTop) + cumReset.marTop).toFixed(0) : null;
+                const cumDirTop = rec.dirTop !== null ? +(Number(rec.dirTop) + cumReset.dirTop).toFixed(0) : null;
+
+                if (!yearStartCum[yr]) {
+                    const prevYrNormals = enrichedList.filter(r => !r.isMeterReset && r.year === yr - 1);
+                    const lastPrev = prevYrNormals[prevYrNormals.length - 1];
+                    const lastPrevMarT = [...prevYrNormals].reverse().find(r => r.cumMarTop !== null);
+                    const lastPrevDirT = [...prevYrNormals].reverse().find(r => r.cumDirTop !== null);
+
+                    yearStartCum[yr] = {
+                        dirk: lastPrev && lastPrev.cumDirk !== null ? lastPrev.cumDirk : 0,
+                        marNakup: lastPrev && lastPrev.cumNakup !== null && lastPrev.cumDirk !== null
+                            ? +(lastPrev.cumNakup - lastPrev.cumDirk).toFixed(2)
+                            : 0,
+                        plyn: lastPrev && lastPrev.cumPlyn !== null ? lastPrev.cumPlyn : 0,
+                        marTop: lastPrevMarT ? lastPrevMarT.cumMarTop : 0,
+                        dirTop: lastPrevDirT ? lastPrevDirT.cumDirTop : 0
+                    };
+                }
+
+                const base = yearStartCum[yr];
+
+                const dirkYear = cumDirk !== null ? +(cumDirk - base.dirk).toFixed(2) : null;
+                const marNakupYear = (cumNakup !== null && cumDirk !== null)
+                    ? +((cumNakup - cumDirk) - base.marNakup).toFixed(2)
+                    : null;
+                const plynYear = cumPlyn !== null ? +(cumPlyn - base.plyn).toFixed(3) : null;
+                const marTopYear = cumMarTop !== null ? +(cumMarTop - base.marTop).toFixed(0) : null;
+                const dirTopYear = cumDirTop !== null ? +(cumDirTop - base.dirTop).toFixed(0) : null;
+
+                let deltaNakup = null, deltaProdej = null, deltaDirk = null, deltaMar = null, deltaDirkYear = null, deltaPlyn = null, deltaMarTop = null, deltaDirTop = null;
+
+                if (prevNormal) {
+                    if (cumNakup !== null && prevNormal.cumNakup !== null) {
+                        deltaNakup = +(cumNakup - prevNormal.cumNakup).toFixed(2);
+                    }
+                    if (cumDirk !== null && prevNormal.cumDirk !== null) {
+                        deltaDirk = +(cumDirk - prevNormal.cumDirk).toFixed(2);
+                        deltaDirkYear = deltaDirk;
+                    }
+                    if (deltaNakup !== null && deltaDirk !== null) {
+                        deltaMar = +(deltaNakup - deltaDirk).toFixed(2);
+                    }
+                }
+                if (cumProdej !== null && prevProdejRow) {
+                    deltaProdej = +(cumProdej - prevProdejRow.cumProdej).toFixed(2);
+                }
+                if (cumPlyn !== null && prevPlynRow) {
+                    deltaPlyn = +(cumPlyn - prevPlynRow.cumPlyn).toFixed(3);
+                }
+                if (cumMarTop !== null) {
+                    if (heatZeroResetAfterPrevMar) {
+                        deltaMarTop = Number(rec.marTop);
+                        heatZeroResetAfterPrevMar = false;
+                    } else if (prevMarTopRow) {
+                        deltaMarTop = +(cumMarTop - prevMarTopRow.cumMarTop).toFixed(0);
+                    }
+                }
+                if (cumDirTop !== null) {
+                    if (heatZeroResetAfterPrevDir) {
+                        deltaDirTop = Number(rec.dirTop);
+                        heatZeroResetAfterPrevDir = false;
+                    } else if (prevDirTopRow) {
+                        deltaDirTop = +(cumDirTop - prevDirTopRow.cumDirTop).toFixed(0);
+                    }
+                }
+
+                const enriched = {
+                    ...rec,
+                    cumResetSnapshot: { ...cumReset },
+                    cumNakup,
+                    cumProdej,
+                    cumDirk,
+                    cumPlyn,
+                    cumMarTop,
+                    cumDirTop,
+                    dirkYear,
+                    marNakupYear,
+                    plynYear,
+                    marTopYear,
+                    dirTopYear,
+                    deltaNakup,
+                    deltaProdej,
+                    deltaDirk,
+                    deltaMar,
+                    deltaDirkYear,
+                    deltaPlyn,
+                    deltaMarTop,
+                    deltaDirTop
+                };
+
+                enrichedList.push(enriched);
+                prevNormal = enriched;
+                if (cumProdej !== null) prevProdejRow = enriched;
+                if (cumPlyn !== null) prevPlynRow = enriched;
+                if (cumMarTop !== null) prevMarTopRow = enriched;
+                if (cumDirTop !== null) prevDirTopRow = enriched;
+            }
+
+            return enrichedList;
+        }
+
+        function getDirkResetOffsetAtEndOfYear(year) {
+            const enriched = computeEnrichedReadings();
+            const resetsUpToYear = enriched.filter(r => r.isMeterReset && r.year <= year && r.dirk !== null);
+            return resetsUpToYear.reduce((sum, r) => sum + Number(r.dirk || 0), 0);
+        }
+
+        function getYoYComparison(targetYear, metricKey) {
+            const enriched = computeEnrichedReadings();
+            const currRows = enriched.filter(r => !r.isMeterReset && r.year === targetYear && r[metricKey] !== null);
+            if (currRows.length === 0) return null;
+
+            const latestCurr = currRows[currRows.length - 1];
+            const currVal = latestCurr[metricKey];
+            const targetDoy = dayOfYearFromStr(latestCurr.date);
+
+            const prevYear = targetYear - 1;
+            const prevRows = enriched.filter(r => !r.isMeterReset && r.year === prevYear && r[metricKey] !== null);
+            if (prevRows.length === 0) return null;
+
+            const points = [{ doy: 0, val: 0 }];
+            prevRows.forEach(r => {
+                points.push({ doy: dayOfYearFromStr(r.date), val: r[metricKey] });
+            });
+            points.sort((a, b) => a.doy - b.doy);
+
+            let prevFullYearVal = points[points.length - 1].val;
+            if (metricKey === "dirkYear" && prevYear === 2025) {
+                prevFullYearVal = 2760;
+            }
+
+            let prevAtSameDate = null;
+            if (targetDoy <= points[points.length - 1].doy) {
+                for (let i = 0; i < points.length - 1; i++) {
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    if (targetDoy >= p1.doy && targetDoy <= p2.doy) {
+                        const span = p2.doy - p1.doy;
+                        const ratio = span > 0 ? (targetDoy - p1.doy) / span : 0;
+                        prevAtSameDate = p1.val + ratio * (p2.val - p1.val);
+                        break;
+                    }
+                }
+            } else {
+                const lastP = points[points.length - 1];
+                const span = 365 - lastP.doy;
+                const ratio = span > 0 ? Math.min(1, (targetDoy - lastP.doy) / span) : 1;
+                prevAtSameDate = lastP.val + ratio * (prevFullYearVal - lastP.val);
+            }
+
+            if (prevAtSameDate === null || prevAtSameDate <= 0) return null;
+
+            const diffVal = currVal - prevAtSameDate;
+            const diffPct = (diffVal / prevAtSameDate) * 100;
+            const estFullYear = prevFullYearVal * (currVal / prevAtSameDate);
+
+            return {
+                dateLabel: formatCzDate(latestCurr),
+                currVal,
+                prevAtSameDate,
+                prevFullYearVal,
+                diffVal,
+                diffPct,
+                estFullYear
+            };
+        }
+
+        // ==========================================
+        // 4. AKCE UŽIVATELE (CRUD)
+        // ==========================================
+        function toggleForm() {
+            const form = document.getElementById("itemForm");
+            form.classList.toggle("hidden");
+            if (!form.classList.contains("hidden")) {
+                const today = new Date().toISOString().split("T")[0];
+                const nowTime = new Date().toTimeString().slice(0, 5);
+                if (!document.getElementById("formDate").value) document.getElementById("formDate").value = today;
+                if (!document.getElementById("formTime").value) document.getElementById("formTime").value = nowTime;
+            }
+        }
+
+        function openResetModal() {
+            const form = document.getElementById("itemForm");
+            form.classList.remove("hidden");
+            document.getElementById("formIsReset").checked = true;
+            document.getElementById("formDate").value = new Date().toISOString().split("T")[0];
+            document.getElementById("formDate").focus();
+        }
+
+        function saveReading() {
+            const dateVal = document.getElementById("formDate").value;
+            const timeVal = document.getElementById("formTime").value;
+            const nakupRaw = document.getElementById("formNakup").value;
+            const prodejRaw = document.getElementById("formProdej").value;
+            const dirkRaw = document.getElementById("formDirk").value;
+            const plynRaw = document.getElementById("formPlyn").value;
+            const marTopRaw = document.getElementById("formMarTop").value;
+            const dirTopRaw = document.getElementById("formDirTop").value;
+            const isReset = document.getElementById("formIsReset").checked;
+
+            if (!dateVal) {
+                alert("Vyplň Datum!");
+                return;
+            }
+
+            const hasAnyValue = [nakupRaw, prodejRaw, dirkRaw, plynRaw, marTopRaw, dirTopRaw].some(v => v !== "");
+            if (!hasAnyValue) {
+                alert("Vyplň alespoň jednu hodnotu měřiče!");
+                return;
+            }
+
+            if (!isReset && (nakupRaw === "" || dirkRaw === "")) {
+                alert("U běžného odečtu vyplň alespoň Nákup (kWh) a DIRK (kWh)!");
+                return;
+            }
+
+            const yr = parseInt(dateVal.split("-")[0]);
+
+            readings.push({
+                id: Date.now(),
+                date: dateVal,
+                time: timeVal || "",
+                year: yr,
+                nakup: nakupRaw !== "" ? parseFloat(nakupRaw) : null,
+                prodej: prodejRaw !== "" ? parseFloat(prodejRaw) : null,
+                dirk: dirkRaw !== "" ? parseFloat(dirkRaw) : null,
+                plyn: plynRaw !== "" ? parseFloat(plynRaw) : null,
+                marTop: marTopRaw !== "" ? parseFloat(marTopRaw) : null,
+                dirTop: dirTopRaw !== "" ? parseFloat(dirTopRaw) : null,
+                isMeterReset: isReset
+            });
+
+            document.getElementById("formNakup").value = "";
+            document.getElementById("formProdej").value = "";
+            document.getElementById("formDirk").value = "";
+            document.getElementById("formPlyn").value = "";
+            document.getElementById("formMarTop").value = "";
+            document.getElementById("formDirTop").value = "";
+            document.getElementById("formIsReset").checked = false;
+
+            toggleForm();
+            save();
+        }
+
+        function deleteReading(id) {
+            if (confirm("Opravdu smazat tento záznam?")) {
+                readings = readings.filter(r => r.id !== id);
+                save();
+            }
+        }
+
+        function updateReadingField(id, field, val) {
+            const rec = readings.find(r => r.id === id);
+            if (!rec) return;
+            if (field === "date") {
+                rec.date = val;
+                rec.year = parseInt(val.split("-")[0]);
+                delete rec.displayDate;
+            } else if (field === "time") {
+                rec.time = val;
+            } else {
+                rec[field] = val === "" ? null : parseFloat(val);
+            }
+            save();
+        }
+
+        function updateStromField(year, field, val) {
+            const row = stromBilling.find(s => s.year === year);
+            if (!row) return;
+            if (field === "endStav") {
+                row.endStav = val === "" ? null : parseFloat(val);
+            } else if (field === "fullPrice") {
+                const full = parseFloat(val) || 0;
+                row.fullPrice = full;
+                row.dirkPrice = Math.round(full * 0.9 * 10) / 10;
+            } else {
+                row[field] = val === "" ? 0 : parseFloat(val);
+            }
+            save();
+        }
+
+        function confirmCurrentYearStav(year, val) {
+            const row = stromBilling.find(s => s.year === year);
+            if (!row) return;
+            row.endStav = Number(val);
+            save();
+        }
+
+        function addStromYear() {
+            const maxYr = stromBilling.reduce((max, r) => Math.max(max, r.year), 2027);
+            const nextYr = maxYr + 1;
+            const last = stromBilling[stromBilling.length - 1];
+            stromBilling.push({
+                year: nextYr,
+                fullPrice: last ? last.fullPrice : 33.97,
+                dirkPrice: last ? last.dirkPrice : 30.57,
+                grundpreis: last ? last.grundpreis : 62.40,
+                messstellenbetrieb: last ? last.messstellenbetrieb : 25.00,
+                endStav: null
+            });
+            save();
+        }
+
+        function deleteStromYear(year) {
+            if (confirm(`Opravdu smazat rok ${year}?`)) {
+                stromBilling = stromBilling.filter(s => s.year !== year);
+                save();
+            }
+        }
+
+        // ==========================================
+        // 5. VYKRESLOVÁNÍ UI
+        // ==========================================
+        function renderSidebar() {
+            const views = ["spotreba", "strom", "gas"];
+            views.forEach(v => {
+                const topBtn = document.getElementById("btnNav" + v.charAt(0).toUpperCase() + v.slice(1));
+                const isActive = currentView === v;
+
+                if (topBtn) {
+                    topBtn.className = isActive
+                        ? "bg-orange-950/30 text-orange-500 rounded-lg border border-orange-500/60 flex items-center justify-center py-2.5 transition-all duration-200 cursor-pointer"
+                        : "bg-gray-900 hover:bg-gray-855 text-orange-500/60 hover:text-orange-400 rounded-lg border border-gray-800 flex items-center justify-center py-2.5 transition-all duration-200 cursor-pointer";
+                }
+            });
+        }
+
+        function render() {
+            renderSidebar();
+            const enriched = computeEnrichedReadings();
+            const normalRows = enriched.filter(r => !r.isMeterReset);
+            const latest = normalRows[normalRows.length - 1] || {};
+            const latestYear = latest.year || 2026;
+
+            const sidebarLatestDate = document.getElementById("sidebarLatestDate");
+            if (sidebarLatestDate) {
+                sidebarLatestDate.innerText = latest.date ? formatCzDate(latest) : "-";
+            }
+
+            const statsContainer = document.getElementById("statsContainer");
+            const mainContent = document.getElementById("mainContent");
+            const pageTitle = document.getElementById("pageTitle");
+
+            // ==========================================
+            // POHLED 1: ODEČTY (SPOTŘEBA)
+            // ==========================================
+            if (currentView === "spotreba") {
+                pageTitle.innerHTML = `<span>📊 Sledování spotřeby</span>`;
+
+                const marYoY = getYoYComparison(latestYear, "marNakupYear");
+                const dirkYoY = getYoYComparison(latestYear, "dirkYear");
+
+                statsContainer.innerHTML = `
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">MY Nákup (${latestYear})</p>
+                        <p class="text-2xl font-black text-blue-400 mt-1">${fmtKwh(latest.marNakupYear)}</p>
+                        <p class="text-xs text-gray-500 mt-1">${marYoY ? `Oproti loni: <span class="${marYoY.diffVal <= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${marYoY.diffVal >= 0 ? '+' : ''}${fmtNum(marYoY.diffVal, 0)} kWh (${marYoY.diffPct >= 0 ? '+' : ''}${fmtNum(marYoY.diffPct, 1)}%)</span>` : 'Bez srovnání'}</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Dirk Odběr (${latestYear})</p>
+                        <p class="text-2xl font-black text-amber-400 mt-1">${fmtKwh(latest.dirkYear)}</p>
+                        <p class="text-xs text-gray-500 mt-1">${dirkYoY ? `Oproti loni: <span class="${dirkYoY.diffVal <= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${dirkYoY.diffVal >= 0 ? '+' : ''}${fmtNum(dirkYoY.diffVal, 0)} kWh (${dirkYoY.diffPct >= 0 ? '+' : ''}${fmtNum(dirkYoY.diffPct, 1)}%)</span>` : `Stav: ${fmtNum(latest.dirk, 2)} kWh`}</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Odhad konce roku ${latestYear}</p>
+                        <p class="text-lg font-black text-gray-200 mt-1">MY: <span class="text-blue-400">${marYoY ? fmtNum(marYoY.estFullYear, 0) : '-'}</span> • Dirk: <span class="text-amber-400">${dirkYoY ? fmtNum(dirkYoY.estFullYear, 0) : '-'}</span></p>
+                        <p class="text-xs text-gray-500 mt-1">Sezónní projekce dle loni (${latestYear - 1})</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Plyn & Topení (${latestYear})</p>
+                        <p class="text-xl font-black text-rose-400 mt-1">${fmtNum(latest.plynYear, 2)} m³</p>
+                        <p class="text-xs text-gray-500 mt-1">Teplo Martin/Dirk: ${latest.marTopYear ?? '-'} / ${latest.dirTopYear ?? '-'} kWh</p>
+                    </div>
+                `;
+
+                const availableYears = [...new Set(readings.map(r => r.year))].sort((a, b) => b - a);
+
+                const filtered = selectedYearFilter === "all"
+                    ? [...enriched].reverse()
+                    : [...enriched].filter(r => String(r.year) === selectedYearFilter).reverse();
+
+                let html = `
+                    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-xl">
+                        <div class="p-4 border-b border-gray-800 flex flex-wrap justify-between items-center gap-3 bg-gray-950/40">
+                            <div>
+                                <h2 class="text-base font-bold text-gray-200">Historie odečtů měřičů</h2>
+                                <p class="text-xs text-gray-500">Malá čísla pod hodnotami ukazují nárůst od předchozího odečtu • Výměna hodin se automaticky přičítá</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="setYearFilter('all')" class="px-3 py-1 rounded-lg text-xs font-bold transition ${selectedYearFilter === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-850 text-gray-400 hover:text-white border border-gray-800'}">
+                                    Vše
+                                </button>
+                                ${availableYears.map(y => `
+                                    <button onclick="setYearFilter('${y}')" class="px-3 py-1 rounded-lg text-xs font-bold transition ${selectedYearFilter === String(y) ? 'bg-orange-600 text-white' : 'bg-gray-850 text-gray-400 hover:text-white border border-gray-800'}">
+                                        ${y}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-gray-950 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-800">
+                                        <th class="p-3">Datum & Čas</th>
+                                        <th class="p-3 text-right text-blue-400">Nákup</th>
+                                        <th class="p-3 text-right text-emerald-400">Prodej</th>
+                                        <th class="p-3 text-right text-amber-400">DIRK</th>
+                                        <th class="p-3 text-right bg-blue-950/20 text-blue-300 font-black">MY (rok)</th>
+                                        <th class="p-3 text-right bg-amber-950/20 text-amber-300 font-black">Dirk (rok)</th>
+                                        <th class="p-3 text-right text-rose-400">Plyn (m³)</th>
+                                        <th class="p-3 text-right text-purple-400">MarTop (kWh)</th>
+                                        <th class="p-3 text-right text-purple-400">DirTop (kWh)</th>
+                                        <th class="p-3 text-center">Akce</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-800/70 font-mono">
+                `;
+
+                filtered.forEach(row => {
+                    if (row.isMeterReset) {
+                        const resetParts = [];
+                        if (row.nakup !== null) resetParts.push(`Nákup: ${fmtNum(row.nakup, 0)}`);
+                        if (row.prodej !== null) resetParts.push(`Prodej: ${fmtNum(row.prodej, 0)}`);
+                        if (row.dirk !== null) resetParts.push(`DIRK: ${fmtNum(row.dirk, 2)}`);
+                        if (row.plyn !== null) resetParts.push(`Plyn: ${fmtNum(row.plyn, 3)}`);
+                        if (row.marTop !== null) resetParts.push(`MarTop: ${fmtNum(row.marTop, 0)}`);
+                        if (row.dirTop !== null) resetParts.push(`DirTop: ${fmtNum(row.dirTop, 0)}`);
+
+                        html += `
+                            <tr class="bg-orange-950/20 border-y border-orange-500/30">
+                                <td class="p-3 font-sans font-bold text-orange-400">
+                                    🔄 ${formatCzDate(row)} <span class="text-[10px] uppercase bg-orange-950 px-1.5 py-0.5 rounded border border-orange-500/40 ml-1">Výměna hodin</span>
+                                </td>
+                                <td colspan="8" class="p-3 font-sans text-orange-200/90">
+                                    ${row.resetNote ? row.resetNote : `Konečné stavy před resetem (započítáno do nových odečtů): <span class="font-mono font-bold text-orange-300">${resetParts.join(' • ')}</span>`}
+                                </td>
+                                <td class="p-3 text-center font-sans">
+                                    <button onclick="deleteReading(${row.id})" class="text-red-400 hover:text-red-300 p-1" title="Smazat">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    const yearBadgeColor = row.year === 2026 ? "text-orange-400" : (row.year === 2025 ? "text-blue-400" : "text-gray-400");
+
+                    html += `
+                        <tr class="hover:bg-gray-850/60 transition">
+                            <td class="p-2.5 font-sans whitespace-nowrap">
+                                <div class="font-bold text-gray-200 flex items-center gap-1.5">
+                                    <span>${formatCzDate(row)}</span>
+                                    <span class="text-[10px] ${yearBadgeColor} opacity-75">${row.time || ''}</span>
+                                </div>
+                            </td>
+                            <td class="p-2.5 text-right">
+                                <input type="number" step="0.01" value="${row.nakup ?? ''}" onchange="updateReadingField(${row.id}, 'nakup', this.value)" class="bg-transparent text-right text-gray-200 font-bold w-20 focus:outline-none focus:bg-gray-950 focus:border-b focus:border-blue-500 rounded px-1">
+                                ${row.deltaNakup !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(row.deltaNakup, 0)}</div>` : ''}
+                            </td>
+                            <td class="p-2.5 text-right">
+                                <input type="number" step="0.01" value="${row.prodej ?? ''}" onchange="updateReadingField(${row.id}, 'prodej', this.value)" class="bg-transparent text-right text-emerald-400 font-bold w-20 focus:outline-none focus:bg-gray-950 focus:border-b focus:border-emerald-500 rounded px-1">
+                                ${row.deltaProdej !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(row.deltaProdej, 0)}</div>` : ''}
+                            </td>
+                            <td class="p-2.5 text-right">
+                                <input type="number" step="0.01" value="${row.dirk ?? ''}" onchange="updateReadingField(${row.id}, 'dirk', this.value)" class="bg-transparent text-right text-amber-300 font-bold w-24 focus:outline-none focus:bg-gray-950 focus:border-b focus:border-amber-500 rounded px-1">
+                                ${row.deltaDirk !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(row.deltaDirk, 2)}</div>` : ''}
+                            </td>
+                            <td class="p-2.5 text-right bg-blue-950/15 font-bold text-blue-300">
+                                <div>${fmtNum(row.marNakupYear, 2)}</div>
+                                ${row.deltaMar !== null ? `<div class="text-[10px] text-blue-400/70">${fmtDelta(row.deltaMar, 2)}</div>` : ''}
+                            </td>
+                            <td class="p-2.5 text-right bg-amber-950/15 font-bold text-amber-300">
+                                <div>${fmtNum(row.dirkYear, 2)}</div>
+                                ${row.deltaDirkYear !== null ? `<div class="text-[10px] text-amber-400/70">${fmtDelta(row.deltaDirkYear, 2)}</div>` : ''}
+                            </td>
+                            <td class="p-2.5 text-right">
+                                <input type="number" step="0.001" value="${row.plyn ?? ''}" onchange="updateReadingField(${row.id}, 'plyn', this.value)" class="bg-transparent text-right text-rose-300 w-24 focus:outline-none focus:bg-gray-950 focus:border-b focus:border-rose-500 rounded px-1">
+                                ${row.deltaPlyn !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(row.deltaPlyn, 3)}</div>` : ''}
+                            </td>
+                            <td class="p-2.5 text-right">
+                                <input type="number" step="1" value="${row.marTop ?? ''}" onchange="updateReadingField(${row.id}, 'marTop', this.value)" class="bg-transparent text-right text-purple-300 w-16 focus:outline-none focus:bg-gray-950 rounded px-1">
+                                ${row.deltaMarTop !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(row.deltaMarTop, 0)}</div>` : ''}
+                            </td>
+                            <td class="p-2.5 text-right">
+                                <input type="number" step="1" value="${row.dirTop ?? ''}" onchange="updateReadingField(${row.id}, 'dirTop', this.value)" class="bg-transparent text-right text-purple-300 w-16 focus:outline-none focus:bg-gray-950 rounded px-1">
+                                ${row.deltaDirTop !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(row.deltaDirTop, 0)}</div>` : ''}
+                            </td>
+                            <td class="p-2.5 text-center font-sans">
+                                <button onclick="deleteReading(${row.id})" class="text-gray-600 hover:text-rose-400 p-1 transition" title="Smazat odečet">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div></div>`;
+                mainContent.innerHTML = html;
+
+            // ==========================================
+            // POHLED 2: ⚡ DIRK (CENÍK & ROČNÍ UZÁVĚRKA)
+            // ==========================================
+            } else if (currentView === "strom") {
+                pageTitle.innerHTML = `<span>⚡ Dirk</span>`;
+
+                const sortedStrom = [...stromBilling].sort((a, b) => a.year - b.year);
+
+                const calculatedStrom = sortedStrom.map((item, idx) => {
+                    const ninetyPct = +(item.fullPrice * 0.9).toFixed(3);
+                    const prevYear = idx > 0 ? sortedStrom[idx - 1] : null;
+                    const prevEndStav = prevYear ? prevYear.endStav : 0;
+
+                    const hasFixedClosing = item.endStav !== null && item.endStav !== undefined && !isNaN(item.endStav);
+                    const isProvisional = !hasFixedClosing && item.year === latestYear && latest.dirk !== null && latest.dirk !== undefined;
+                    const effectiveStav = hasFixedClosing ? Number(item.endStav) : (isProvisional ? Number(latest.dirk) : null);
+
+                    let spotrebaRok = null;
+                    let utrataSpotreba = null;
+                    let utrataKomplet = null;
+
+                    if (effectiveStav !== null) {
+                        const resetDelta = getDirkResetOffsetAtEndOfYear(item.year) - (prevYear ? getDirkResetOffsetAtEndOfYear(prevYear.year) : 0);
+                        spotrebaRok = idx === 0
+                            ? +effectiveStav.toFixed(2)
+                            : +((effectiveStav + resetDelta) - Number(prevEndStav || 0)).toFixed(2);
+                        utrataSpotreba = +((item.dirkPrice * spotrebaRok) / 100).toFixed(2);
+                        const fixTotal = (Number(item.grundpreis) || 0) + (Number(item.messstellenbetrieb) || 0);
+                        utrataKomplet = +(utrataSpotreba + fixTotal).toFixed(2);
+                    }
+
+                    const fixTotal = +((Number(item.grundpreis) || 0) + (Number(item.messstellenbetrieb) || 0)).toFixed(2);
+
+                    return {
+                        ...item,
+                        ninetyPct,
+                        hasFixedClosing,
+                        isProvisional,
+                        effectiveStav,
+                        spotrebaRok,
+                        utrataSpotreba,
+                        fixTotal,
+                        utrataKomplet
+                    };
+                });
+
+                const sCurr = calculatedStrom.find(s => s.year === latestYear) || calculatedStrom[calculatedStrom.length - 1] || {};
+                const currDirkKwh = latest.dirkYear || 0;
+                const currDirkEurKwh = +((currDirkKwh * (sCurr.dirkPrice || 0)) / 100).toFixed(2);
+                const dirkYoY = getYoYComparison(latestYear, "dirkYear");
+                const estEndEur = dirkYoY ? +((dirkYoY.estFullYear * (sCurr.dirkPrice || 0)) / 100 + (sCurr.fixTotal || 0)).toFixed(2) : null;
+
+                statsContainer.innerHTML = `
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Tarif Dirk ${latestYear}</p>
+                        <p class="text-2xl font-black text-amber-400 mt-1">${fmtNum(sCurr.dirkPrice, 2)} ct/kWh</p>
+                        <p class="text-xs text-gray-500 mt-1">Plná: ${fmtNum(sCurr.fullPrice, 2)} ct (90 % = ${fmtNum(sCurr.ninetyPct, 3)})</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Fixní poplatky ${latestYear}</p>
+                        <p class="text-2xl font-black text-blue-400 mt-1">${fmtEur(sCurr.fixTotal)}</p>
+                        <p class="text-xs text-gray-500 mt-1">Grundpreis ${fmtNum(sCurr.grundpreis, 2)} € + Mess. ${fmtNum(sCurr.messstellenbetrieb, 2)} €</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Aktuální spotřeba tento rok</p>
+                        <p class="text-2xl font-black text-orange-400 mt-1">${fmtKwh(currDirkKwh)}</p>
+                        <p class="text-xs text-gray-500 mt-1">Zatím za kWh: <span class="text-gray-300 font-bold">${fmtEur(currDirkEurKwh)}</span> (k ${latest.date ? formatCzDate(latest) : '-'})</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Meziročně & odhad ${latestYear}</p>
+                        <p class="text-2xl font-black ${dirkYoY && dirkYoY.diffVal <= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-1">
+                            ${dirkYoY ? `${dirkYoY.diffVal >= 0 ? '+' : ''}${fmtNum(dirkYoY.diffVal, 0)} kWh (${dirkYoY.diffPct >= 0 ? '+' : ''}${fmtNum(dirkYoY.diffPct, 1)}%)` : '-'}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">${dirkYoY ? `Odhad konce roku: ~${fmtNum(dirkYoY.estFullYear, 0)} kWh (${fmtEur(estEndEur)})` : 'Čeká na srovnání'}</p>
+                    </div>
+                `;
+
+                let html = `
+                    <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-xl space-y-6">
+                        <div class="flex flex-wrap justify-between items-center gap-4">
+                            <div>
+                                <h2 class="text-lg font-bold text-orange-400">Roční tarify a fixní poplatky pro Dirka</h2>
+                                <p class="text-xs text-gray-500">U letošního roku se automaticky doplňuje <span class="text-amber-300 font-semibold">průběžný stav</span> z posledního odečtu. Na konci roku ho můžeš přepsat nebo potvrdit tlačítkem <span class="text-emerald-400 font-bold">✓</span>.</p>
+                            </div>
+                            <button onclick="addStromYear()" class="bg-orange-600 hover:bg-orange-500 px-3.5 py-2 rounded-lg text-xs font-bold text-white transition">
+                                ➕ Přidat další rok
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-gray-950 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-800">
+                                        <th class="p-3">Rok</th>
+                                        <th class="p-3 text-right">Plná (ct)</th>
+                                        <th class="p-3 text-right text-gray-500">90 %</th>
+                                        <th class="p-3 text-right text-amber-400">Dirk (ct)</th>
+                                        <th class="p-3 text-right text-blue-400">Grundpreis (€)</th>
+                                        <th class="p-3 text-right text-blue-300">Messstellenbetrieb (€)</th>
+                                        <th class="p-3 text-right bg-gray-900/80 text-gray-200 border-l border-gray-800">Stav konec roku</th>
+                                        <th class="p-3 text-right text-gray-300">Spotřeba rok</th>
+                                        <th class="p-3 text-right text-orange-400">Útrata (kWh)</th>
+                                        <th class="p-3 text-right bg-emerald-950/20 text-emerald-400 font-black">Komplet s fixy</th>
+                                        <th class="p-3 text-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-800/80 font-mono">
+                `;
+
+                calculatedStrom.forEach(row => {
+                    const hasVal = row.effectiveStav !== null;
+
+                    let inputClasses = "bg-gray-950 border border-dashed border-gray-700 text-gray-400 text-right font-bold w-24 rounded px-2 py-1 focus:outline-none focus:border-emerald-500";
+                    if (row.hasFixedClosing) {
+                        inputClasses = "bg-gray-950 border border-gray-700 text-white text-right font-bold w-24 rounded px-2 py-1 focus:outline-none focus:border-emerald-500";
+                    } else if (row.isProvisional) {
+                        inputClasses = "bg-amber-950/30 border border-amber-500/60 text-amber-300 text-right font-bold w-24 rounded px-2 py-1 focus:outline-none focus:border-amber-400";
+                    }
+
+                    html += `
+                        <tr class="${row.isProvisional ? 'bg-amber-950/10' : ''} hover:bg-gray-850/50 transition">
+                            <td class="p-3 font-sans font-black text-sm text-white">
+                                ${row.year}
+                                ${row.isProvisional ? `<span class="block text-[9px] uppercase tracking-wider text-amber-400 font-bold">průběžně</span>` : ''}
+                            </td>
+                            <td class="p-3 text-right">
+                                <input type="number" step="0.01" value="${row.fullPrice}" onchange="updateStromField(${row.year}, 'fullPrice', this.value)" class="bg-gray-950 border border-gray-800 text-right text-gray-200 w-20 rounded px-2 py-1 focus:outline-none focus:border-orange-500">
+                            </td>
+                            <td class="p-3 text-right text-gray-500">${fmtNum(row.ninetyPct, 3)}</td>
+                            <td class="p-3 text-right">
+                                <input type="number" step="0.01" value="${row.dirkPrice}" onchange="updateStromField(${row.year}, 'dirkPrice', this.value)" class="bg-gray-950 border border-gray-800 text-right text-amber-400 font-bold w-20 rounded px-2 py-1 focus:outline-none focus:border-amber-500">
+                            </td>
+                            <td class="p-3 text-right">
+                                <input type="number" step="0.01" value="${row.grundpreis}" onchange="updateStromField(${row.year}, 'grundpreis', this.value)" class="bg-gray-950 border border-gray-800 text-right text-blue-300 w-20 rounded px-2 py-1 focus:outline-none focus:border-blue-500">
+                            </td>
+                            <td class="p-3 text-right">
+                                <input type="number" step="0.01" value="${row.messstellenbetrieb}" onchange="updateStromField(${row.year}, 'messstellenbetrieb', this.value)" class="bg-gray-950 border border-gray-800 text-right text-blue-300 w-20 rounded px-2 py-1 focus:outline-none focus:border-blue-500">
+                            </td>
+                            <td class="p-3 text-right bg-gray-900/40 border-l border-gray-800 whitespace-nowrap">
+                                <div class="inline-flex items-center gap-1.5">
+                                    <input type="number" step="0.01" placeholder="konec roku" value="${hasVal ? row.effectiveStav : ''}" onchange="updateStromField(${row.year}, 'endStav', this.value)" class="${inputClasses}">
+                                    ${row.isProvisional ? `<button onclick="confirmCurrentYearStav(${row.year}, ${row.effectiveStav})" class="bg-emerald-950/60 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/40 rounded px-1.5 py-1 text-[11px] font-sans font-bold transition" title="Potvrdit jako pevný konečný stav roku">✓</button>` : ''}
+                                </div>
+                            </td>
+                            <td class="p-3 text-right font-bold ${row.isProvisional ? 'text-amber-300' : 'text-gray-300'}">
+                                ${hasVal ? fmtKwh(row.spotrebaRok) : '<span class="text-gray-600">-</span>'}
+                            </td>
+                            <td class="p-3 text-right font-bold ${row.isProvisional ? 'text-amber-400' : 'text-orange-400'}">
+                                ${hasVal ? fmtEur(row.utrataSpotreba) : '<span class="text-gray-600">-</span>'}
+                            </td>
+                            <td class="p-3 text-right ${row.isProvisional ? 'bg-amber-950/20 text-amber-300' : 'bg-emerald-950/15 text-emerald-400'} font-black text-sm">
+                                ${hasVal ? fmtEur(row.utrataKomplet) : '<span class="text-gray-600 font-normal text-xs">čeká na stav</span>'}
+                            </td>
+                            <td class="p-3 text-center font-sans">
+                                <button onclick="deleteStromYear(${row.year})" class="text-gray-600 hover:text-rose-400 p-1 transition" title="Smazat rok">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div></div>`;
+                mainContent.innerHTML = html;
+
+            // ==========================================
+            // POHLED 3: 🔥 GAS (KONTROLA PLYNU A TOPENÍ)
+            // ==========================================
+            } else if (currentView === "gas") {
+                pageTitle.innerHTML = `<span>🔥 Gas</span>`;
+
+                const gasYoY = getYoYComparison(latestYear, "plynYear");
+                const currGasM3 = latest.plynYear || 0;
+
+                const years = [...new Set(normalRows.map(r => r.year))].sort((a, b) => b - a);
+                const yearlyGasSummaryRaw = years.map(yr => {
+                    const yRows = normalRows.filter(r => r.year === yr);
+                    const lastY = yRows[yRows.length - 1] || {};
+                    const lastTopRow = [...yRows].reverse().find(r => r.marTopYear !== null || r.dirTopYear !== null) || {};
+                    const m3 = lastY.plynYear || 0;
+                    const marT = lastTopRow.marTopYear || 0;
+                    const dirT = lastTopRow.dirTopYear || 0;
+                    const topDate = lastTopRow.date ? formatCzDate(lastTopRow) : null;
+                    return { year: yr, date: lastY.date ? formatCzDate(lastY) : '-', m3, marT, dirT, topDate };
+                });
+
+                const yearlyGasSummary = yearlyGasSummaryRaw.map((item, idx) => {
+                    const prev = yearlyGasSummaryRaw[idx + 1];
+                    const diffM3 = prev ? +(item.m3 - prev.m3).toFixed(3) : null;
+                    const diffMar = (prev && item.marT > 0 && prev.marT > 0) ? (item.marT - prev.marT) : null;
+                    const diffDir = (prev && item.dirT > 0 && prev.dirT > 0) ? (item.dirT - prev.dirT) : null;
+                    return { ...item, diffM3, diffMar, diffDir };
+                });
+
+                const s2025Gas = yearlyGasSummary.find(y => y.year === 2025) || { m3: 0 };
+                const sCurrGas = yearlyGasSummary.find(y => y.year === latestYear) || { marT: 0, dirT: 0 };
+
+                statsContainer.innerHTML = `
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Spotřeba plynu ${latestYear}</p>
+                        <p class="text-2xl font-black text-rose-400 mt-1">${fmtNum(currGasM3, 2)} m³</p>
+                        <p class="text-xs text-gray-500 mt-1">Stav k ${latest.date ? formatCzDate(latest) : '-'}: ${fmtNum(latest.plyn, 3)} m³</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Meziročně ke stejnému datu</p>
+                        <p class="text-2xl font-black ${gasYoY && gasYoY.diffVal <= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-1">
+                            ${gasYoY ? `${gasYoY.diffVal >= 0 ? '+' : ''}${fmtNum(gasYoY.diffVal, 1)} m³ (${gasYoY.diffPct >= 0 ? '+' : ''}${fmtNum(gasYoY.diffPct, 1)}%)` : '-'}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">${gasYoY ? `Loni ke stejnému dni: ${fmtNum(gasYoY.prevAtSameDate, 1)} m³` : 'Bez srovnání'}</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Odhad plynu do konce ${latestYear}</p>
+                        <p class="text-2xl font-black text-orange-400 mt-1">${gasYoY ? fmtNum(gasYoY.estFullYear, 1) + ' m³' : '-'}</p>
+                        <p class="text-xs text-gray-500 mt-1">Loni celý rok (2025): ${fmtNum(s2025Gas.m3, 1)} m³</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Topení ${latestYear} (od 15. 1. 2026)</p>
+                        <p class="text-lg font-black text-purple-400 mt-1">Martin: ${fmtNum(sCurrGas.marT, 0)} • Dirk: ${fmtNum(sCurrGas.dirT, 0)} kWh</p>
+                        <p class="text-xs text-gray-500 mt-1">Odečty z bytových měřičů tepla</p>
+                    </div>
+                `;
+
+                const gasAndHeatReadings = normalRows.filter(r => r.plyn !== null || r.marTop !== null || r.dirTop !== null);
+
+                let html = `
+                    <div class="space-y-6">
+                        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-xl space-y-4">
+                            <div>
+                                <h2 class="text-lg font-bold text-rose-400">Roční přehled plynu a topení (meziroční kontrola)</h2>
+                                <p class="text-xs text-gray-500">Výměna plynoměru (léto 2024) i nové měřiče tepla od 15. 1. 2026 jsou automaticky zohledněny • Pod hodnotou je rozdíl oproti předchozímu roku.</p>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                        <tr class="bg-gray-950 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-800">
+                                            <th class="p-3">Rok</th>
+                                            <th class="p-3">Poslední odečet</th>
+                                            <th class="p-3 text-right text-rose-400 font-bold">Plyn za rok (m³)</th>
+                                            <th class="p-3 text-right text-purple-300 font-bold">Martin (kWh)</th>
+                                            <th class="p-3 pr-8 text-right text-purple-300 font-bold">Dirk (kWh)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-800/80 font-mono">
+                                        ${yearlyGasSummary.map(y => `
+                                            <tr class="hover:bg-gray-850/50 transition">
+                                                <td class="p-3 font-sans font-black text-sm text-white">${y.year}</td>
+                                                <td class="p-3 font-sans text-gray-400">${y.date}</td>
+                                                <td class="p-3 text-right">
+                                                    <div class="font-black text-sm text-rose-400">${fmtNum(y.m3, 3)} m³</div>
+                                                    ${y.diffM3 !== null ? `<div class="text-[10px] ${y.diffM3 <= 0 ? 'text-emerald-400/80' : 'text-rose-400/80'}">${fmtDelta(y.diffM3, 1)} m³</div>` : ''}
+                                                </td>
+                                                <td class="p-3 text-right">
+                                                    <div class="font-bold text-purple-300">
+                                                        ${y.marT > 0 ? fmtKwh(y.marT) : '-'}
+                                                        ${y.year === 2025 && y.topDate ? `<span class="text-[10px] text-gray-500 font-sans ml-1">(do ${y.topDate})</span>` : ''}
+                                                    </div>
+                                                    ${y.diffMar !== null ? `<div class="text-[10px] ${y.diffMar <= 0 ? 'text-emerald-400/80' : 'text-rose-400/80'}">${fmtDelta(y.diffMar, 0)} kWh</div>` : ''}
+                                                </td>
+                                                <td class="p-3 pr-8 text-right">
+                                                    <div class="font-bold text-purple-300">
+                                                        ${y.dirT > 0 ? fmtKwh(y.dirT) : '-'}
+                                                    </div>
+                                                    ${y.diffDir !== null ? `<div class="text-[10px] ${y.diffDir <= 0 ? 'text-emerald-400/80' : 'text-rose-400/80'}">${fmtDelta(y.diffDir, 0)} kWh</div>` : ''}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-xl">
+                            <div class="p-4 border-b border-gray-800 bg-gray-950/40">
+                                <h3 class="text-base font-bold text-gray-200">Průběh odečtů plynu a topení</h3>
+                                <p class="text-xs text-gray-500">Stavy měřičů a přírůstky od minulého odečtu</p>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                        <tr class="bg-gray-950 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-800">
+                                            <th class="p-3">Datum</th>
+                                            <th class="p-3 text-right text-rose-400">Plyn stav (m³)</th>
+                                            <th class="p-3 text-right text-orange-400 font-bold">Plyn v roce (m³)</th>
+                                            <th class="p-3 text-right text-purple-300">Martin (kWh)</th>
+                                            <th class="p-3 pr-8 text-right text-purple-300">Dirk (kWh)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-800/70 font-mono">
+                                        ${[...gasAndHeatReadings].reverse().map(r => `
+                                            <tr class="hover:bg-gray-850/50 transition">
+                                                <td class="p-2.5 font-sans font-bold text-gray-200">${formatCzDate(r)}</td>
+                                                <td class="p-2.5 text-right text-rose-300">
+                                                    <div>${fmtNum(r.plyn, 3)}</div>
+                                                    ${r.deltaPlyn !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(r.deltaPlyn, 3)} m³</div>` : ''}
+                                                </td>
+                                                <td class="p-2.5 text-right font-bold text-orange-400">${fmtNum(r.plynYear, 3)} m³</td>
+                                                <td class="p-2.5 text-right text-purple-300">
+                                                    <div>${fmtNum(r.marTop, 0)}</div>
+                                                    ${r.deltaMarTop !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(r.deltaMarTop, 0)}</div>` : ''}
+                                                </td>
+                                                <td class="p-2.5 pr-8 text-right text-purple-300">
+                                                    <div>${fmtNum(r.dirTop, 0)}</div>
+                                                    ${r.deltaDirTop !== null ? `<div class="text-[10px] text-gray-500">${fmtDelta(r.deltaDirTop, 0)}</div>` : ''}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                mainContent.innerHTML = html;
+            }
+        }
+
+        // ==========================================
+        // 6. EXPORT / IMPORT
+        // ==========================================
+        function exportData() {
+            const dataStr = JSON.stringify({ readings, stromBilling }, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', 'spotreba_energie_zaloha.json');
+            linkElement.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.readings) {
+                        pushToHistory();
+                        readings = imported.readings;
+                        stromBilling = imported.stromBilling || defaultStromBilling;
+                        save(false);
+                        alert("Data úspěšně nahrána!");
+                    } else {
+                        alert("Neplatný formát souboru zálohy.");
+                    }
+                } catch (err) {
+                    alert("Chyba při čtení souboru JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        render();
+    </script>
+</body>
+</html>
